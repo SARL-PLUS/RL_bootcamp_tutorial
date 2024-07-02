@@ -11,4 +11,7 @@
 2. Press run agent ?
 3. Benchmark implemented (optimal policy and "naive" policy)
 4. Code comments gap text
-5. Groups which debates on questions, and we find a consent together with the experts
+5. Groups which debates on questions, and we find a consent together with the experts 
+### Visual Ideas
+![IMG_2880.jpg](IMG_2880.jpg)
+![img.png](img.png)
