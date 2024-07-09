@@ -2,6 +2,25 @@
 
 Simon Hirlaender, Olga Mironova, ... 
 
+## Short description of the content
+
+1. The script [environment_awake_steering.py](environment_awake_steering.py) contains the original AWAKE 
+environement and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
+as the original environement. 
+2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
+procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
+defined numer of training steps.
+3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](Visualize_policy_validation.py).
+
+## Open questions for the programmes:
+1. Reward shaping as a part of the turorial also as a contest?
+2. One of the main goals is to understand every aspect of the MDP:
+   * We discuss the initial distribution
+   * We discuss the reward function and its equivalence classes
+   * The episodic formulation within the MDP world
+3. Difference between noise and partially observability
+
+
 ## Achievements:
 ### What should people learn?
 - Understanding the basics of Reinforcement Learning (RL).
