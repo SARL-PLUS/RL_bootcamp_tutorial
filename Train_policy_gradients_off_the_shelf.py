@@ -53,7 +53,7 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples):
     plt.show()
 
 # Train on different size of the environment
-for DoF in range(10, 11):
+for DoF in range():
     env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
     if algorithm == 'TRPO':
         model = TRPO("MlpPolicy", env)#, verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
