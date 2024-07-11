@@ -186,6 +186,7 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
             plot_rms_states(ax[2], ax2_twin, states_per_task, "States", ep_len_per_task, rewards_per_task,
                             threshold=env.threshold)
             ax[2].set_ylabel("negative RMS")
+            ax[2].set_ylim(-1,0)
 
         # Plot episode lengths
         plot_episode_lengths(ax[0], ax0_twin, ep_len_per_task, label=label)

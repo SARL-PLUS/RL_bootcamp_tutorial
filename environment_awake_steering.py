@@ -32,6 +32,8 @@ class DoFWrapper(gym.Wrapper):
                                        dtype=np.float32)
 
     def reset(self, seed: Optional[int] = None):
+        if seed is not None:
+            self.seed(seed=seed)
         observation, info = self.env.reset(seed=seed)
         observation = observation[:self.DoF]
         return observation, info
