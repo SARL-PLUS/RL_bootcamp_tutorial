@@ -65,8 +65,8 @@ for DoF in [1]:
     success_rates, mean_rewards, x_plot = [], [], []
 
     # For Olga- change here
-    total_steps = int(1e7)
-    nr_steps = 100
+    total_steps = int(1e4)
+    nr_steps = 50
     increments = total_steps // nr_steps
 
     nr_validation_episodes = 10
