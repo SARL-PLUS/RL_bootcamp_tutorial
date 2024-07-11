@@ -52,15 +52,19 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples):
     plt.tight_layout()
     plt.show()
 
+
+# For Olga- change here
 # Train on different size of the environment
-for DoF in range():
+for DoF in [1]:
     env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
     if algorithm == 'TRPO':
-        model = TRPO("MlpPolicy", env)#, verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
+        model = TRPO("MlpPolicy", env)  #, verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
     else:
-        model = PPO("MlpPolicy", env ,  clip_range=.1, learning_rate=1e-4, gamma=1, batch_size=128)
+        model = PPO("MlpPolicy", env, clip_range=.1, learning_rate=1e-4, gamma=1, batch_size=128)
 
     success_rates, mean_rewards, x_plot = [], [], []
+
+    # For Olga- change here
     total_steps = int(1e7)
     nr_steps = 100
     increments = total_steps // nr_steps
@@ -101,4 +105,5 @@ for DoF in range():
     policy = lambda x: model.predict(x)[0]
 
     verify_external_policy_on_specific_env(env, [policy], tasks=verification_task, episodes=10, title=algorithm,
-                                           save_folder=save_folder_figures_individual, policy_labels=[algorithm], DoF=DoF)
+                                           save_folder=save_folder_figures_individual, policy_labels=[algorithm],
+                                           DoF=DoF)
