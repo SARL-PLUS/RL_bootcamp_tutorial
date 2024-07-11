@@ -92,11 +92,11 @@ defined numer of training steps.
 4. **Code Snippets:**
    - Well-commented code snippets to illustrate key concepts.
 
-<img src="img.png" alt="RL Process" width="800">
+<img src="miscellaneous/img.png" alt="RL Process" width="800">
 
 - Visualize the RL process and key components.
 
-<img src="IMG_2880.jpg" alt="Real-world problem" width="800">
+<img src="miscellaneous/IMG_2880.jpg" alt="Real-world problem" width="800">
 
 - Depict a real-world problem being addressed by an RL agent.
 
