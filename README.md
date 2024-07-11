@@ -11,7 +11,7 @@ as the original environement.
 procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
 defined numer of training steps.
 3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](Visualize_policy_validation.py).
-
+4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
 ## Open questions for the programmes:
 1. Reward shaping as a part of the turorial also as a contest?
 2. One of the main goals is to understand every aspect of the MDP:
