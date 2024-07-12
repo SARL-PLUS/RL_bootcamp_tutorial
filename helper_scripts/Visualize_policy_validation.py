@@ -73,22 +73,6 @@ def plot_rewards(ax, ax_twin, rewards_per_task, success_rates, label=None):
     ax_twin.set_ylim(-0.1, 1.1)
 
 
-with open('configs/awake.yaml', "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
-# Todo: do properly:
-base_folder = config["env-name"]
-experiment_type = 'test'
-experiment_name = 'test_me'
-experiment_folder = os.path.join(base_folder, experiment_name)
-
-save_progress_data_dir = os.path.join(experiment_folder, experiment_type, 'progress')
-
-training_data_location = os.path.join(experiment_folder, experiment_type)
-meta_policy_location = os.path.join(base_folder, 'policy.th')
-
-policy_config_loc = os.path.join(base_folder, 'config_fixed.json')
-
-
 def test_policy(env, policy=None, episodes=50):
     rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = [], [], [], []
 

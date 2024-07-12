@@ -5,7 +5,7 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
-from Visualize_policy_validation import verify_external_policy_on_specific_env
+from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment_awake_steering import DoFWrapper, AwakeSteering, load_prefdefined_task
 
 # Todo: Make plots interactive
@@ -100,7 +100,7 @@ for DoF in [8]:
         plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples, nr_validation_episodes=nr_validation_episodes)
 
     x = [i * increments for i in (range(0, nr_steps))]
-    plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples)
+    plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples, nr_validation_episodes=nr_validation_episodes)
 
     model = TRPO.load(save_folder_weights_individual)
 

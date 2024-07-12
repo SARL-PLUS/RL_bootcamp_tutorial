@@ -10,8 +10,8 @@ as the original environement.
 2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
 procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
 defined numer of training steps. The plot shows the statistics of the valiations during the training.
-3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](Visualize_policy_validation.py).
-4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
+3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
+4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC_script.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
 5. Finally we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
 ## Open questions for the programmes - these are the notes I took during our discussions:
 1. Reward shaping as a part of the turorial also as a contest?
@@ -101,3 +101,4 @@ defined numer of training steps. The plot shows the statistics of the valiations
 
 - Depict a real-world problem being addressed by an RL agent.
 
+<img src="miscellaneous/img_1.png" alt="Real-world problem" width="800">

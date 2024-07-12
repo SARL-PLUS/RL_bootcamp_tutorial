@@ -1,5 +1,4 @@
 import os
-import os
 import pickle
 import random
 from enum import Enum
@@ -10,8 +9,8 @@ import numpy as np
 from gymnasium import spaces
 
 
-from Visualize_policy_validation import verify_external_policy_on_specific_env
-from helpers import MamlHelpers
+from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
+from helper_scripts.helpers import MamlHelpers
 
 
 class DoFWrapper(gym.Wrapper):
@@ -157,10 +156,6 @@ class AwakeSteering(gym.Env):
             truncated = True
 
         return return_state, reward, done, truncated, {"task": self._id, 'time': self.current_steps}
-
-    import numpy as np
-
-
 
     def _get_reward(self, observation):
         """
