@@ -179,7 +179,8 @@ class AwakeSteering(gym.Env):
         self.state = self.observation_space.sample()
         return self.state, {}
 
-    def seed(self, seed=None):
+    def seed(self, seed):
+        print(f'set seed {seed}')
         random.seed(seed)
         np.random.seed(seed)
 

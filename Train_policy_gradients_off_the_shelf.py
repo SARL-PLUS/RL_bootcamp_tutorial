@@ -57,7 +57,7 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
 
 # For Olga- change here
 # Train on different size of the environment
-for DoF in [1]:
+for DoF in [8]:
     env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
     if algorithm == 'TRPO':
         model = TRPO("MlpPolicy", env)  #, verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
@@ -67,11 +67,11 @@ for DoF in [1]:
     success_rates, mean_rewards, x_plot = [], [], []
 
     # For Olga- change here
-    total_steps = int(1e6)
-    nr_steps = 20
+    total_steps = int(1e4)
+    nr_steps = 50
     increments = total_steps // nr_steps
 
-    nr_validation_episodes = 100
+    nr_validation_episodes = 10
 
     for i in tqdm(range(0, nr_steps)):
         num_samples = increments * i
