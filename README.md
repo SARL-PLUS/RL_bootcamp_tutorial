@@ -13,7 +13,7 @@ defined numer of training steps. The plot shows the statistics of the valiations
 3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](Visualize_policy_validation.py).
 4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
 5. Finally we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
-## Open questions for the programmes:
+## Open questions for the programmes - these are the notes I took during our discussions:
 1. Reward shaping as a part of the turorial also as a contest?
 2. One of the main goals is to understand every aspect of the MDP:
    * We discuss the initial distribution
