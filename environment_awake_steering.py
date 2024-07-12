@@ -31,8 +31,6 @@ class DoFWrapper(gym.Wrapper):
                                        dtype=np.float32)
 
     def reset(self, seed: Optional[int] = None):
-        if seed is not None:
-            self.seed(seed=seed)
         observation, info = self.env.reset(seed=seed)
         observation = observation[:self.DoF]
         return observation, info
@@ -168,6 +166,7 @@ class AwakeSteering(gym.Env):
     def reset(self, seed: Optional[int] = None):
         if seed is not None:
             self.seed(seed)
+            self.observation_space.seed(seed)
         self.is_finalized = False
         self.current_steps = 0
         self.current_episode += 1
@@ -175,7 +174,6 @@ class AwakeSteering(gym.Env):
         return self.state, {}
 
     def seed(self, seed):
-        print(f'set seed {seed}')
         random.seed(seed)
         np.random.seed(seed)
 

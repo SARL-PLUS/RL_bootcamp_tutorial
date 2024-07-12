@@ -1,4 +1,5 @@
 import os
+import time
 
 from matplotlib import pyplot as plt
 from sb3_contrib import TRPO
@@ -8,12 +9,14 @@ from tqdm import tqdm
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment_awake_steering import DoFWrapper, AwakeSteering, load_prefdefined_task
 
-# Todo: Make plots interactive
+# Todo: Make plots interactive and add variance
 
-# load specific configuration for the environment - a predefined task
+# Select on algorithm
+algorithm = 'TRPO'  #
+algorithm = 'PPO'  #
 
-algorithm = 'TRPO'
-predefined_task = 1
+# Here we select one possible MDP out of a set of MDPs - not important at this stage
+predefined_task = 0
 verification_task = load_prefdefined_task(predefined_task)
 experiment_name = f'predefined_task_{predefined_task}'
 save_folder_figures = os.path.join(algorithm, experiment_name, 'Figures', 'verification')
@@ -39,7 +42,8 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
     ax.set_xlabel('Interactions with the system')
     ax.set_ylabel('Cumulative Reward', color='blue')
     ax.tick_params(axis='y', labelcolor='blue')
-    ax.set_title(f"{algorithm} on AWAKE with DoF: {DoF} and trained on {num_samples} samples\n averaged over {nr_validation_episodes} validation episodes")
+    ax.set_title(
+        f"{algorithm} on AWAKE with DoF: {DoF} and trained on {num_samples} samples\n averaged over {nr_validation_episodes} validation episodes")
 
     ax1 = ax.twinx()
     ax1.plot(x, success_rate, color='green', label='Success Rate')
@@ -55,18 +59,19 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
     plt.show()
 
 
-# For Olga- change here
+# For Olga-change here
 # Train on different size of the environment
-for DoF in [8]:
+for DoF in [2]:
     env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
     if algorithm == 'TRPO':
-        model = TRPO("MlpPolicy", env)  #, verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
-    else:
-        model = PPO("MlpPolicy", env, clip_range=.1, learning_rate=1e-4, gamma=1, batch_size=128)
+        model = TRPO("MlpPolicy", env)
+    elif algorithm == 'PPO':
+        model = PPO("MlpPolicy", env)
+    else: print('Select valid algorithm')
 
     success_rates, mean_rewards, x_plot = [], [], []
 
-    # For Olga- change here
+    # For Olga-change here
     total_steps = int(1e4)
     nr_steps = 50
     increments = total_steps // nr_steps
@@ -82,7 +87,6 @@ for DoF in [8]:
         model.save(save_folder_weights_individual)
         vec_env = model.get_env()
         policy = lambda x: model.predict(x)[0]
-        # save_folder = f'{save_folder_figures}_{DoF}_{nr_samples}'
         title = f'{algorithm}_{DoF}_{num_samples} samples, threshold={env.threshold}'
         success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy], tasks=verification_task,
                                                                            episodes=nr_validation_episodes,
@@ -91,16 +95,18 @@ for DoF in [8]:
                                                                            policy_labels=[algorithm], DoF=DoF,
                                                                            nr_validation_episodes=nr_validation_episodes)
 
-
         print(success_rate)
+        time.sleep(5)
         success_rates.append(success_rate)
         mean_rewards.append(mean_reward)
 
         x_plot.append(num_samples)
-        plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples, nr_validation_episodes=nr_validation_episodes)
+        plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
+                      nr_validation_episodes=nr_validation_episodes)
 
     x = [i * increments for i in (range(0, nr_steps))]
-    plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples, nr_validation_episodes=nr_validation_episodes)
+    plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
+                  nr_validation_episodes=nr_validation_episodes)
 
     model = TRPO.load(save_folder_weights_individual)
 

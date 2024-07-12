@@ -17,13 +17,15 @@ DoF = 1
 nr_validation_episodes = 10
 env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
 
+
 # Model parameters for MPC
 action_matrix = action_matrix[:DoF, :DoF]
 action_matrix_scaled = action_matrix * env.action_scale * env.state_scale
 threshold = -env.threshold
 
 mpc_horizon = 5  # Number of steps
-policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
+def policy_mpc(state):
+    return model_predictive_control(state, mpc_horizon, action_matrix_scaled, threshold, plot=False)
 
 model = PPO("MlpPolicy", env, verbose=1)
 
@@ -45,12 +47,12 @@ else:
 
 vec_env = model.get_env()
 
-policy_ppo = lambda x: model.predict(x)[0]
+def policy_ppo(state):
+ return model.predict(state)[0]
+
 b_inv = np.linalg.inv(action_matrix_scaled)
-
-
-def policy_response_matrix(x):
-    action = -b_inv @ x
+def policy_response_matrix(state):
+    action = -b_inv @ state
     action_abs_max = max(abs(action))
     if action_abs_max > 1:
         action = action / action_abs_max

@@ -1,11 +1,6 @@
-import os
-import pickle
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
-import yaml
 
 
 def ep_mean_return(rewards_per_task):
@@ -111,16 +106,14 @@ def create_trajectories(env, policy, episodes):
             trajectory['rewards'].append(reward.copy())
             done = terminated or truncated
             trajectory['length'] += 1
-            if trajectory['length'] >= 10:
-                done = True
+            # if trajectory['length'] >= 10:
+            #     done = True
         trajectories.append(trajectory)
 
     return trajectories
 
 
 def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs):
-    # kwargs['threshold'] = env.unwrapped.threshold
-    env.threshold
     labels = kwargs['policy_labels']
     DoF = kwargs['DoF'] if 'DoF' in kwargs else 10
     colors = plt.cm.rainbow(np.linspace(0, 1, DoF))
