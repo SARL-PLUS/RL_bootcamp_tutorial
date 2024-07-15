@@ -2,6 +2,7 @@
 
 Simon Hirlaender, Olga Mironova, ... 
 
+# [The slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
 
 1. The script [environment_awake_steering.py](environment_awake_steering.py) contains the original AWAKE 

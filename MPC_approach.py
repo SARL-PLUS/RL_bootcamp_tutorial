@@ -22,10 +22,10 @@ import os
 # Importing required functions and classes
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment_awake_steering import AwakeSteering, DoFWrapper, load_prefdefined_task
+from environment_awake_steering import AwakeSteering, DoFWrapper, load_predefined_task
 
 # Load a predefined task for verification
-verification_task = load_prefdefined_task(0)
+verification_task = load_predefined_task(0)
 action_matrix = verification_task['goal'][0]
 DoF = 1  # Degrees of Freedom
 nr_validation_episodes = 10  # Number of validation episodes

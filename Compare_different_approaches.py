@@ -5,13 +5,13 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment_awake_steering import AwakeSteering, DoFWrapper, load_prefdefined_task
+from environment_awake_steering import AwakeSteering, DoFWrapper, load_predefined_task
 
 
 # ToDo: find bug in initialisation
 
 predefined_task = 1
-verification_task = load_prefdefined_task(predefined_task)
+verification_task = load_predefined_task(predefined_task)
 action_matrix = verification_task['goal'][0]
 DoF = 1
 nr_validation_episodes = 10

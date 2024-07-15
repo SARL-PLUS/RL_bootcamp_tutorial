@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import concurrent.futures
 
-from environment_awake_steering import AwakeSteering, load_prefdefined_task
+from environment_awake_steering import AwakeSteering, load_predefined_task
 
 
 def rms(x):
@@ -180,7 +180,7 @@ def plot_results(x_final, u_final, costs, time_run, threshold):
     print(f"Total execution time: {time_run:.2f}s")
 
 
-verification_task = load_prefdefined_task(1)
+verification_task = load_predefined_task(1)
 b = verification_task['goal'][0]
 
 # b_inverse = np.linalg.inv(b)

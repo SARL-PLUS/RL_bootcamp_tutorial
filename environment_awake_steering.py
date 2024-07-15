@@ -200,7 +200,7 @@ class Plane(Enum):
     vertical = 1
 
 
-def load_prefdefined_task(task_nr):
+def load_predefined_task(task_nr):
     # Define file location and name
     verification_tasks_loc = 'configs'
     filename = 'verification_tasks.pkl'  # Adding .pkl extension for clarity

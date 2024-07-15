@@ -7,7 +7,7 @@ from stable_baselines3 import PPO
 from tqdm import tqdm
 
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment_awake_steering import DoFWrapper, AwakeSteering, load_prefdefined_task
+from environment_awake_steering import DoFWrapper, AwakeSteering, load_predefined_task
 
 # Todo: Make plots interactive and add variance
 
@@ -17,7 +17,7 @@ algorithm = 'PPO'  #
 
 # Here we select one possible MDP out of a set of MDPs - not important at this stage
 predefined_task = 0
-verification_task = load_prefdefined_task(predefined_task)
+verification_task = load_predefined_task(predefined_task)
 experiment_name = f'predefined_task_{predefined_task}'
 save_folder_figures = os.path.join(algorithm, experiment_name, 'Figures', 'verification')
 save_folder_weights = os.path.join(algorithm, experiment_name, 'Weights', 'verification')
