@@ -4,30 +4,41 @@ Simon Hirlaender, Olga Mironova, ...
 
 # [The slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
-
-1. The script [environment_awake_steering.py](environment_awake_steering.py) contains the original AWAKE 
+Part I:
+   1. The script [environment_awake_steering.py](environment_awake_steering.py) contains the original AWAKE 
 environement and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
 as the original environement. 
-2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
-procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
-defined numer of training steps. The plot shows the statistics of the valiations during the training.
-3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
-4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC_script.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
-5. Finally we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
-## Open questions for the programmes - these are the notes I took during our discussions:
-1. Reward shaping as a part of the turorial also as a contest?
-2. One of the main goals is to understand every aspect of the MDP:
-   * We discuss the initial distribution
-   * We discuss the reward function and its equivalence classes
-   * The episodic formulation within the MDP world
-3. Difference between noise and partially observability
+   2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
+   procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
+   defined numer of training steps. The plot shows the statistics of the valiations during the training.
+   3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
+   4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC_script.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
+   5. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
 
+Part II:
+
+   1. Elements of model-based RL
+   2. Elements of MPC design and optimization
+   3. Gaussian processes in a nut-shell
+   4. Running GP-MPC on the AWAKE
+   5. Alternative advanced approaches 
+
+## Open questions for the programmes - these are the notes I took during our discussions:
+1. MDP shaping as a part of the tutorial also as a contest?
+
+2. One of the main goals is to understand every aspect of the MDP:
+   * We discuss the dynamics of the system, actions and states
+   * We discuss the initial distribution of the states and it's role
+   * We discuss the reward function and its equivalence classes
+   * The episodic formulation within the MDP world - modification of termination/truncation criteria
+   * Beyond MDP - POMDPs  by modifying the dynamics (non-stationary)
+3. Difference between noise and partially observability - where to draw the line?
 
 ## Achievements:
 ### What should people learn?
 - Understanding the basics of Reinforcement Learning (RL).
 - Key components: agents, environments, states, actions, rewards, and policies.
-- Differences between RL and other machine learning paradigms.
+- Differences between RL and other machine learning paradigms and classical optimization.
 - Hands-on experience with simple RL algorithms like Q-learning and Deep Q-Networks (DQNs).
 - Practical applications and limitations of RL.
 
@@ -40,7 +51,7 @@ defined numer of training steps. The plot shows the statistics of the valiations
 
 ### What are the most important concepts?
 - **Agent:** The learner or decision maker.
-- **Environment:** The external system with which the agent interacts.
+- **Environment and MDPs:** The external system with which the agent interacts.
 - **State:** A representation of the current situation of the agent.
 - **Action:** A set of all possible moves the agent can make.
 - **Reward:** Feedback from the environment to evaluate actions.
@@ -58,7 +69,7 @@ defined numer of training steps. The plot shows the statistics of the valiations
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
 
-## Steps in the Tutorial:
+## Steps in the Tutorial - decided at the end:
 1. **Real-world problems:**
    - Introduction to real-world problems that can be solved with RL.
    - Examples from different industries like robotics, healthcare, finance, etc.
@@ -94,12 +105,19 @@ defined numer of training steps. The plot shows the statistics of the valiations
 4. **Code Snippets:**
    - Well-commented code snippets to illustrate key concepts.
 
-<img src="miscellaneous/img.png" alt="RL Process" width="800">
 
-- Visualize the RL process and key components.
 
-<img src="miscellaneous/IMG_2880.jpg" alt="Real-world problem" width="800">
 
-- Depict a real-world problem being addressed by an RL agent.
+[//]: # (<img src="miscellaneous/img.png" alt="RL Process" width="800">)
 
-<img src="miscellaneous/img_1.png" alt="Real-world problem" width="800">
+[//]: # ()
+[//]: # (- Visualize the RL process and key components.)
+
+[//]: # ()
+[//]: # (<img src="miscellaneous/IMG_2880.jpg" alt="Real-world problem" width="800">)
+
+[//]: # ()
+[//]: # (- Depict a real-world problem being addressed by an RL agent.)
+
+[//]: # ()
+[//]: # (<img src="miscellaneous/img_1.png" alt="Real-world problem" width="800">)
