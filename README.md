@@ -1,8 +1,8 @@
-# Tutorial in Reinforcement Learning
+# Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
 
-Simon Hirlaender, Olga Mironova, ... 
+Simon Hirlaender, Olga Mironova, Catherine Laflamme, Thomas
 
-# [The slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
+# [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
 Part I:
    1. The script [environment_awake_steering.py](environment_awake_steering.py) contains the original AWAKE 
