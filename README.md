@@ -1,6 +1,6 @@
 # Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
 
-Simon Hirlaender, Olga Mironova, Catherine Laflamme, Thomas
+Simon Hirlaender, Olga Mironova, Catherine Laflamme, Thomas Gallien
 
 # [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
