@@ -5,7 +5,7 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment_awake_steering import AwakeSteering, DoFWrapper, load_predefined_task
+from environment.environment_awake_steering import AwakeSteering, DoFWrapper, load_predefined_task
 
 
 # ToDo: find bug in initialisation

@@ -1,5 +1,3 @@
-import os
-import pickle
 import random
 from enum import Enum
 from typing import Optional
@@ -8,89 +6,8 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-
+from environment.helpers import MamlHelpers, DoFWrapper
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from helper_scripts.helpers import MamlHelpers
-
-
-class DoFWrapper(gym.Wrapper):
-    def __init__(self, env, DoF):
-        super(DoFWrapper, self).__init__(env)
-        self.DoF = DoF
-        # self.threshold = -0.005 * DoF if (DoF <= 6) else -0.1
-        self.threshold = -0.1
-        self.env = env
-
-        self.observation_space = spaces.Box(low=env.observation_space.low[:self.DoF],
-                                            high=env.observation_space.high[:self.DoF],
-                                            # shape=env.observation_space.shape[:self.DoF],
-                                            dtype=np.float32)
-        self.action_space = spaces.Box(low=env.action_space.low[:self.DoF],
-                                       high=env.action_space.high[:self.DoF],
-                                       # shape=env.action_space.shape[:self.DoF],
-                                       dtype=np.float32)
-
-    def reset(self, seed: Optional[int] = None):
-        observation, info = self.env.reset(seed=seed)
-        observation = observation[:self.DoF]
-        return observation, info
-
-    def step(self, action):
-        # Initialize a zero-filled array for the action space
-        full_action_space = np.zeros(self.env.action_space.shape)
-        full_action_space[:self.DoF] = action  # Set the first 'DoF' elements with the provided action
-
-        # Execute the action in the environment
-        observation, reward, terminated, truncated, info = self.env.step(full_action_space)
-
-        # Reset termination status and check for step limit
-        truncated = self.env.current_steps >= self.env.MAX_TIME
-
-        # Focus only on the degrees of freedom for observations
-        observation = observation[:self.DoF]
-
-        # Update the reward based on the current observation
-        reward = self.env._get_reward(observation)
-
-        # Terminate if the reward exceeds the threshold
-        if reward >= self.threshold:
-            terminated = True
-
-        # observation = observation * self.pot_function(
-        #     observation)  # Ensure observation is a NumPy array
-        reward = self.env._get_reward(observation)
-
-        # Check for any violations where the absolute values in observations exceed 1
-        violations = np.where(abs(observation) >= 1)[0]
-        if violations.size > 0:
-            # Modify observation from the first violation onward
-            observation[violations[0]:] = np.sign(observation[violations[0]])
-
-            # Recalculate reward after modification
-            # observation = observation * self.pot_function(
-            #     observation)  # Ensure observation is a NumPy array
-            reward = self.env._get_reward(observation)
-            # truncated = True  # Terminate due to the violation
-        #
-        return observation, reward, terminated, truncated, info
-
-    def seed(self, seed):
-        self.env.seed(seed)
-
-    def pot_function(self, x, k=1000, x0=1):
-        """
-        Compute a potential function using a modified sigmoid to handle deviations.
-        The output scales transformations symmetrically for positive and negative values of x.
-        """
-        # Precompute the exponential terms to use them efficiently.
-        exp_pos = np.exp(k * (x - x0))
-        exp_neg = np.exp(k * (-x - x0))
-
-        # Calculate the transformation symmetrically for both deviations
-        result = (1 - 1 / (1 + exp_pos)) + (1 - 1 / (1 + exp_neg))
-
-        # Scale and shift the output between 1 and 10
-        return 1 + 10 * result
 
 
 class AwakeSteering(gym.Env):
@@ -200,16 +117,7 @@ class Plane(Enum):
     vertical = 1
 
 
-def load_predefined_task(task_nr):
-    # Define file location and name
-    verification_tasks_loc = 'configs'
-    filename = 'verification_tasks.pkl'  # Adding .pkl extension for clarity
-    # Construct the full file path
-    full_path = os.path.join(verification_tasks_loc, filename)
 
-    with open(full_path, "rb") as input_file:  # Load in tasks
-        tasks = pickle.load(input_file)
-    return tasks[task_nr]
 
 
 if __name__ == "__main__":

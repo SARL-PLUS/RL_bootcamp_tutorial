@@ -1,11 +1,11 @@
 # Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
-
+## Closer to real worl applications
 [Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova, Catherine Laflamme, Thomas Gallien
 
-# [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
+## [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
 Part I:
-   1. The script [environment_awake_steering.py](environment_awake_steering.py) contains the original AWAKE 
+   1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE 
 environement and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
 as the original environement. 
    2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
@@ -26,7 +26,7 @@ Part II:
 ## Open questions for the programmes - these are the notes I took during our discussions:
 1. MDP shaping as a part of the tutorial also as a contest?
 
-2. One of the main goals is to understand every aspect of the MDP:
+2. One of the main goals is to understand every aspect of the (an) MDP:
    * We discuss the dynamics of the system, actions and states
    * We discuss the initial distribution of the states and it's role
    * We discuss the reward function and its equivalence classes
@@ -39,8 +39,9 @@ Part II:
 - Understanding the basics of Reinforcement Learning (RL).
 - Key components: agents, environments, states, actions, rewards, and policies.
 - Differences between RL and other machine learning paradigms and classical optimization.
-- Hands-on experience with simple RL algorithms like Q-learning and Deep Q-Networks (DQNs).
+- Hands-on experience with simple RL algorithms like PPO/TRPO and tuning of such algorithms.
 - Practical applications and limitations of RL.
+- Working with gymnasium and wrappers
 
 ### What are common pitfalls in the beginning?
 - Underestimating the complexity of tuning hyperparameters.
@@ -105,7 +106,8 @@ Part II:
 4. **Code Snippets:**
    - Well-commented code snippets to illustrate key concepts.
 
-
+## Todos:
+1. Explain the environment motivation
 
 
 [//]: # (<img src="miscellaneous/img.png" alt="RL Process" width="800">)

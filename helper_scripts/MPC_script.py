@@ -19,7 +19,8 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import concurrent.futures
 
-from environment_awake_steering import AwakeSteering, load_predefined_task
+from environment.environment_awake_steering import AwakeSteering
+from environment.helpers import load_predefined_task
 
 
 def rms(x):

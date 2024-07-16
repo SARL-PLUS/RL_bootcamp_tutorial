@@ -6,8 +6,9 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
+from environment.helpers import load_predefined_task
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment_awake_steering import DoFWrapper, AwakeSteering, load_predefined_task
+from environment.environment_awake_steering import DoFWrapper, AwakeSteering
 
 # Todo: Make plots interactive and add variance
 
@@ -61,7 +62,7 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
 
 # For Olga-change here
 # Train on different size of the environment
-for DoF in [2]:
+for DoF in [5]:
     env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
     if algorithm == 'TRPO':
         model = TRPO("MlpPolicy", env)
@@ -77,6 +78,7 @@ for DoF in [2]:
     increments = total_steps // nr_steps
 
     nr_validation_episodes = 10
+    seed_set = [0, 2, 3, 4, 5, 7, 8, 9, 10, 11]
 
     for i in tqdm(range(0, nr_steps)):
         num_samples = increments * i
@@ -93,7 +95,8 @@ for DoF in [2]:
                                                                            title=title,
                                                                            save_folder=save_folder_figures_individual,
                                                                            policy_labels=[algorithm], DoF=DoF,
-                                                                           nr_validation_episodes=nr_validation_episodes)
+                                                                           nr_validation_episodes=nr_validation_episodes,
+                                                                           seed_set=seed_set)
 
         print(success_rate)
         time.sleep(5)
@@ -115,4 +118,5 @@ for DoF in [2]:
 
     verify_external_policy_on_specific_env(env, [policy], tasks=verification_task, episodes=10, title=algorithm,
                                            save_folder=save_folder_figures_individual, policy_labels=[algorithm],
-                                           DoF=DoF, nr_validation_episodes=nr_validation_episodes)
+                                           DoF=DoF, nr_validation_episodes=nr_validation_episodes,
+                                           seed_set=seed_set)

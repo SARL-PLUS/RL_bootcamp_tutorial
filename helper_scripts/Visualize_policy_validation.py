@@ -68,14 +68,14 @@ def plot_rewards(ax, ax_twin, rewards_per_task, success_rates, label=None):
     ax_twin.set_ylim(-0.1, 1.1)
 
 
-def test_policy(env, policy=None, episodes=50):
+def test_policy(env, policy=None, episodes=50, seed_set=None):
     rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = [], [], [], []
 
     if policy is None:
         policy = lambda x: env.action_space.sample()
 
     trajectories = \
-        create_trajectories(env, policy, episodes)
+        create_trajectories(env, policy, episodes, seed_set=seed_set)
 
     all_observations = [trajectory['observations'] for trajectory in trajectories]
     all_actions = [trajectory['actions'] for trajectory in trajectories]
@@ -90,9 +90,11 @@ def test_policy(env, policy=None, episodes=50):
     return rewards_per_task, ep_len_per_task, actions_per_task, states_per_task
 
 
-def create_trajectories(env, policy, episodes):
+def create_trajectories(env, policy, episodes, seed_set=None):
     trajectories = []
-    for seed in range(episodes):
+    if seed_set is None:
+        seed_set = range(episodes)
+    for seed in seed_set:
         trajectory = {'observations': [], 'actions': [], 'rewards': [], 'length': 0}
         observation, info = env.reset(seed=seed)
         trajectory['observations'].append(observation.copy())
@@ -116,6 +118,7 @@ def create_trajectories(env, policy, episodes):
 def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs):
     labels = kwargs['policy_labels']
     DoF = kwargs['DoF'] if 'DoF' in kwargs else 10
+    seed_set = kwargs['seed_set'] if 'seed_set' in kwargs else None
     colors = plt.cm.rainbow(np.linspace(0, 1, DoF))
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=[color for color in colors])
 
@@ -140,7 +143,7 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
     for i, policy in enumerate(policies):
         label = labels[i]
         rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = test_policy(env, policy,
-                                                                                           episodes)
+                                                                                           episodes, seed_set=seed_set)
 
         for task_nr, ep_ret in enumerate(map(ep_mean_return, rewards_per_task)):
             print(f"Mean return for Task nr.{task_nr} - {label}: {ep_ret}")
@@ -163,7 +166,7 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
             plot_rms_states(ax[2], ax2_twin, states_per_task, "States", ep_len_per_task, rewards_per_task,
                             threshold=env.threshold)
             ax[2].set_ylabel("negative RMS")
-            ax[2].set_ylim(-1,0)
+            ax[2].set_ylim(-1, 0)
 
         # Plot episode lengths
         plot_episode_lengths(ax[0], ax0_twin, ep_len_per_task, label=label)

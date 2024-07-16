@@ -17,12 +17,14 @@ Dependencies:
 
 """
 
+# TODO: save data for accelerated verification
 import os
 
 # Importing required functions and classes
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment_awake_steering import AwakeSteering, DoFWrapper, load_predefined_task
+from environment.environment_awake_steering import AwakeSteering
+from environment.helpers import load_predefined_task, DoFWrapper
 
 # Load a predefined task for verification
 verification_task = load_predefined_task(0)
@@ -54,7 +56,6 @@ verify_external_policy_on_specific_env(
     title='MPC',
     save_folder=save_folder,
     policy_labels=['MPC'],
-    DoF=DoF
+    DoF=DoF,
+    seed_set=[0, 2, 3, 4, 5, 7, 8, 9, 10, 11]
 )
-
-
