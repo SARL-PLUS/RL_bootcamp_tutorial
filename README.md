@@ -4,11 +4,12 @@
 
 ## [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
-I (Simon) will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it. 
-There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL.
+I (Simon) will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it (there are two ingredients, making the control problem interesting).
+There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL
 Now I implement a noise study, a study of a POMDP environment.
 
 Part I:
+
    1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE 
 environment and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
 as the original environment. 
@@ -22,10 +23,10 @@ as the original environment.
 Part II:
 
    1. Elements of model-based RL
-   2. Elements of MPC design and optimization
+   2. Elements of data-driven MPC design and optimization
    3. Gaussian processes in a nut-shell
-   4. Running GP-MPC on the AWAKE
-   5. Alternative advanced approaches 
+   4. Running GP-MPC on the AWAKE environment
+   5. Alternative advanced ideas - non-stationary, masking, 
 
 ## Open questions for the programmes - these are the notes I took during our discussions:
 1. MDP shaping as a part of the tutorial also as a contest?
