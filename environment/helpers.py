@@ -297,7 +297,7 @@ class Awake_Benchmarking_Wrapper(Wrapper):
 
 def load_predefined_task(task_nr):
     # Define file location and name
-    verification_tasks_loc = 'environment/configs'
+    verification_tasks_loc = 'environment/tasks'
     filename = 'verification_tasks.pkl'  # Adding .pkl extension for clarity
     # Construct the full file path
     full_path = os.path.join(verification_tasks_loc, filename)

@@ -5,11 +5,9 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 
 from environment.helpers import load_predefined_task
-from MPC_script import model_predictive_control
+from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment.environment_awake_steering import AwakeSteering, DoFWrapper
-
-
 
 # ToDo: store the tajectories of the MPC policy
 
@@ -42,6 +40,7 @@ save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name
 save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', 'verification')
 
 files = glob.glob(os.path.join(save_folder_weights, '*'))
+print(files)
 files_DoF = [file for file in files if f'verification_{DoF}' in file][-1]
 
 print(files)

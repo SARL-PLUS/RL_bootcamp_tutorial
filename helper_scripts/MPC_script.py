@@ -15,7 +15,8 @@ Dependencies:
 import os
 import pickle
 import time
-import autograd.numpy as np
+# import autograd.numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import concurrent.futures

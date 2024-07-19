@@ -21,7 +21,7 @@ Dependencies:
 import os
 
 # Importing required functions and classes
-from MPC_script import model_predictive_control
+from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment.environment_awake_steering import AwakeSteering
 from environment.helpers import load_predefined_task, DoFWrapper

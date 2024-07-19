@@ -1,0 +1,7 @@
+# Gaussian Process Constraints
+noise_setting:
+  std_noise: none
+
+task_setting:
+  task_location: 'environment/tasks/verification_tasks.pkl'
+  task_nr: 0

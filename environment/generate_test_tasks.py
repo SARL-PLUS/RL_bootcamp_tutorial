@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt, colors
 from environment.helpers import MamlHelpers
 
 # Define file location and name
-verification_tasks_loc = 'configs'
+verification_tasks_loc = 'tasks'
 filename = 'verification_tasks.pkl'  # Adding .pkl extension for clarity
 
 # Create an instance of MamlHelpers and sample tasks
@@ -83,7 +83,7 @@ full_path = os.path.join(verification_tasks_loc, filename)
 
 # import yaml
 #
-# config_path = 'configs/maml/awake.yaml'
+# config_path = 'tasks/maml/awake.yaml'
 # kwargs = {'verification_tasks_loc': full_path}
 #
 # # Load the configuration from the YAML file and update 'env-kwargs'
