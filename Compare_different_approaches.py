@@ -3,14 +3,17 @@ import os
 import numpy as np
 from sb3_contrib import TRPO
 from stable_baselines3 import PPO
-from helper_scripts.MPC_script import model_predictive_control
+
+from environment.helpers import load_predefined_task
+from MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment.environment_awake_steering import AwakeSteering, DoFWrapper, load_predefined_task
+from environment.environment_awake_steering import AwakeSteering, DoFWrapper
 
 
-# ToDo: find bug in initialisation
 
-predefined_task = 1
+# ToDo: store the tajectories of the MPC policy
+
+predefined_task = 0
 verification_task = load_predefined_task(predefined_task)
 action_matrix = verification_task['goal'][0]
 DoF = 1
@@ -20,21 +23,23 @@ env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
 
 # Model parameters for MPC
 action_matrix = action_matrix[:DoF, :DoF]
-action_matrix_scaled = action_matrix * env.action_scale * env.state_scale
+action_matrix_scaled = action_matrix * env.unwrapped.action_scale * env.unwrapped.state_scale
 threshold = -env.threshold
 
 mpc_horizon = 5  # Number of steps
 def policy_mpc(state):
     return model_predictive_control(state, mpc_horizon, action_matrix_scaled, threshold, plot=False)
 
-model = PPO("MlpPolicy", env, verbose=1)
 
+# Select on algorithm
+algorithm = 'TRPO'  #
+algorithm = 'PPO'  #
 
-algorithm = 'TRPO'
-
+# Here we select one possible MDP out of a set of MDPs - not important at this stage
+optimization_type = 'RL'
 experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(algorithm, experiment_name, 'Figures_compare')
-save_folder_weights = os.path.join(algorithm, experiment_name, 'Weights')
+save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', 'verification')
+save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', 'verification')
 
 files = glob.glob(os.path.join(save_folder_weights, '*'))
 files_DoF = [file for file in files if f'verification_{DoF}' in file][-1]
@@ -67,9 +72,9 @@ verify_external_policy_on_specific_env(env, [policy_mpc, policy_ppo, policy_resp
                                        policy_labels=['MPC', algorithm, 'Response_matrix'], DoF=DoF)
 
 verify_external_policy_on_specific_env(env, [policy_ppo, policy_mpc, policy_response_matrix], tasks=verification_task,
-                                       episodes=nr_validation_episodes, title=f'MPC vs. {algorithm} vs analytical approach', save_folder=save_folder+'_1',
+                                       episodes=nr_validation_episodes, title=f'MPC vs. {algorithm} vs analytical approach', save_folder=save_folder+'_2',
                                        policy_labels=[algorithm, 'MPC', 'Response_matrix'], DoF=DoF)
 
 verify_external_policy_on_specific_env(env, [policy_response_matrix, policy_ppo, policy_mpc], tasks=verification_task,
-                                       episodes=nr_validation_episodes, title=f'MPC vs. {algorithm} vs analytical approach', save_folder=save_folder+'_1',
+                                       episodes=nr_validation_episodes, title=f'MPC vs. {algorithm} vs analytical approach', save_folder=save_folder+'_3',
                                        policy_labels=['Response_matrix', algorithm, 'MPC'], DoF=DoF)

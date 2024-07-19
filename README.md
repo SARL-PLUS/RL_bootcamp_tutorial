@@ -4,15 +4,18 @@
 
 ## [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content
+I (Simon) will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it. 
+There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL.
+Now I implement a noise study, a study of a POMDP study of the environment.
 Part I:
    1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE 
 environement and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
 as the original environement. 
    2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
    procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
-   defined numer of training steps. The plot shows the statistics of the valiations during the training.
+   defined numer of training steps. The plot shows the statistics of the validations during the training.
    3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
-   4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC_script.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
+   4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](MPC_script.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
    5. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
 
 Part II:

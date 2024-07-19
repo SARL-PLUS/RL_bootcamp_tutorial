@@ -21,7 +21,7 @@ Dependencies:
 import os
 
 # Importing required functions and classes
-from helper_scripts.MPC_script import model_predictive_control
+from MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment.environment_awake_steering import AwakeSteering
 from environment.helpers import load_predefined_task, DoFWrapper
@@ -38,7 +38,7 @@ env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
 
 # Model parameters for MPC
 action_matrix = action_matrix[:DoF, :DoF]  # Adjust action matrix according to DoF
-action_matrix_scaled = action_matrix * env.action_scale  # Scale the action matrix
+action_matrix_scaled = action_matrix * env.unwrapped.action_scale  # Scale the action matrix
 threshold = -env.threshold  # Define the threshold for the MPC
 
 # Define the policy for MPC

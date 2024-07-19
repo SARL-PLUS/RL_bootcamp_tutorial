@@ -12,7 +12,8 @@ Dependencies:
 - matplotlib for plotting results.
 - concurrent.futures for parallel execution.
 """
-
+import os
+import pickle
 import time
 import autograd.numpy as np
 import matplotlib.pyplot as plt
@@ -65,10 +66,8 @@ def predict_actions(initial_state, horizon_length, response_matrix, threshold, t
                 'fun': (lambda z, k=i: (z[dimension * (k + 1):dimension * (k + 2)] -
                                         (step_function(rms(z[dimension * k:dimension * (k + 1)]), threshold) *
                                          (a @ z[dimension * k:dimension * (k + 1)] + response_matrix @
-                                          z[dimension * (horizon_length + 1) + dimension * k:dimension
-                                                                                             * (
-                                                                                                     horizon_length + 1) + dimension * (
-                                                                                                     k + 1)]))).flatten())
+                                          z[dimension * (horizon_length + 1) + dimension * k:dimension *
+                                                     (horizon_length + 1) + dimension * (k + 1)]))).flatten())
             })
         return constraints
 
@@ -181,14 +180,17 @@ def plot_results(x_final, u_final, costs, time_run, threshold):
     print(f"Total execution time: {time_run:.2f}s")
 
 
-verification_task = load_predefined_task(1)
+predefined_task = 0
+verification_task = load_predefined_task(predefined_task)
+
+
 b = verification_task['goal'][0]
 
 # b_inverse = np.linalg.inv(b)
 env = AwakeSteering(task=verification_task)
-b = b * env.action_scale
-threshold = -env.threshold / env.state_scale
-N = 4  # Number of steps
+b = b * env.unwrapped.action_scale
+threshold = -env.threshold / env.unwrapped.state_scale
+N = 6  # Number of steps
 
 # print(threshold)
 

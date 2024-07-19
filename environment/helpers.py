@@ -225,7 +225,7 @@ class Awake_Benchmarking_Wrapper(Wrapper):
     def get_k_for_state(self, state):
         # invrmatrix = self.invH if self.plane == 'horizontal' else self.invV
         invrmatrix = self.invH
-        k = invrmatrix.dot(state * self.env.state_scale) * self.env.action_scale
+        k = invrmatrix.dot(state * self.env.unwrapped.state_scale) * self.env.unwrapped.action_scale
         return k
 
     def get_optimal_trajectory(self):

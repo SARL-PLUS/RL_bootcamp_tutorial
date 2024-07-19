@@ -19,9 +19,10 @@ algorithm = 'PPO'  #
 # Here we select one possible MDP out of a set of MDPs - not important at this stage
 predefined_task = 0
 verification_task = load_predefined_task(predefined_task)
+optimization_type = 'RL'
 experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(algorithm, experiment_name, 'Figures', 'verification')
-save_folder_weights = os.path.join(algorithm, experiment_name, 'Weights', 'verification')
+save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', 'verification')
+save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', 'verification')
 
 os.makedirs(save_folder_figures, exist_ok=True)
 os.makedirs(save_folder_weights, exist_ok=True)
@@ -62,7 +63,7 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
 
 # For Olga-change here
 # Train on different size of the environment
-for DoF in [5]:
+for DoF in [1]:
     env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
     if algorithm == 'TRPO':
         model = TRPO("MlpPolicy", env)
