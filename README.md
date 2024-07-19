@@ -6,11 +6,12 @@
 ## Short description of the content
 I (Simon) will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it. 
 There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL.
-Now I implement a noise study, a study of a POMDP study of the environment.
+Now I implement a noise study, a study of a POMDP environment.
+
 Part I:
    1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE 
-environement and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
-as the original environement. 
+environment and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
+as the original environment. 
    2. The script [Train_policy_gradients_off_the_shelf.py](Train_policy_gradients_off_the_shelf.py) contains the training 
    procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
    defined numer of training steps. The plot shows the statistics of the validations during the training.
