@@ -1,7 +1,10 @@
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
+
+#Todo: legend for states and actions
 
 def ep_mean_return(rewards_per_task):
     mean_returns = np.mean([np.sum(rews) for rews in rewards_per_task])
@@ -94,7 +97,7 @@ def create_trajectories(env, policy, episodes, seed_set=None):
     trajectories = []
     if seed_set is None:
         seed_set = range(episodes)
-    for seed in seed_set:
+    for seed in tqdm(seed_set, total=episodes):
         trajectory = {'observations': [], 'actions': [], 'rewards': [], 'length': 0}
         observation, info = env.reset(seed=seed)
         trajectory['observations'].append(observation.copy())

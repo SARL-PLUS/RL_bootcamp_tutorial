@@ -6,19 +6,20 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
-from environment.helpers import load_predefined_task
+from environment.helpers import load_predefined_task, load_env_config, read_yaml_file
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment.environment_awake_steering import DoFWrapper, AwakeSteering
+
 
 # Todo: Make plots interactive and add variance
 
 # Select on algorithm
-algorithm = 'TRPO'  #
+# algorithm = 'TRPO'  #
 algorithm = 'PPO'  #
 
 # Here we select one possible MDP out of a set of MDPs - not important at this stage
-predefined_task = 0
-verification_task = load_predefined_task(predefined_task)
+environment_settings = read_yaml_file('config/environment_setting.yaml')
+predefined_task = environment_settings['task_setting']['task_nr']
+
 optimization_type = 'RL'
 experiment_name = f'predefined_task_{predefined_task}'
 save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', 'verification')
@@ -63,61 +64,62 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
 
 # For Olga-change here
 # Train on different size of the environment
-for DoF in [1]:
-    env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
-    if algorithm == 'TRPO':
-        model = TRPO("MlpPolicy", env)
-    elif algorithm == 'PPO':
-        model = PPO("MlpPolicy", env)
-    else: print('Select valid algorithm')
+env = load_env_config(env_config='config/environment_setting.yaml')
+DoF = env.DoF
+verification_task = env.get_task()
+if algorithm == 'TRPO':
+    model = TRPO("MlpPolicy", env)
+elif algorithm == 'PPO':
+    model = PPO("MlpPolicy", env)
+else: print('Select valid algorithm')
 
-    success_rates, mean_rewards, x_plot = [], [], []
+success_rates, mean_rewards, x_plot = [], [], []
 
-    # For Olga-change here
-    total_steps = int(1e4)
-    nr_steps = 50
-    increments = total_steps // nr_steps
+# For Olga-change here
+total_steps = int(1e6)
+evaluation_steps = 50
+increments = total_steps // evaluation_steps
 
-    nr_validation_episodes = 10
-    seed_set = [0, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+validation_seeds = environment_settings['validation-settings']['validation-seeds']
+nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
 
-    for i in tqdm(range(0, nr_steps)):
-        num_samples = increments * i
-        save_folder_figures_individual = f'{save_folder_figures}_{DoF}_{num_samples}'
-        save_folder_weights_individual = f'{save_folder_weights}_{DoF}_{num_samples}'
-        if i > 0:
-            model.learn(total_timesteps=increments)
-        model.save(save_folder_weights_individual)
-        vec_env = model.get_env()
-        policy = lambda x: model.predict(x)[0]
-        title = f'{algorithm}_{DoF}_{num_samples} samples, threshold={env.threshold}'
-        success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy], tasks=verification_task,
-                                                                           episodes=nr_validation_episodes,
-                                                                           title=title,
-                                                                           save_folder=save_folder_figures_individual,
-                                                                           policy_labels=[algorithm], DoF=DoF,
-                                                                           nr_validation_episodes=nr_validation_episodes,
-                                                                           seed_set=seed_set)
+for i in tqdm(range(0, evaluation_steps)):
+    num_samples = increments * i
+    save_folder_figures_individual = f'{save_folder_figures}_{DoF}_{num_samples}'
+    save_folder_weights_individual = f'{save_folder_weights}_{DoF}_{num_samples}'
+    if i > 0:
+        model.learn(total_timesteps=increments)
+    model.save(save_folder_weights_individual)
+    vec_env = model.get_env()
+    policy = lambda x: model.predict(x)[0]
+    title = f'{algorithm}_{DoF}_{num_samples} samples, threshold={env.threshold}'
+    success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy], tasks=verification_task,
+                                                                       episodes=nr_validation_episodes,
+                                                                       title=title,
+                                                                       save_folder=save_folder_figures_individual,
+                                                                       policy_labels=[algorithm], DoF=DoF,
+                                                                       nr_validation_episodes=nr_validation_episodes,
+                                                                       seed_set=validation_seeds)
 
-        print(success_rate)
-        time.sleep(5)
-        success_rates.append(success_rate)
-        mean_rewards.append(mean_reward)
+    print(success_rate)
+    time.sleep(5)
+    success_rates.append(success_rate)
+    mean_rewards.append(mean_reward)
 
-        x_plot.append(num_samples)
-        plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
-                      nr_validation_episodes=nr_validation_episodes)
-
-    x = [i * increments for i in (range(0, nr_steps))]
+    x_plot.append(num_samples)
     plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
                   nr_validation_episodes=nr_validation_episodes)
 
-    model = TRPO.load(save_folder_weights_individual)
+x = [i * increments for i in (range(0, evaluation_steps))]
+plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
+              nr_validation_episodes=nr_validation_episodes)
 
-    vec_env = model.get_env()
-    policy = lambda x: model.predict(x)[0]
+model = TRPO.load(save_folder_weights_individual)
 
-    verify_external_policy_on_specific_env(env, [policy], tasks=verification_task, episodes=10, title=algorithm,
-                                           save_folder=save_folder_figures_individual, policy_labels=[algorithm],
-                                           DoF=DoF, nr_validation_episodes=nr_validation_episodes,
-                                           seed_set=seed_set)
+vec_env = model.get_env()
+policy = lambda x: model.predict(x)[0]
+
+verify_external_policy_on_specific_env(env, [policy], tasks=verification_task, episodes=10, title=algorithm,
+                                       save_folder=save_folder_figures_individual, policy_labels=[algorithm],
+                                       DoF=DoF, nr_validation_episodes=nr_validation_episodes,
+                                       seed_set=validation_seeds)

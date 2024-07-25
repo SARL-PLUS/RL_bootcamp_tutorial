@@ -1,7 +1,15 @@
 # Gaussian Process Constraints
 noise_setting:
   std_noise: none
-
+degrees-of-freedom: 4
 task_setting:
   task_location: 'environment/tasks/verification_tasks.pkl'
   task_nr: 0
+terminal-conditions:
+  MAX-TIME : 1000
+  boundary-conditions: false
+mpc-settings:
+  horizon-length: 4
+
+validation-settings:
+  validation-seeds: [0, 2, 3, 4, 5, 7, 8, 9, 10, 11]

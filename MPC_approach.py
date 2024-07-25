@@ -24,22 +24,22 @@ import os
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment.environment_awake_steering import AwakeSteering
-from environment.helpers import load_predefined_task, DoFWrapper
+from environment.helpers import load_predefined_task, DoFWrapper, read_yaml_file, get_model_parameters
+
+environment_settings = read_yaml_file('config/environment_setting.yaml')
 
 # Load a predefined task for verification
-verification_task = load_predefined_task(0)
-action_matrix = verification_task['goal'][0]
-DoF = 1  # Degrees of Freedom
-nr_validation_episodes = 10  # Number of validation episodes
-mpc_horizon = 5  # Number of steps for MPC horizon
+verification_task = load_predefined_task(environment_settings['task_setting']['task_nr'], environment_settings['task_setting']['task_location'])
+
+DoF = environment_settings['degrees-of-freedom']  # Degrees of Freedom
+validation_seeds = environment_settings['validation-settings']['validation-seeds']
+nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
+mpc_horizon = environment_settings['mpc-settings']['horizon-length'] # Number of steps for MPC horizon
 
 # Initialize the environment with the specified task and DoF
 env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
 
-# Model parameters for MPC
-action_matrix = action_matrix[:DoF, :DoF]  # Adjust action matrix according to DoF
-action_matrix_scaled = action_matrix * env.unwrapped.action_scale  # Scale the action matrix
-threshold = -env.threshold  # Define the threshold for the MPC
+action_matrix_scaled, threshold = get_model_parameters(env)
 
 # Define the policy for MPC
 policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
@@ -57,5 +57,5 @@ verify_external_policy_on_specific_env(
     save_folder=save_folder,
     policy_labels=['MPC'],
     DoF=DoF,
-    seed_set=[0, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+    seed_set=validation_seeds
 )

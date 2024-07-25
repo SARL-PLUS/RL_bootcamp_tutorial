@@ -9,7 +9,6 @@ There are several possibilities to attack the problem, and we can highlight some
 Now I implement a noise study, a study of a POMDP environment.
 
 Part I:
-
    1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE 
 environment and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
 as the original environment. 
@@ -21,12 +20,11 @@ as the original environment.
    5. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
 
 Part II:
-
    1. Elements of model-based RL
    2. Elements of data-driven MPC design and optimization
    3. Gaussian processes in a nut-shell
    4. Running GP-MPC on the AWAKE environment
-   5. Alternative advanced ideas - non-stationary, masking, 
+   5. Alternative advanced ideas - non-stationary (shifts), masking, domain randomization, domain generalisation.
 
 ## Open questions for the programmes - these are the notes I took during our discussions:
 1. MDP shaping as a part of the tutorial also as a contest?

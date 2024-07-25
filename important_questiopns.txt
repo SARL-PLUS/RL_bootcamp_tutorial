@@ -1,0 +1,1 @@
+1. Why is the validation start point allways low?

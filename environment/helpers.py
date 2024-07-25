@@ -8,9 +8,12 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import yaml
 from cpymad.madx import Madx
 from gymnasium import Wrapper
 from gymnasium import spaces
+
+from environment.environment_awake_steering import AwakeSteering
 
 
 class Plane(Enum):
@@ -18,108 +21,17 @@ class Plane(Enum):
     vertical = 1
 
 
-class MamlHelpers:
-    # init
-    def __init__(self):
-        self.twiss = self._generate_optics()
-        self.response_scale = 0.5
 
-        self.twiss_bpms = self.twiss[self.twiss["keyword"] == "monitor"]
-        self.twiss_correctors = self.twiss[self.twiss["keyword"] == "kicker"]
-
-    def _calculate_response(self, bpmsTwiss, correctorsTwiss, plane):
-        bpms = bpmsTwiss.index.values.tolist()
-        correctors = correctorsTwiss.index.values.tolist()
-        bpms.pop(0)
-        correctors.pop(-1)
-        rmatrix = np.zeros((len(bpms), len(correctors)))
-        for i, bpm in enumerate(bpms):
-            for j, corrector in enumerate(correctors):
-                if plane == Plane.horizontal:
-                    bpm_beta = bpmsTwiss.betx[bpm]
-                    corrector_beta = correctorsTwiss.betx[corrector]
-                    bpm_mu = bpmsTwiss.mux[bpm]
-                    corrector_mu = correctorsTwiss.mux[corrector]
-                else:
-                    bpm_beta = bpmsTwiss.bety[bpm]
-                    corrector_beta = correctorsTwiss.bety[corrector]
-                    bpm_mu = bpmsTwiss.muy[bpm]
-                    corrector_mu = correctorsTwiss.muy[corrector]
-
-                if bpm_mu > corrector_mu:
-                    rmatrix[i][j] = (
-                            math.sqrt(bpm_beta * corrector_beta)
-                            * math.sin((bpm_mu - corrector_mu) * 2.0 * math.pi)
-                            * self.response_scale
-                    )
-                else:
-                    rmatrix[i][j] = 0.0
-        return rmatrix
-
-    def generate_optics(self, randomize=True):
-        twiss = self._generate_optics(randomize)
-        twiss_bpms = twiss[twiss["keyword"] == "monitor"]
-        twiss_correctors = twiss[twiss["keyword"] == "kicker"]
-        responseH = self._calculate_response(
-            twiss_bpms, twiss_correctors, Plane.horizontal
-        )
-        responseV = self._calculate_response(
-            twiss_bpms, twiss_correctors, Plane.vertical
-        )
-        return responseH, responseV
-
-    def recalculate_response(self):
-        responseH = self._calculate_response(self.twiss_bpms, self.twiss_correctors, Plane.horizontal)
-        responseV = self._calculate_response(self.twiss_bpms, self.twiss_correctors, Plane.vertical)
-        return responseH, responseV
-
-    def _generate_optics(self, randomize=False):
-        OPTIONS = ["WARN"]  # ['ECHO', 'WARN', 'INFO', 'DEBUG', 'TWISS_PRINT']
-        MADX_OUT = [f"option, -{ele};" for ele in OPTIONS]
-        madx = Madx(stdout=False)
-        madx.input("\n".join(MADX_OUT))
-        tt43_ini = "environment/electron_design.mad"
-        madx.call(file=tt43_ini, chdir=True)
-        madx.use(sequence="tt43", range="#s/plasma_merge")
-        quads = {}
-        variation_range = (0.75, 1.25)
-        if randomize:
-            for ele, value in dict(madx.globals).items():
-                if "kq" in ele:
-                    # quads[ele] = value * 0.8
-                    quads[ele] = value * np.random.uniform(variation_range[0], variation_range[1], size=None)
-                    # pass
-        madx.globals.update(quads)
-        madx.input(
-            "initbeta0:beta0,BETX=5,ALFX=0,DX=0,DPX=0,BETY=5,ALFY=0,DY=0.0,DPY=0.0,x=0,px=0,y=0,py=0;"
-        )
-        twiss_cpymad = madx.twiss(beta0="initbeta0").dframe()
-
-        return twiss_cpymad
-
-    def sample_tasks(self, num_tasks):
-        # Generate goals using list comprehension for more concise code
-        goals = [self.generate_optics() for _ in range(num_tasks)]
-
-        # Create tasks with goals and corresponding IDs using list comprehension
-        tasks = [{"goal": goal, "id": idx} for idx, goal in enumerate(goals)]
-        return tasks
-
-    def get_origin_task(self, idx=0):
-        # Generate goals using list comprehension for more concise code
-        goal = self.generate_optics(randomize=False)
-        # Create tasks with goals and corresponding IDs using list comprehension
-        task = {"goal": goal, "id": idx}
-        return task
 
 
 class DoFWrapper(gym.Wrapper):
-    def __init__(self, env, DoF):
+    def __init__(self, env, DoF, **kwargs):
         super(DoFWrapper, self).__init__(env)
         self.DoF = DoF
         # self.threshold = -0.005 * DoF if (DoF <= 6) else -0.1
         self.threshold = -0.1
         self.env = env
+        (self.boundary_conditions) = kwargs.get("boundary_conditions", False)
 
         self.observation_space = spaces.Box(low=env.observation_space.low[:self.DoF],
                                             high=env.observation_space.high[:self.DoF],
@@ -143,8 +55,8 @@ class DoFWrapper(gym.Wrapper):
         # Execute the action in the environment
         observation, reward, terminated, truncated, info = self.env.step(full_action_space)
 
-        # Reset termination status and check for step limit
-        truncated = self.env.current_steps >= self.env.MAX_TIME
+        # # Reset termination status and check for step limit
+        # truncated = self.env.current_steps >= self.env.MAX_TIME
 
         # Focus only on the degrees of freedom for observations
         observation = observation[:self.DoF]
@@ -170,6 +82,8 @@ class DoFWrapper(gym.Wrapper):
             # observation = observation * self.pot_function(
             #     observation)  # Ensure observation is a NumPy array
             reward = self.env._get_reward(observation)
+            terminated = self.boundary_conditions
+
             # truncated = True  # Terminate due to the violation
         #
         return observation, reward, terminated, truncated, info
@@ -295,13 +209,7 @@ class Awake_Benchmarking_Wrapper(Wrapper):
         plt.pause(1)
 
 
-def load_predefined_task(task_nr):
-    # Define file location and name
-    verification_tasks_loc = 'environment/tasks'
-    filename = 'verification_tasks.pkl'  # Adding .pkl extension for clarity
-    # Construct the full file path
-    full_path = os.path.join(verification_tasks_loc, filename)
-
+def load_predefined_task(task_nr, full_path):
     with open(full_path, "rb") as input_file:  # Load in tasks
         tasks = pickle.load(input_file)
     return tasks[task_nr]
@@ -341,3 +249,101 @@ def plot_optimal_policy(states_opt_list, actions_opt_list, returns_opt_list, env
     plt.suptitle('Optimal Policy')
     plt.tight_layout()
     plt.show()
+
+
+def read_yaml_file(filepath):
+    """
+    Reads a YAML file and returns the data.
+
+    Args:
+    - filepath (str): The path to the YAML file.
+
+    Returns:
+    - dict: The data from the YAML file.
+    """
+    try:
+        with open(filepath, 'r') as file:
+            return yaml.safe_load(file)
+    except FileNotFoundError:
+        print("The file could not be found.")
+    except yaml.YAMLError as exc:
+        print("Error parsing YAML:", exc)
+
+
+# Model parameters for MPC from env
+def get_model_parameters(environment):
+    """
+    Extract and process model parameters from a given environment.
+
+    This function retrieves the action matrix and threshold for model predictive control (MPC)
+    from the environment's underlying attributes. It adjusts the action matrix based on the
+    degrees of freedom (DoF) and scales it appropriately.
+
+    Args:
+        environment: An environment object that should have attributes `unwrapped`, `DoF`,
+                     `action_scale`, and `threshold`.
+
+    Returns:
+        tuple: A tuple containing the scaled action matrix and the MPC threshold.
+
+    Raises:
+        AttributeError: If the necessary attributes are not found in the environment.
+    """
+    try:
+        # Extract the action matrix from the environment.
+        action_matrix = environment.unwrapped.rmatrix
+
+        # Adjust the action matrix size based on the Degrees of Freedom (DoF).
+        action_matrix_reduced = action_matrix[:environment.DoF, :environment.DoF]
+
+        # Scale the action matrix by the environment's action scale factor.
+        action_matrix_scaled = action_matrix_reduced * environment.unwrapped.action_scale
+
+        # Define the threshold for MPC, converting it to a positive value if necessary.
+        threshold = -environment.threshold if environment.threshold < 0 else environment.threshold
+
+        return action_matrix_scaled, threshold
+
+    except AttributeError as error:
+        raise AttributeError("Missing one or more required attributes from the environment: " + str(error))
+
+
+# Example usage
+# Assuming `env` is your environment object loaded with all necessary attributes.
+# action_matrix, mpc_threshold = get_model_parameters(env)
+
+class RewardScalingWrapper(gym.Wrapper):
+    def __init__(self, env, scale=1.0):
+        super().__init__(env)
+        self.scale = scale
+        self.state_scale = 1.0
+
+    def step(self, action):
+        observation, reward, done, truncated, info = self.env.step(action)
+        scaled_reward = reward * self.scale
+
+        observation = self.state_scale * observation + np.random.uniform(low=-0.001, high=0.001, size=observation.shape)
+        return observation, scaled_reward, done, truncated, info
+
+    def reset(self, **kwargs):
+        observation, info = self.env.reset(**kwargs)
+        observation = self.state_scale * observation + np.random.uniform(low=-0.001, high=0.001, size=observation.shape)
+        return observation, info
+
+
+def load_env_config(env_config='config/environment_setting.yaml'):
+    environment_settings = read_yaml_file(env_config)
+
+    # Load a predefined task for verification
+    verification_task = load_predefined_task(environment_settings['task_setting']['task_nr'],
+                                             environment_settings['task_setting']['task_location'])
+
+    DoF = environment_settings['degrees-of-freedom']  # Degrees of Freedom
+
+    MAX_TIME = environment_settings['terminal-conditions']['MAX-TIME']
+    boundary_conditions = environment_settings['terminal-conditions']['boundary-conditions']
+
+    env = DoFWrapper(AwakeSteering(task=verification_task, MAX_TIME=MAX_TIME), DoF,
+                     boundary_conditions=boundary_conditions)
+
+    return env

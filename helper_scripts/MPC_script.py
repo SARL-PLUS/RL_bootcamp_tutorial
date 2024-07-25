@@ -68,7 +68,9 @@ def predict_actions(initial_state, horizon_length, response_matrix, threshold, t
                                         (step_function(rms(z[dimension * k:dimension * (k + 1)]), threshold) *
                                          (a @ z[dimension * k:dimension * (k + 1)] + response_matrix @
                                           z[dimension * (horizon_length + 1) + dimension * k:dimension *
-                                                     (horizon_length + 1) + dimension * (k + 1)]))).flatten())
+                                                                                             (
+                                                                                                         horizon_length + 1) + dimension * (
+                                                                                                         k + 1)]))).flatten())
             })
         return constraints
 
@@ -181,40 +183,40 @@ def plot_results(x_final, u_final, costs, time_run, threshold):
     print(f"Total execution time: {time_run:.2f}s")
 
 
-predefined_task = 0
-verification_task = load_predefined_task(predefined_task)
-
-
-b = verification_task['goal'][0]
-
-# b_inverse = np.linalg.inv(b)
-env = AwakeSteering(task=verification_task)
-b = b * env.unwrapped.action_scale
-threshold = -env.threshold / env.unwrapped.state_scale
-N = 6  # Number of steps
-
-# print(threshold)
-
-tol_values = [1e-8]  # Different tol values to test
-number_of_samples = 10
-
-
-# The function to run in each parallel process
-def run_simulation(tol):
-    results = []
-    for i in range(number_of_samples):  # Modify this number based on the desired number of simulations per tol
-        x0, _ = env.reset(seed=i)
-        x0 /= env.state_scale
-        x_final, u_final, costs, rms_final, time_run = predict_actions(x0, N, b, threshold, tol=tol)
-        episode_length = sum(rms_final > threshold)
-        results.append(episode_length)
-        if i == number_of_samples - 1:
-            plot_results(x_final, u_final, costs, time_run, threshold)
-    return (tol, results)
-
-
 # Main block to execute the parallel processing
 if __name__ == "__main__":
+
+    predefined_task = 0
+    verification_task = load_predefined_task(predefined_task)
+
+    b = verification_task['goal'][0]
+
+    # b_inverse = np.linalg.inv(b)
+    env = AwakeSteering(task=verification_task)
+    b = b * env.unwrapped.action_scale
+    threshold = -env.threshold / env.unwrapped.state_scale
+    N = 6  # Number of steps
+
+    # print(threshold)
+
+    tol_values = [1e-8]  # Different tol values to test
+    number_of_samples = 10
+
+
+    # The function to run in each parallel process
+    def run_simulation(tol):
+        results = []
+        for i in range(number_of_samples):  # Modify this number based on the desired number of simulations per tol
+            x0, _ = env.reset(seed=i)
+            x0 /= env.state_scale
+            x_final, u_final, costs, rms_final, time_run = predict_actions(x0, N, b, threshold, tol=tol)
+            episode_length = sum(rms_final > threshold)
+            results.append(episode_length)
+            if i == number_of_samples - 1:
+                plot_results(x_final, u_final, costs, time_run, threshold)
+        return (tol, results)
+
+
     tol_results = {}
     with concurrent.futures.ProcessPoolExecutor() as executor:
         # Map the function over the tol_values
