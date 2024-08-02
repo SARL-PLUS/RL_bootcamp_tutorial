@@ -182,7 +182,7 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
         ax[1].legend()
 
     # Handle additional kwargs
-    title = kwargs.get('title', '') + f'- policy shown from {labels[0]}'
+    title = kwargs.get('title', '') + f' - policy shown from {labels[0]}'
     if title:
         plt.suptitle(title)
     fig.align_ylabels(ax)

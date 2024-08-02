@@ -4,46 +4,64 @@ import numpy as np
 from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 
-from environment.helpers import load_predefined_task
+from environment.helpers import load_predefined_task, read_yaml_file, load_env_config, get_model_parameters
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment.environment_awake_steering import AwakeSteering, DoFWrapper
-
-# ToDo: store the tajectories of the MPC policy
-
-predefined_task = 0
-verification_task = load_predefined_task(predefined_task)
-action_matrix = verification_task['goal'][0]
-DoF = 1
-nr_validation_episodes = 10
-env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
 
 
-# Model parameters for MPC
-action_matrix = action_matrix[:DoF, :DoF]
-action_matrix_scaled = action_matrix * env.unwrapped.action_scale * env.unwrapped.state_scale
-threshold = -env.threshold
+# ToDo: store the trajectories of the MPC policy
 
-mpc_horizon = 5  # Number of steps
-def policy_mpc(state):
-    return model_predictive_control(state, mpc_horizon, action_matrix_scaled, threshold, plot=False)
+environment_settings = read_yaml_file('config/environment_setting.yaml')
+predefined_task = environment_settings['task_setting']['task_nr']
+task_location = environment_settings['task_setting']['task_location']
 
+# # Load a predefined task for verification
+# verification_task = load_predefined_task(predefined_task, task_location)
+
+DoF = environment_settings['degrees-of-freedom']  # Degrees of Freedom
+validation_seeds = environment_settings['validation-settings']['validation-seeds']
+nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
+
+
+# Train on different size of the environment
+env = load_env_config(env_config='config/environment_setting.yaml')
+DoF = env.DoF
+verification_task = env.get_task()
+
+
+# MPC specific parameters
+mpc_horizon = environment_settings['mpc-settings']['horizon-length'] # Number of steps for MPC horizon
+action_matrix_scaled, threshold = get_model_parameters(env)
+# Define the policy for MPC
+policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
+
+# # Model parameters for MPC
+# action_matrix = action_matrix[:DoF, :DoF]
+# action_matrix_scaled = action_matrix * env.unwrapped.action_scale * env.unwrapped.state_scale
+# threshold = -env.threshold
+#
+# mpc_horizon = 5  # Number of steps
+# def policy_mpc(state):
+#     return model_predictive_control(state, mpc_horizon, action_matrix_scaled, threshold, plot=False)
 
 # Select on algorithm
-algorithm = 'TRPO'  #
+# algorithm = 'TRPO'  #
 algorithm = 'PPO'  #
 
-# Here we select one possible MDP out of a set of MDPs - not important at this stage
 optimization_type = 'RL'
 experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', 'verification')
-save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', 'verification')
+save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures')
+save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights')
 
+print(save_folder_weights)
 files = glob.glob(os.path.join(save_folder_weights, '*'))
 print(files)
 files_DoF = [file for file in files if f'verification_{DoF}' in file][-1]
 
 print(files)
+print(files_DoF)
+
+
 if algorithm == 'TRPO':
     model = TRPO.load(files_DoF)  # , verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
 else:

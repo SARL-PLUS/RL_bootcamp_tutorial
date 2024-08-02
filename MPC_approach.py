@@ -17,44 +17,54 @@ Dependencies:
 
 """
 
-# TODO: save data for accelerated verification
+# TODO: save data for accelerated verification in the verification functions
 import os
 
 # Importing required functions and classes
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 from environment.environment_awake_steering import AwakeSteering
-from environment.helpers import load_predefined_task, DoFWrapper, read_yaml_file, get_model_parameters
+from environment.helpers import load_predefined_task, DoFWrapper, read_yaml_file, get_model_parameters, load_env_config
 
 environment_settings = read_yaml_file('config/environment_setting.yaml')
+predefined_task = environment_settings['task_setting']['task_nr']
+task_location = environment_settings['task_setting']['task_location']
 
-# Load a predefined task for verification
-verification_task = load_predefined_task(environment_settings['task_setting']['task_nr'], environment_settings['task_setting']['task_location'])
+# # Load a predefined task for verification
+# verification_task = load_predefined_task(predefined_task, task_location)
 
 DoF = environment_settings['degrees-of-freedom']  # Degrees of Freedom
 validation_seeds = environment_settings['validation-settings']['validation-seeds']
 nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
+
+
+# Train on different size of the environment
+env = load_env_config(env_config='config/environment_setting.yaml')
+DoF = env.DoF
+verification_task = env.get_task()
+
+
+# MPC specific parameters
 mpc_horizon = environment_settings['mpc-settings']['horizon-length'] # Number of steps for MPC horizon
-
-# Initialize the environment with the specified task and DoF
-env = DoFWrapper(AwakeSteering(task=verification_task), DoF)
-
 action_matrix_scaled, threshold = get_model_parameters(env)
-
 # Define the policy for MPC
 policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
 
 # Create folder to save verification results
-save_folder = 'Figures/mpc_verification'
-os.makedirs(save_folder, exist_ok=True)
+# Specific for RL training
+optimization_type = 'MPC'
+experiment_name = f'predefined_task_{predefined_task}'
+save_folder_figures = os.path.join(optimization_type, experiment_name, 'Figures', 'verification')
+# save_folder_weights = os.path.join(optimization_type, experiment_name, 'Weights', 'verification')
+os.makedirs(save_folder_figures, exist_ok=True)
 
 # Verify the external policy on the specific environment
 verify_external_policy_on_specific_env(
     env, [policy_mpc],
-    tasks=verification_task,
+    # tasks=verification_task,
     episodes=nr_validation_episodes,
     title='MPC',
-    save_folder=save_folder,
+    save_folder=save_folder_figures,
     policy_labels=['MPC'],
     DoF=DoF,
     seed_set=validation_seeds

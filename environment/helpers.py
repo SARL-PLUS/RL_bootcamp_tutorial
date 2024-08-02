@@ -81,7 +81,8 @@ class DoFWrapper(gym.Wrapper):
             # Recalculate reward after modification
             # observation = observation * self.pot_function(
             #     observation)  # Ensure observation is a NumPy array
-            reward = self.env._get_reward(observation)
+            reward = self.env._get_reward(observation)*100
+            # print('reward', reward)
             terminated = self.boundary_conditions
 
             # truncated = True  # Terminate due to the violation

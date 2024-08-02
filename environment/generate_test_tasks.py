@@ -3,7 +3,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt, colors
 
-from environment.helpers import MamlHelpers
+from environment.environment_awake_steering import MamlHelpers
 
 # Define file location and name
 verification_tasks_loc = 'tasks'

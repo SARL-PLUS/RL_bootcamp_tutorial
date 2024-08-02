@@ -19,6 +19,18 @@ algorithm = 'PPO'  #
 # Here we select one possible MDP out of a set of MDPs - not important at this stage
 environment_settings = read_yaml_file('config/environment_setting.yaml')
 predefined_task = environment_settings['task_setting']['task_nr']
+task_location = environment_settings['task_setting']['task_location']
+
+# For Olga-change here
+# Train on different size of the environment
+env = load_env_config(env_config='config/environment_setting.yaml')
+DoF = env.DoF
+# verification_task = env.get_task()
+
+validation_seeds = environment_settings['validation-settings']['validation-seeds']
+nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
+
+# Specific for RL training savings
 
 optimization_type = 'RL'
 experiment_name = f'predefined_task_{predefined_task}'
@@ -62,11 +74,7 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
     plt.show()
 
 
-# For Olga-change here
-# Train on different size of the environment
-env = load_env_config(env_config='config/environment_setting.yaml')
-DoF = env.DoF
-verification_task = env.get_task()
+
 if algorithm == 'TRPO':
     model = TRPO("MlpPolicy", env)
 elif algorithm == 'PPO':
@@ -80,8 +88,7 @@ total_steps = int(1e6)
 evaluation_steps = 50
 increments = total_steps // evaluation_steps
 
-validation_seeds = environment_settings['validation-settings']['validation-seeds']
-nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
+
 
 for i in tqdm(range(0, evaluation_steps)):
     num_samples = increments * i
@@ -93,7 +100,8 @@ for i in tqdm(range(0, evaluation_steps)):
     vec_env = model.get_env()
     policy = lambda x: model.predict(x)[0]
     title = f'{algorithm}_{DoF}_{num_samples} samples, threshold={env.threshold}'
-    success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy], tasks=verification_task,
+    success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy],
+                                                                       # tasks=verification_task,
                                                                        episodes=nr_validation_episodes,
                                                                        title=title,
                                                                        save_folder=save_folder_figures_individual,
@@ -119,7 +127,9 @@ model = TRPO.load(save_folder_weights_individual)
 vec_env = model.get_env()
 policy = lambda x: model.predict(x)[0]
 
-verify_external_policy_on_specific_env(env, [policy], tasks=verification_task, episodes=10, title=algorithm,
+verify_external_policy_on_specific_env(env, [policy],
+                                       # tasks=verification_task,
+                                       episodes=10, title=algorithm,
                                        save_folder=save_folder_figures_individual, policy_labels=[algorithm],
                                        DoF=DoF, nr_validation_episodes=nr_validation_episodes,
                                        seed_set=validation_seeds)

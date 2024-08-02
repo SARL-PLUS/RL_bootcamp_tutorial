@@ -48,9 +48,7 @@ def main():
     change_list = ['memory', 'gp_init']
     for var in change_list:
         for key in params_controller_dict[var].keys():
-            print(key, params_controller_dict[var][key])
             params_controller_dict[var][key] = params_controller_dict[var][key][:DoF]
-            print(key, params_controller_dict[var][key])
 
     change_list = ['target_state_norm', 'weight_state', 'weight_state_terminal', 'target_action_norm',
                    'weight_action', 'obs_var_norm']

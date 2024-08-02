@@ -17,6 +17,7 @@ torch.set_default_dtype(torch.double)
 class GpMpcController(BaseControllerObject):
     def __init__(self, observation_space, action_space, params_dict):
         params_dict = self.preprocess_params(params_dict)
+        print('GpMpcController init', params_dict)
         self.weight_matrix_cost = \
             torch.block_diag(
                 torch.diag(params_dict['controller']['weight_state']),
@@ -73,9 +74,12 @@ class GpMpcController(BaseControllerObject):
             self.actions_pred_previous_iter = np.random.uniform(low=0, high=1,
                                                                 size=(self.len_horizon, self.num_actions))
 
+        print('Create self models', '*' * 50)
         self.models = create_models(train_inputs=None, train_targets=None, params=params_dict['gp_init'],
                                     constraints_gp=self.gp_constraints, num_models=self.obs_space.shape[0],
                                     num_inputs=self.num_inputs)
+        [print(model.state_dict()) for model in self.models]
+        print('Created self models', '*' * 50)
         for idx_model in range(len(self.models)):
             self.models[idx_model].eval()
 
@@ -300,12 +304,28 @@ class GpMpcController(BaseControllerObject):
 			beta (torch.Tensor): needed by the gaussian processes models to compute the predictions
 
 		"""
-        K = torch.stack([model.covar_module(x).evaluate() for model in models])
+
+        print('K ' * 50, x.shape)
+        num_models = len(models)
+        indices = [([idx_model] + list(range(num_models, num_models + idx_model + 1))) for idx_model in
+                   range(num_models)]
+        print('indices:', indices)
+        Ks = []
+        for idx_model in range(num_models):
+            print(idx_model, x[:, indices[idx_model]].shape)
+            Ks.append(models[idx_model].covar_module(x[:, indices[idx_model]]).evaluate())
+
+        # K = torch.stack([model.covar_module(x).evaluate() for model in models])
+        K = torch.stack(Ks)
+        print('K:', K.shape)
+
         batched_eye = torch.eye(K.shape[1]).repeat(K.shape[0], 1, 1)
         L = torch.linalg.cholesky(K + torch.stack([model.likelihood.noise for model in models])[:, None] * batched_eye)
         iK = torch.cholesky_solve(batched_eye, L)
         Y_ = (y.t())[:, :, None]
         beta = torch.cholesky_solve(Y_, L)[:, :, 0]
+        print('iK:', iK.shape)
+        print('beta:', beta.shape)
         return iK, beta
 
     def predict_next_state_change(self, state_mu, state_var, iK, beta):
@@ -330,53 +350,64 @@ class GpMpcController(BaseControllerObject):
 
 			where Ns: dimension of state, Na: dimension of action
 		"""
-        state_var = state_var[None, None, :, :].repeat([self.num_states, self.num_states, 1, 1])
-        inp = (self.x[self.idxs_mem_gp[:beta.shape[1]]] - state_mu)[None, :, :].repeat([self.num_states, 1, 1])
-        lengthscales = torch.stack([model.covar_module.base_kernel.lengthscale[0] for model in self.models])
-        variances = torch.stack([model.covar_module.outputscale for model in self.models])
-        # Calculate M and V: mean and inv(s) times input-output covariance
-        iL = torch.diag_embed(1 / lengthscales)
-        iN = inp @ iL
-        B = iL @ state_var[0, ...] @ iL + torch.eye(self.num_inputs)
+        print('iK', iK.shape)
+        print('state_var', state_var.shape)
+        for model_selected in self.models:
+            print('state_mu', state_mu.shape)
+            # state_var = state_var[None, None, :, :].repeat([self.num_states, self.num_states, 1, 1])
+            state_var = state_var[None, None, :, :]
+            print('state_var', state_var.shape)
+            # inp = (self.x[self.idxs_mem_gp[:beta.shape[1]]] - state_mu)[None, :, :].repeat([self.num_states, 1, 1]) # (x-mu)
+            inp = (self.x[self.idxs_mem_gp[:beta.shape[1]]] - state_mu)[None, :, :]
+            print('inp', inp.shape)
+            print('model.covar_module.base_kernel.lengthscale', [model.covar_module.base_kernel.lengthscale[0] for model in [model_selected]])
+            print('model.covar_module.outputscale', torch.stack([model.covar_module.outputscale for model in [model_selected]]))
+            lengthscales = torch.stack([model.covar_module.base_kernel.lengthscale[0] for model in [model_selected]])
+            variances = torch.stack([model.covar_module.outputscale for model in [model_selected]])
 
-        # Redefine iN as in^T and t --> t^T
-        # B is symmetric, so it is equivalent
-        t = torch.transpose(torch.linalg.solve(B, torch.transpose(iN, -1, -2)), -1, -2)
+            # Calculate M and V: mean and inv(s) times input-output covariance
+            iL = torch.diag_embed(1 / lengthscales)# Λ-1 sqrt matrix
+            iN = inp @ iL # (x-mu)*Λ-1/2
+            B = iL @ state_var[0, ...] @ iL + torch.eye(self.num_inputs) # |ΣΛ-1 +I| = Λ-1|Σ +Λ|
 
-        lb = torch.exp(-torch.sum(iN * t, -1) / 2) * beta
-        tiL = t @ iL
-        c = variances / torch.sqrt(torch.det(B))
+            # Redefine iN as iN^T and t --> t^T
+            # B is symmetric, so it is equivalent
+            t = torch.transpose(torch.linalg.solve(B, torch.transpose(iN, -1, -2)), -1, -2)# t=iN*B-1
 
-        M = (torch.sum(lb, -1) * c)[:, None]
-        V = torch.matmul(torch.transpose(tiL.conj(), -1, -2), lb[:, :, None])[..., 0] * c[:, None]
+            lb = torch.exp(-torch.sum(iN * t, -1) / 2) * beta # −12(xi −μ)⊤(Σ+Λ)−1(xi −μ)*beta
+            tiL = t @ iL
+            c = variances / torch.sqrt(torch.det(B)) # α2|ΣΛ−1+I|−1/2
 
-        # Calculate S: Predictive Covariance
-        R = torch.matmul(state_var, torch.diag_embed(
-            1 / torch.square(lengthscales[None, :, :]) +
-            1 / torch.square(lengthscales[:, None, :])
-        )) + torch.eye(self.num_inputs)
+            M = (torch.sum(lb, -1) * c)[:, None] # μ∗
+            V = torch.matmul(torch.transpose(tiL.conj(), -1, -2), lb[:, :, None])[..., 0] * c[:, None]
 
-        X = inp[None, :, :, :] / torch.square(lengthscales[:, None, None, :])
-        X2 = -inp[:, None, :, :] / torch.square(lengthscales[None, :, None, :])
-        Q = torch.linalg.solve(R, state_var) / 2
-        Xs = torch.sum(X @ Q * X, -1)
-        X2s = torch.sum(X2 @ Q * X2, -1)
-        maha = -2 * torch.matmul(torch.matmul(X, Q), torch.transpose(X2.conj(), -1, -2)) + Xs[:, :, :, None] + X2s[:, :,
-                                                                                                               None, :]
+            # Calculate S: Predictive Covariance
+            R = torch.matmul(state_var, torch.diag_embed(
+                1 / torch.square(lengthscales[None, :, :]) +
+                1 / torch.square(lengthscales[:, None, :])
+            )) + torch.eye(self.num_inputs)
 
-        k = torch.log(variances)[:, None] - torch.sum(torch.square(iN), -1) / 2
-        L = torch.exp(k[:, None, :, None] + k[None, :, None, :] + maha)
-        temp = beta[:, None, None, :].repeat([1, self.num_states, 1, 1]) @ L
-        S = (temp @ beta[None, :, :, None].repeat([self.num_states, 1, 1, 1]))[:, :, 0, 0]
+            X = inp[None, :, :, :] / torch.square(lengthscales[:, None, None, :])
+            X2 = -inp[:, None, :, :] / torch.square(lengthscales[None, :, None, :])
+            Q = torch.linalg.solve(R, state_var) / 2
+            Xs = torch.sum(X @ Q * X, -1)
+            X2s = torch.sum(X2 @ Q * X2, -1)
+            maha = -2 * torch.matmul(torch.matmul(X, Q), torch.transpose(X2.conj(), -1, -2)) + Xs[:, :, :, None] + X2s[:, :,
+                                                                                                                   None, :]
 
-        diagL = torch.Tensor.permute(torch.diagonal(torch.Tensor.permute(L, dims=(3, 2, 1, 0)), dim1=-2, dim2=-1),
-                                     dims=(2, 1, 0))
-        S = S - torch.diag_embed(torch.sum(torch.mul(iK, diagL), [1, 2]))
-        S = S / torch.sqrt(torch.det(R))
-        S = S + torch.diag_embed(variances)
-        S = S - M @ torch.transpose(M, -1, -2)
+            k = torch.log(variances)[:, None] - torch.sum(torch.square(iN), -1) / 2
+            L = torch.exp(k[:, None, :, None] + k[None, :, None, :] + maha)
+            temp = beta[:, None, None, :].repeat([1, self.num_states, 1, 1]) @ L
+            S = (temp @ beta[None, :, :, None].repeat([self.num_states, 1, 1, 1]))[:, :, 0, 0]
 
-        return M.t(), S, V.t()
+            diagL = torch.Tensor.permute(torch.diagonal(torch.Tensor.permute(L, dims=(3, 2, 1, 0)), dim1=-2, dim2=-1),
+                                         dims=(2, 1, 0))
+            S = S - torch.diag_embed(torch.sum(torch.mul(iK, diagL), [1, 2]))
+            S = S / torch.sqrt(torch.det(R))
+            S = S + torch.diag_embed(variances)
+            S = S - M @ torch.transpose(M, -1, -2)
+
+        return aM.t(), S, V.t()
 
     def predict_trajectory(self, actions, obs_mu, obs_var, iK, beta):
         """
@@ -789,7 +820,10 @@ class GpMpcController(BaseControllerObject):
         start_time = time.time()
         # create models, which is necessary since this function is used in a parallel process
         # that do not share memory with the principal process
+        print('Create models for training', '*' * 50)
+        print('parameters', parameters)
         models = create_models(train_inputs, train_targets, parameters, constraints_hyperparams)
+        print('Created models for training', '*' * 50)
         best_outputscales = [model.covar_module.outputscale.detach() for model in models]
         best_noises = [model.likelihood.noise.detach() for model in models]
         best_lengthscales = [model.covar_module.base_kernel.lengthscale.detach() for model in models]
@@ -845,6 +879,7 @@ class GpMpcController(BaseControllerObject):
                         loss.backward()
                         torch.nn.utils.clip_grad_value_(models[model_idx].parameters(), clip_grad_value)
                         return loss
+
                     loss = optimizer.step(closure)
                     if print_train and i % step_print_train == 0:
                         lengthscale = models[model_idx].covar_module.base_kernel.lengthscale.detach().numpy()
