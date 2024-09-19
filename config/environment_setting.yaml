@@ -4,15 +4,19 @@ noise_setting:
 init_scaling: 0.9
 action_scale: 1.0
 degrees-of-freedom: 1
-task_setting:
-  task_location: 'environment/tasks/verification_tasks.pkl'
-  task_nr: 0
+
 terminal-conditions:
   MAX-TIME : 1000
   boundary-conditions: true
 mpc-settings:
   horizon-length: 8
 rl-settings:
-  algorithm: 'PPO'
+  algorithm: 'PPO' # 'TRPO' ... from stable baselines
+
+# Advanced settings
+# don't touch this if not necessary
 validation-settings:
   validation-seeds: [0, 2, 3, 4, 5, 7, 8, 11, 12, 14]
+task_setting:
+  task_location: 'environment/tasks/verification_tasks.pkl'
+  task_nr: 0

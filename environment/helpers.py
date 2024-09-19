@@ -44,7 +44,6 @@ class DoFWrapper(gym.Wrapper):
         self.boundary_conditions = kwargs.get("boundary_conditions", False)
         self.env.init_scaling = kwargs.get("init_scaling", 1.0)
         self.action_scale = kwargs.get("action_scale", 1.0)
-        print('self.action_scale: ', self.action_scale)
 
 
         # Modify the action and observation spaces

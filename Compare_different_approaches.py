@@ -34,31 +34,6 @@ action_matrix_scaled, threshold = get_model_parameters(env)
 # Define the policy for MPC
 policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
 
-# Select on algorithm
-# algorithm = 'TRPO'  #
-algorithm = 'PPO'  #
-
-optimization_type = 'RL'
-experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', f'Dof_{DoF}', 'Comparison')
-save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', f'Dof_{DoF}')
-
-files = glob.glob(os.path.join(save_folder_weights, '*'))
-files.sort()
-latest_model_file = files[-1]
-print(latest_model_file)
-
-
-if algorithm == 'TRPO':
-    model = TRPO.load(latest_model_file)  # , verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
-else:
-    model = PPO.load(latest_model_file)
-
-vec_env = model.get_env()
-
-def policy_ppo(state):
- return model.predict(state, deterministic=True)[0]
-
 b_inv = np.linalg.inv(action_matrix_scaled)
 def policy_response_matrix(state):
     action = -b_inv @ state
@@ -67,20 +42,55 @@ def policy_response_matrix(state):
         action = action / action_abs_max
     return action
 
+experiment_name = f'predefined_task_{predefined_task}'
 
-save_folder = save_folder_figures
+# Create the save folder for figures
+save_folder = os.path.join('Comparing', experiment_name, 'Figures', f'Dof_{DoF}', 'Comparison')
 os.makedirs(save_folder, exist_ok=True)
+
+# Define the save folder for results
 save_folder_results = os.path.join('MPC', experiment_name, 'MPC_results', f'Dof_{DoF}')
 save_folder_name_results = os.path.join(save_folder_results, 'MPC_results.pkl')
 
-# verify_external_policy_on_specific_env(env, [policy_mpc, policy_ppo, policy_response_matrix], tasks=verification_task,
-#                                        episodes=nr_validation_episodes, title=f'MPC vs. {algorithm} vs analytical approach', save_folder=save_folder+'_1',
-#                                        policy_labels=['MPC', algorithm, 'Response_matrix'], DoF=DoF)
+# Check if save_folder_name_results exists
+if not os.path.exists(save_folder_name_results):
+    raise FileNotFoundError(f"The results file does not exist: {save_folder_name_results}")
 
-verify_external_policy_on_specific_env_regret(env, ['policy_mpc_stored', 'policy_mpc_stored', policy_ppo], policy_benchmark='policy_mpc_stored', tasks=verification_task,
-                                       episodes=nr_validation_episodes, title=f'Regret to MPC of {algorithm} and analytical approach', save_folder=save_folder+'_2',
-                                       policy_labels=['Response_matrix',  'MPC', algorithm], DoF=DoF, save_results=save_folder_name_results)
-#
-# verify_external_policy_on_specific_env(env, [policy_response_matrix, policy_ppo, policy_mpc], tasks=verification_task,
-#                                        episodes=nr_validation_episodes, title=f'MPC vs. {algorithm} vs analytical approach', save_folder=save_folder+'_3',
-#                                        policy_labels=['Response_matrix', algorithm, 'MPC'], DoF=DoF)
+# If it exists, you can proceed with your operations on save_folder_name_results
+print(f"Results file found: {save_folder_name_results}")
+
+
+optimization_type = 'RL'
+
+
+# Select on algorithm
+
+algorithm = environment_settings['rl-settings']['algorithm']
+
+# Construct the save folder path for weights
+save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', f'Dof_{DoF}')
+
+# Get the list of files in the weights folder
+files = glob.glob(os.path.join(save_folder_weights, '*'))
+files.sort()
+
+# Check if there are any files found
+if not files:
+    raise FileNotFoundError(f"No model files found in {save_folder_weights} to load. Run training (Train_policy_gradients_off_the_shelf.py)!")
+
+# Get the latest model file
+latest_model_file = files[-1]
+print(f"Loading the latest model from: {latest_model_file}")
+
+# Load the model
+if algorithm == 'TRPO':
+    model = TRPO.load(latest_model_file)  # , verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
+else:
+    model = PPO.load(latest_model_file)
+
+def policy_rl_agent(state):
+ return model.predict(state, deterministic=True)[0]
+
+verify_external_policy_on_specific_env_regret(env, ['policy_mpc_stored', 'policy_mpc_stored', policy_rl_agent], policy_benchmark='policy_mpc_stored', tasks=verification_task,
+                                              episodes=nr_validation_episodes, title=f'Regret to MPC of {algorithm} and analytical approach', save_folder=save_folder+'_2',
+                                              policy_labels=[algorithm, 'MPC', 'Response_matrix'], DoF=DoF, save_results=save_folder_name_results)
