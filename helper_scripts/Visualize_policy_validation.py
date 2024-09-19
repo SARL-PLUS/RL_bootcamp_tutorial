@@ -83,10 +83,11 @@ def plot_rewards(ax, ax_twin, rewards_per_task, success_rates, color, label=None
 def plot_regrets(ax, ax_twin, rewards_per_task,  rewards_per_task_benchmark, success_rates, color, label=None):
     for i in range(len(rewards_per_task)):
         ep_returns = np.array([np.sum(r) for r in rewards_per_task[i]])
-        rewards_per_task_benchmark = np.array([np.sum(r) for r in rewards_per_task_benchmark[i]])
+        ep_returns_benchmark = np.array([np.sum(r) for r in rewards_per_task_benchmark[i]])
+        print(label, ep_returns, ep_returns_benchmark)
         # x = np.linspace(0, len(ep_returns), len(ep_returns))
         x = np.arange(len(ep_returns))
-        ax.plot(x, rewards_per_task_benchmark-ep_returns, label=f"Regret Task {i} - {label}", drawstyle='steps',
+        ax.plot(x, ep_returns_benchmark-ep_returns, label=f"Regret Task {i} - {label}", drawstyle='steps',
                 color=color)
     color = 'tab:red'
     ax_twin.plot(x, success_rates, c=color, drawstyle='steps')
@@ -168,8 +169,8 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
     success_rates, mean_rewards = [], []
     for i, policy in enumerate(policies):
         label = labels[i]
-        if policy == 'policy_mpc_stored' and 'save_results' in kwargs:
-            save_folder_name_results = kwargs['save_results']
+        if policy == 'policy_mpc_stored' and 'read_results' in kwargs:
+            save_folder_name_results = kwargs['read_results']
             # Load the dictionary from the file using pickle
             with open(save_folder_name_results, "rb") as f:
                 save_dict = pickle.load(f)
@@ -263,8 +264,8 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
     ax1_twin = ax[1].twinx()
     ax2_twin = ax[2].twinx()
 
-    if policy_benchmark == 'policy_mpc_stored' and 'save_results' in kwargs:
-        save_location_name_results = kwargs['save_results']
+    if policy_benchmark == 'policy_mpc_stored' and 'read_results' in kwargs:
+        save_location_name_results = kwargs['read_results']
         # Load the dictionary from the file using pickle
         with open(save_location_name_results, "rb") as f:
             save_dict = pickle.load(f)
@@ -283,8 +284,8 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
     success_rates, mean_rewards = [], []
     for i, policy in enumerate(policies):
         label = labels[i]
-        if policy == 'policy_mpc_stored' and 'save_results' in kwargs:
-            save_location_name_results = kwargs['save_results']
+        if policy == 'policy_mpc_stored' and 'read_results' in kwargs:
+            save_location_name_results = kwargs['read_results']
             # Load the dictionary from the file using pickle
             with open(save_location_name_results, "rb") as f:
                 save_dict = pickle.load(f)
@@ -296,7 +297,8 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
 
         else:
             rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = test_policy(env, policy,
-                                                                                               episodes, seed_set=seed_set)
+                                                                                               episodes,
+                                                                                               seed_set=seed_set)
 
         if 'save_results' in kwargs:
             save_location_name_results = kwargs['save_results']
@@ -319,7 +321,7 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
 
         # Plot actions and states
         if i == 0:
-            print('Plotting actions and states', i)
+            print('Plotting actions and states', label)
             plot_actions_states(ax[4], actions_per_task, "Actions", ep_len_per_task)
             ax[4].set_ylabel("Actions")
             ax[4].set_xlabel("Step")
@@ -331,6 +333,7 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
             ax[2].set_ylim(-1, 0)
 
         # Plot episode lengths
+        print('Plot episode lengths', label, ep_len_per_task)
         plot_episode_lengths(ax[0], ax0_twin, ep_len_per_task, label=label, color=colors_for_different_appoaches[i])
         ax[0].set_ylabel("Ep. lengths")
         ax[0].legend()
@@ -338,6 +341,7 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
         # Plot regrets
         plot_regrets(ax[1], ax1_twin, rewards_per_task, rewards_per_task_benchmark, success_rate_per_tasks, label=label,
                      color=colors_for_different_appoaches[i])
+
         ax[1].set_ylabel("Regret")
         ax[1].set_xlabel("Episode")
         ax[1].legend()

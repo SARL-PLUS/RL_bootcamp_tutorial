@@ -86,8 +86,8 @@ else:
 success_rates, mean_rewards, x_plot = [], [], []
 
 # For Olga-change here
-total_steps = int(2e5)
-evaluation_steps = 10
+total_steps = int(5e4)
+evaluation_steps = 50
 increments = total_steps // evaluation_steps
 
 for i in tqdm(range(0, evaluation_steps)):

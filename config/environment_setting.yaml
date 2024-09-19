@@ -3,13 +3,16 @@ noise_setting:
   std_noise: none
 init_scaling: 0.9
 action_scale: 1.0
-degrees-of-freedom: 1
+
+degrees-of-freedom: 5
 
 terminal-conditions:
   MAX-TIME : 1000
   boundary-conditions: true
+
 mpc-settings:
   horizon-length: 8
+
 rl-settings:
   algorithm: 'PPO' # 'TRPO' ... from stable baselines
 

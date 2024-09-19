@@ -1,6 +1,13 @@
 # Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
 ## Closer to real worl applications
-[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova, Catherine Laflamme, Thomas Gallien
+[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu
+
+## Todo: 
+* Marius PPO Challenge - hyperparameter model and so on...
+* Simon and Catherine tomorrow
+* Simon Deep Dive
+* Final round weekend
+
 
 ## [The online slides for the tutorial](https://sarl-plus.github.io/RL-Bootcamp-slides/)
 ## Short description of the content

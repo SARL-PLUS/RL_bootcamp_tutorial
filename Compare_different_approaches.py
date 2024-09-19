@@ -4,6 +4,7 @@ import os
 import numpy as np
 from sb3_contrib import TRPO
 from stable_baselines3 import PPO
+from torch.backends.cudnn import benchmark
 
 from environment.helpers import read_yaml_file, load_env_config, get_model_parameters
 from helper_scripts.MPC_script import model_predictive_control
@@ -91,6 +92,11 @@ else:
 def policy_rl_agent(state):
  return model.predict(state, deterministic=True)[0]
 
-verify_external_policy_on_specific_env_regret(env, ['policy_mpc_stored', 'policy_mpc_stored', policy_rl_agent], policy_benchmark='policy_mpc_stored', tasks=verification_task,
-                                              episodes=nr_validation_episodes, title=f'Regret to MPC of {algorithm} and analytical approach', save_folder=save_folder+'_2',
-                                              policy_labels=[algorithm, 'MPC', 'Response_matrix'], DoF=DoF, save_results=save_folder_name_results)
+policy_benchmark = 'policy_mpc_stored'
+verify_external_policy_on_specific_env_regret(env, [policy_rl_agent, 'policy_mpc_stored'],
+                                              policy_benchmark='policy_mpc_stored',
+                                              tasks=verification_task, episodes=nr_validation_episodes,
+                                              title=f'Regret to {policy_benchmark} of {algorithm}',
+                                              save_folder=save_folder+'_2',
+                                              policy_labels=[algorithm, 'MPC'],
+                                              DoF=DoF, read_results=save_folder_name_results)
