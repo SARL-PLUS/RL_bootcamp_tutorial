@@ -12,17 +12,16 @@ Dependencies:
 - matplotlib for plotting results.
 - concurrent.futures for parallel execution.
 """
-import os
-import pickle
+import concurrent.futures
 import time
+
+import matplotlib.pyplot as plt
 # import autograd.numpy as np
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-import concurrent.futures
 
 from environment.environment_awake_steering import AwakeSteering
-from environment.helpers import load_predefined_task
+from environment.helpers import load_predefined_task, DoFWrapper, read_yaml_file, load_env_config
 
 
 def rms(x):
@@ -80,7 +79,6 @@ def predict_actions(initial_state, horizon_length, response_matrix, threshold, t
         (-control_bounds, control_bounds)] * dimension * horizon_length  # No bounds on states, [-1, 1] on controls
 
     # Start timing for total execution
-    start_total = time.time()
     costs = []
     rms_run = []  # List to store RMS values for each run
 
@@ -97,7 +95,7 @@ def predict_actions(initial_state, horizon_length, response_matrix, threshold, t
         constraints=create_constraints(),
         bounds=bounds,
         method='SLSQP',
-        options={'disp': disp, 'maxiter': 1000},
+        options={'disp': disp, 'maxiter': 5000},
         tol=tol,
         callback=callback
     )
@@ -183,68 +181,3 @@ def plot_results(x_final, u_final, costs, time_run, threshold):
     print(f"Total execution time: {time_run:.2f}s")
 
 
-# Main block to execute the parallel processing
-if __name__ == "__main__":
-
-    predefined_task = 0
-    verification_task = load_predefined_task(predefined_task)
-
-    b = verification_task['goal'][0]
-
-    # b_inverse = np.linalg.inv(b)
-    env = AwakeSteering(task=verification_task)
-    b = b * env.unwrapped.action_scale
-    threshold = -env.threshold / env.unwrapped.state_scale
-    N = 6  # Number of steps
-
-    # print(threshold)
-
-    tol_values = [1e-8]  # Different tol values to test
-    number_of_samples = 10
-
-
-    # The function to run in each parallel process
-    def run_simulation(tol):
-        results = []
-        for i in range(number_of_samples):  # Modify this number based on the desired number of simulations per tol
-            x0, _ = env.reset(seed=i)
-            x0 /= env.state_scale
-            x_final, u_final, costs, rms_final, time_run = predict_actions(x0, N, b, threshold, tol=tol)
-            episode_length = sum(rms_final > threshold)
-            results.append(episode_length)
-            if i == number_of_samples - 1:
-                plot_results(x_final, u_final, costs, time_run, threshold)
-        return (tol, results)
-
-
-    tol_results = {}
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        # Map the function over the tol_values
-        future_to_tol = {executor.submit(run_simulation, tol): tol for tol in tol_values}
-        for future in concurrent.futures.as_completed(future_to_tol):
-            tol = future_to_tol[future]
-            try:
-                result = future.result()
-                tol_results[result[0]] = result[1]
-            except Exception as exc:
-                print(f"{tol} generated an exception: {exc}")
-
-    # Calculate statistics for each tol value
-    mean_episode_lengths = {tol: np.mean(lengths) for tol, lengths in tol_results.items()}
-    std_episode_lengths = {tol: np.std(lengths) for tol, lengths in tol_results.items()}
-
-    # Display the results or plot as required
-    plt.figure(figsize=(10, 5))
-    plt.errorbar(tol_values, [mean_episode_lengths[tol] for tol in tol_values],
-                 yerr=[std_episode_lengths[tol] for tol in tol_values], fmt='-o')
-    plt.xscale('log')
-    plt.title('Episode Lengths vs tol')
-    plt.xlabel('tol')
-    plt.ylabel('Mean Episode Length')
-    plt.grid(True)
-    plt.show()
-
-    # Print statistics
-    for tol in tol_values:
-        print(f"tol: {tol:.1e}, Mean Episode Length: {mean_episode_lengths[tol]:.2f}, "
-              f"Standard Deviation: {std_episode_lengths[tol]:.2f}")

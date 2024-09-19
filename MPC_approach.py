@@ -20,11 +20,10 @@ Dependencies:
 # TODO: save data for accelerated verification in the verification functions
 import os
 
+from environment.helpers import read_yaml_file, get_model_parameters, load_env_config
 # Importing required functions and classes
 from helper_scripts.MPC_script import model_predictive_control
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
-from environment.environment_awake_steering import AwakeSteering
-from environment.helpers import load_predefined_task, DoFWrapper, read_yaml_file, get_model_parameters, load_env_config
 
 environment_settings = read_yaml_file('config/environment_setting.yaml')
 predefined_task = environment_settings['task_setting']['task_nr']
@@ -40,8 +39,6 @@ nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
 
 # Train on different size of the environment
 env = load_env_config(env_config='config/environment_setting.yaml')
-DoF = env.DoF
-verification_task = env.get_task()
 
 
 # MPC specific parameters
@@ -54,18 +51,21 @@ policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_sc
 # Specific for RL training
 optimization_type = 'MPC'
 experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(optimization_type, experiment_name, 'Figures', 'verification')
+save_folder_figures = os.path.join(optimization_type, experiment_name, 'Figures', f'Dof_{DoF}')
+save_folder_results = os.path.join(optimization_type, experiment_name, 'MPC_results', f'Dof_{DoF}')
+save_folder_name_results = os.path.join(save_folder_results, 'MPC_results.pkl')
 # save_folder_weights = os.path.join(optimization_type, experiment_name, 'Weights', 'verification')
 os.makedirs(save_folder_figures, exist_ok=True)
+os.makedirs(save_folder_results, exist_ok=True)
 
 # Verify the external policy on the specific environment
 verify_external_policy_on_specific_env(
     env, [policy_mpc],
-    # tasks=verification_task,
     episodes=nr_validation_episodes,
     title='MPC',
     save_folder=save_folder_figures,
     policy_labels=['MPC'],
     DoF=DoF,
-    seed_set=validation_seeds
+    seed_set=validation_seeds,
+    save_results=save_folder_name_results
 )

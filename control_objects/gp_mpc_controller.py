@@ -1,14 +1,89 @@
 import multiprocessing
 import time
+from typing import Tuple
 
 import gpytorch
 import numpy as np
 import torch
-import torch.multiprocessing as mp
-from scipy.optimize import basinhopping, minimize, shgo
+from scipy.optimize import minimize
 
-from control_objects.abstract_control_obj import BaseControllerObject
-from utils.utils import create_models
+from control_objects.utils import create_models
+
+import gpytorch
+
+
+class ExactGPModelMonoTask(gpytorch.models.ExactGP):
+    """
+    A single-task Exact Gaussian Process Model using GPyTorch.
+
+    Parameters:
+    - train_x (Tensor): Training input data.
+    - train_y (Tensor): Training target data.
+    - dim_input (int): Dimensionality of the input features.
+    - likelihood (gpytorch.likelihoods.Likelihood, optional): Gaussian likelihood function. Defaults to GaussianLikelihood.
+    - kernel (gpytorch.kernels.Kernel, optional): Covariance kernel. Defaults to RBFKernel with ARD.
+    """
+
+    def __init__(self, train_x, train_y, dim_input, likelihood=None, kernel=None):
+        likelihood = (
+            likelihood
+            if likelihood is not None
+            else gpytorch.likelihoods.GaussianLikelihood()
+        )
+        super().__init__(train_x, train_y, likelihood)
+
+        self.mean_module = gpytorch.means.ZeroMean()
+        self.covar_module = (
+            kernel
+            if kernel is not None
+            else gpytorch.kernels.ScaleKernel(
+                gpytorch.kernels.RBFKernel(ard_num_dims=dim_input)
+            )
+        )
+
+    def forward(self, x):
+        """
+        Performs a forward pass through the model.
+
+        Parameters:
+        - x (Tensor): Input data for prediction.
+
+        Returns:
+        - MultivariateNormal: Predictive distribution.
+        """
+        mean_x = self.mean_module(x)
+        covar_x = self.covar_module(x)
+        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+
+class BaseControllerObject:
+    def __init__(
+        self, observation_space, action_space, n_points_init_memory=1000
+    ):
+        self.action_space = action_space
+        self.obs_space = observation_space
+        self.num_states = self.obs_space.shape[0]
+        self.num_actions = action_space.shape[0]
+        self.num_inputs = self.num_states + self.num_actions
+        self.points_add_mem_when_full = n_points_init_memory
+        # if use_time:
+        #     self.num_inputs += 1
+        self.x = torch.empty(n_points_init_memory, self.num_inputs)
+        self.y = torch.empty(n_points_init_memory, self.num_states)
+        self.rewards = torch.empty(n_points_init_memory)
+
+        self.len_mem = 0
+
+    def add_memory(self, observation, action, new_observation, reward, **kwargs):
+        raise NotImplementedError()
+
+    def compute_action(self, observation, s_observation):
+        raise NotImplementedError()
+
+    def train(self):
+        raise NotImplementedError()
+
+
 
 # precision double tensor necessary for the gaussian processes predictions
 torch.set_default_dtype(torch.double)
@@ -16,8 +91,8 @@ torch.set_default_dtype(torch.double)
 
 class GpMpcController(BaseControllerObject):
     def __init__(self, observation_space, action_space, params_dict):
+
         params_dict = self.preprocess_params(params_dict)
-        print('GpMpcController init', params_dict)
         self.weight_matrix_cost = \
             torch.block_diag(
                 torch.diag(params_dict['controller']['weight_state']),
@@ -27,13 +102,14 @@ class GpMpcController(BaseControllerObject):
         self.target_state_norm = params_dict['controller']['target_state_norm']
         self.target_state_action_norm = torch.cat(
             (self.target_state_norm, params_dict['controller']['target_action_norm']))
-        self.limit_action_change = params_dict['controller']['limit_action_change']
-        self.max_change_action_norm = np.array(params_dict['controller']['max_change_action_norm'])
-        self.clip_lower_bound_cost_to_0 = params_dict['controller']['clip_lower_bound_cost_to_0']
-        self.num_repeat_actions = params_dict['controller']['num_repeat_actions']
+        # self.limit_action_change = params_dict['controller']['limit_action_change']
+        # self.max_change_action_norm = np.array(params_dict['controller']['max_change_action_norm'])
+        # self.clip_lower_bound_cost_to_0 = params_dict['controller']['clip_lower_bound_cost_to_0']
+        # self.num_repeat_actions = params_dict['controller']['num_repeat_actions']
         self.len_horizon = params_dict['controller']['len_horizon']
         self.exploration_factor = params_dict['controller']['exploration_factor']
         self.obs_var_norm = torch.diag(params_dict['controller']['obs_var_norm'])
+        self.barrier_weight = params_dict['controller']['barrier_weight']
 
         self.lr_train = params_dict['train']['lr_train']
         self.iter_train = params_dict['train']['iter_train']
@@ -46,8 +122,8 @@ class GpMpcController(BaseControllerObject):
 
         BaseControllerObject.__init__(self, observation_space, action_space)
 
-        self.error_pred_memory = params_dict['memory']['min_error_prediction_state_for_memory']
-        self.std_pred_memory = params_dict['memory']['min_prediction_state_std_for_memory']
+        # self.error_pred_memory = params_dict['memory']['min_error_prediction_state_for_memory']
+        # self.std_pred_memory = params_dict['memory']['min_prediction_state_std_for_memory']
 
         self.gp_constraints = params_dict['gp_constraints']
         self.state_min = None
@@ -62,24 +138,21 @@ class GpMpcController(BaseControllerObject):
         # The definition of bounds are then different in that case and
         # changes in action will be postprocessed to get the absolute action.
         # Initial values of the optimized values are also different
-        if self.limit_action_change:
-            self.bounds = \
-                [(-self.max_change_action_norm[idx_action], self.max_change_action_norm[idx_action]) \
-                 for idx_action in range(self.action_space.shape[0])] * self.len_horizon
-            self.actions_pred_previous_iter = \
-                np.dot(np.expand_dims(np.random.uniform(low=-1, high=1, size=(self.len_horizon)), 1),
-                       np.expand_dims(self.max_change_action_norm, 0))
-        else:
-            self.bounds = [(0, 1)] * self.num_actions * self.len_horizon
-            self.actions_pred_previous_iter = np.random.uniform(low=0, high=1,
-                                                                size=(self.len_horizon, self.num_actions))
+        # if self.limit_action_change:
+        #     self.bounds = \
+        #         [(-self.max_change_action_norm[idx_action], self.max_change_action_norm[idx_action]) \
+        #          for idx_action in range(self.action_space.shape[0])] * self.len_horizon
+        #     self.actions_pred_previous_iter = \
+        #         np.dot(np.expand_dims(np.random.uniform(low=-1, high=1, size=(self.len_horizon)), 1),
+        #                np.expand_dims(self.max_change_action_norm, 0))
+        # else:
+        self.bounds = [(0, 1)] * self.num_actions * self.len_horizon
+        self.actions_pred_previous_iter = np.random.uniform(low=0, high=1,
+                                                            size=(self.len_horizon, self.num_actions))
 
-        print('Create self models', '*' * 50)
         self.models = create_models(train_inputs=None, train_targets=None, params=params_dict['gp_init'],
                                     constraints_gp=self.gp_constraints, num_models=self.obs_space.shape[0],
                                     num_inputs=self.num_inputs)
-        [print(model.state_dict()) for model in self.models]
-        print('Created self models', '*' * 50)
         for idx_model in range(len(self.models)):
             self.models[idx_model].eval()
 
@@ -114,8 +187,7 @@ class GpMpcController(BaseControllerObject):
             params_dict['controller']['weight_state_terminal'])
         params_dict['controller']['target_action_norm'] = torch.Tensor(params_dict['controller']['target_action_norm'])
         params_dict['controller']['weight_action'] = torch.Tensor(params_dict['controller']['weight_action'])
-        # params_dict['constraints_states']['state_min'] = torch.Tensor(params_dict['constraints_states']['state_min'])
-        # params_dict['constraints_states']['state_max'] = torch.Tensor(params_dict['constraints_states']['state_max'])
+
         for key in params_dict['gp_init']:
             if type(params_dict['gp_init'][key]) != float and type(params_dict['gp_init'][key]) != int:
                 params_dict['gp_init'][key] = torch.Tensor(params_dict['gp_init'][key])
@@ -123,14 +195,7 @@ class GpMpcController(BaseControllerObject):
         for key in params_dict['gp_constraints']:
             if type(params_dict['gp_constraints'][key]) != float and type(params_dict['gp_constraints'][key]) != int:
                 params_dict['gp_constraints'][key] = torch.Tensor(params_dict['gp_constraints'][key])
-
-        params_dict['memory']['min_error_prediction_state_for_memory'] = \
-            torch.Tensor(params_dict['memory']['min_error_prediction_state_for_memory'])
-        params_dict['memory']['min_prediction_state_std_for_memory'] = \
-            torch.Tensor(params_dict['memory']['min_prediction_state_std_for_memory'])
-
         params_dict['controller']['obs_var_norm'] = torch.Tensor(params_dict['controller']['obs_var_norm'])
-
         return params_dict
 
     def to_normed_obs_tensor(self, obs):
@@ -190,69 +255,201 @@ class GpMpcController(BaseControllerObject):
         action = action_norm * (self.action_space.high - self.action_space.low) + self.action_space.low
         return action
 
-    def compute_cost(self, state_mu, state_var, action):
+    def barrier_cost(self, state, alpha):
+        # Ensure numerical stability by adding a small epsilon
+        epsilon = 1e-6
+        state = torch.clamp(state, epsilon, 1 - epsilon)
+        return -alpha * (torch.log(state) + torch.log(1 - state)).sum(-1)
+
+    def compute_cost(self, state_mu: torch.Tensor, state_var: torch.Tensor, action: torch.Tensor) -> Tuple[
+        torch.Tensor, torch.Tensor]:
         """
-		Compute the quadratic cost of one state distribution or a trajectory of states distributions
-		given the mean value and variance of states (observations), the weight matrix, and target state.
-		The state, state_var and action must be normalized.
-		If reading directly from the gym env observation,
-		this can be done with the gym env action space and observation space.
-		See an example of normalization in the add_points_memory function.
-		Args:
-			state_mu (torch.Tensor): normed mean value of the state or observation distribution
-									(elements between 0 and 1). dim=(Ns) or dim=(Np, Ns)
-			state_var (torch.Tensor): normed variance matrix of the state or observation distribution
-										(elements between 0 and 1)
-										dim=(Ns, Ns) or dim=(Np, Ns, Ns)
-			action (torch.Tensor): normed actions. (elements between 0 and 1).
-									dim=(Na) or dim=(Np, Na)
+        Compute the mean and variance of the quadratic cost function for given state and action distributions.
 
-			Np: length of the prediction trajectory. (=self.len_horizon)
-			Na: dimension of the gym environment actions
-			Ns: dimension of the gym environment states
+        The cost function is defined as:
 
-		Returns:
-			cost_mu (torch.Tensor): mean value of the cost distribution. dim=(1) or dim=(Np)
-			cost_var (torch.Tensor): variance of the cost distribution. dim=(1) or dim=(Np)
-		"""
+            cost = (x - x_target)^T * W * (x - x_target)
 
-        if state_var.ndim == 3:
-            error = torch.cat((state_mu, action), 1) - self.target_state_action_norm
-            state_action_var = torch.cat((
-                torch.cat((state_var, torch.zeros((state_var.shape[0], state_var.shape[1], action.shape[1]))), 2),
-                torch.zeros((state_var.shape[0], action.shape[1], state_var.shape[1] + action.shape[1]))), 1)
-        else:
-            error = torch.cat((state_mu, action), 0) - self.target_state_action_norm
-            state_action_var = torch.block_diag(state_var, torch.zeros((action.shape[0], action.shape[0])))
-        cost_mu = torch.diagonal(torch.matmul(state_action_var, self.weight_matrix_cost),
-                                 dim1=-1, dim2=-2).sum(-1) + \
-                  torch.matmul(torch.matmul(error[..., None].transpose(-1, -2), self.weight_matrix_cost),
-                               error[..., None]).squeeze()
-        TS = self.weight_matrix_cost @ state_action_var
-        cost_var_term1 = torch.diagonal(2 * TS @ TS, dim1=-1, dim2=-2).sum(-1)
-        cost_var_term2 = TS @ self.weight_matrix_cost
-        cost_var_term3 = (4 * error[..., None].transpose(-1, -2) @ cost_var_term2 @ error[..., None]).squeeze()
-        cost_var = cost_var_term1 + cost_var_term3
+        where:
+        - x is the concatenation of state and action variables.
+        - x_target is the target state-action vector.
+        - W is the weight matrix (self.weight_matrix_cost).
+
+        Given that the state and action are random variables characterized by their means and variances,
+        this function computes the mean and variance of the cost.
+
+        Parameters:
+        - state_mu (torch.Tensor): Mean of the state(s). Shape (Ns,) or (Np, Ns)
+        - state_var (torch.Tensor): Covariance matrix of the state(s). Shape (Ns, Ns) or (Np, Ns, Ns)
+        - action (torch.Tensor): Action(s). Shape (Na,) or (Np, Na)
+
+        Returns:
+        - cost_mu (torch.Tensor): Mean of the cost distribution. Shape (1,) or (Np,)
+        - cost_var (torch.Tensor): Variance of the cost distribution. Shape (1,) or (Np,)
+        """
+
+        # Determine if we're working with a single time-step or a trajectory
+        single_timestep = state_var.ndim == 2  # state_var shape (Ns, Ns)
+
+        if single_timestep:
+            # Reshape inputs to add batch dimension for uniform processing
+            state_mu = state_mu.unsqueeze(0)  # Shape: (1, Ns)
+            state_var = state_var.unsqueeze(0)  # Shape: (1, Ns, Ns)
+            action = action.unsqueeze(0)  # Shape: (1, Na)
+
+        Np = state_mu.shape[0]  # Number of prediction steps (batch size)
+        Ns = state_mu.shape[1]  # State dimension
+        Na = action.shape[1]  # Action dimension
+
+        # Concatenate state and action means to form x_mu
+        x_mu = torch.cat((state_mu, action), dim=1)  # Shape: (Np, Ns + Na)
+
+        # Compute error between current state-action and target
+        x_target = self.target_state_action_norm  # Expected shape: (Ns + Na,)
+        error = x_mu - x_target  # Shape: (Np, Ns + Na)
+
+        # Construct the covariance matrix for the state-action
+        # Since action variance is zero (actions are deterministic), we can construct a block diagonal matrix
+        # with state_var and zeros for the action variance
+        state_action_var = torch.zeros((Np, Ns + Na, Ns + Na), device=state_var.device, dtype=state_var.dtype)
+        state_action_var[:, :Ns, :Ns] = state_var  # Shape: (Np, Ns + Na, Ns + Na)
+
+        # Weight matrix W for the cost function
+        W = self.weight_matrix_cost  # Shape: (Ns + Na, Ns + Na)
+
+        # Compute the expected cost (mean of the cost)
+        # E[cost] = trace(W * state_action_var) + error^T * W * error
+
+        # First term: trace(W * state_action_var)
+        # Using torch.einsum for efficient computation
+        trace_term = torch.einsum('bii->b', W @ state_action_var)  # Shape: (Np,)
+
+        # Second term: error^T * W * error
+        error = error.unsqueeze(-1)  # Shape: (Np, Ns + Na, 1)
+        quadratic_term = (error.transpose(-2, -1) @ W @ error).squeeze(-1).squeeze(-1)  # Shape: (Np,)
+
+        # Total expected cost
+        cost_mu = trace_term + quadratic_term  # Shape: (Np,)
+
+        # Compute barrier cost
+        alpha = self.barrier_weight  # You can define this parameter
+        barrier = self.barrier_cost(state_mu, alpha)
+        # Total cost mean
+        cost_mu = cost_mu + barrier
+
+        # Compute the variance of the cost
+        # Var[cost] = 2 * sum over i,j of (TS_ij)^2 + 4 * error^T * W * state_action_var * W * error
+
+        # Compute TS = W @ state_action_var
+        TS = W @ state_action_var  # Shape: (Np, Ns + Na, Ns + Na)
+
+        # First variance term: 2 * sum of squares of TS elements
+        trace_var_term = 2 * (TS ** 2).sum(dim=(-2, -1))  # Shape: (Np,)
+
+        # Second variance term: 4 * (error^T @ W @ state_action_var @ W @ error)
+        var_quadratic_term = 4 * (error.transpose(-2, -1) @ W @ state_action_var @ W @ error).squeeze(-1).squeeze(
+            -1)  # Shape: (Np,)
+
+        # Total variance of the cost
+        cost_var = trace_var_term + var_quadratic_term  # Shape: (Np,)
+
+        if single_timestep:
+            # Remove batch dimension for single time-step inputs
+            cost_mu = cost_mu.squeeze(0)  # Shape: ()
+            cost_var = cost_var.squeeze(0)  # Shape: ()
+
         return cost_mu, cost_var
 
-    def compute_cost_terminal(self, state_mu, state_var):
+    def compute_cost_terminal(self, state_mu: torch.Tensor, state_var: torch.Tensor) -> Tuple[
+        torch.Tensor, torch.Tensor]:
         """
-		Compute the terminal cost of the prediction trajectory.
-		Args:
-			state_mu (torch.Tensor): mean value of the terminal state distribution. dim=(Ns)
-			state_var (torch.Tensor): variance matrix of the terminal state distribution. dim=(Ns, Ns)
+        Compute the mean and variance of the terminal cost for given state distributions.
 
-		Returns:
-			cost_mu (torch.Tensor): mean value of the cost distribution. dim=(1)
-			cost_var (torch.Tensor): variance of the cost distribution. dim=(1)
-		"""
-        error = state_mu - self.target_state_norm
-        cost_mu = torch.trace(torch.matmul(state_var, self.weight_matrix_cost_terminal)) + \
-                  torch.matmul(torch.matmul(error.t(), self.weight_matrix_cost_terminal), error)
-        TS = self.weight_matrix_cost_terminal @ state_var
-        cost_var_term1 = torch.trace(2 * TS @ TS)
-        cost_var_term2 = 4 * error.t() @ TS @ self.weight_matrix_cost_terminal @ error
-        cost_var = cost_var_term1 + cost_var_term2
+        The terminal cost is defined as:
+
+            cost = (x - x_target)^T * W * (x - x_target)
+
+        where:
+        - x is the state variable.
+        - x_target is the target state vector.
+        - W is the weight matrix (self.weight_matrix_cost_terminal).
+
+        Given that the state is a random variable characterized by its mean and covariance,
+        this function computes the mean and variance of the cost.
+
+        Parameters:
+        - state_mu (torch.Tensor): Mean of the terminal state(s). Shape (Ns,) or (Np, Ns)
+        - state_var (torch.Tensor): Covariance matrix of the terminal state(s). Shape (Ns, Ns) or (Np, Ns, Ns)
+
+        Returns:
+        - cost_mu (torch.Tensor): Mean of the cost distribution. Shape (1,) or (Np,)
+        - cost_var (torch.Tensor): Variance of the cost distribution. Shape (1,) or (Np,)
+        """
+
+        # Ensure inputs are tensors
+        state_mu = torch.as_tensor(state_mu)
+        state_var = torch.as_tensor(state_var)
+
+        # Determine if we're working with a single state or batch of states
+        single_timestep = state_mu.ndim == 1  # state_mu shape (Ns,)
+
+        if single_timestep:
+            # Reshape inputs to add batch dimension for uniform processing
+            state_mu = state_mu.unsqueeze(0)  # Shape: (1, Ns)
+            state_var = state_var.unsqueeze(0)  # Shape: (1, Ns, Ns)
+
+        Np = state_mu.shape[0]  # Number of samples (batch size)
+        Ns = state_mu.shape[1]  # State dimension
+
+        # Target state vector
+        x_target = self.target_state_norm  # Shape: (Ns,)
+        x_target = x_target.unsqueeze(0) if x_target.ndim == 1 else x_target  # Ensure shape is (1, Ns)
+
+        # Compute error vector
+        error = state_mu - x_target  # Shape: (Np, Ns)
+
+        # Weight matrix W for the cost function
+        W = self.weight_matrix_cost_terminal  # Shape: (Ns, Ns)
+
+        # Compute expected cost (mean of the cost)
+        # E[cost] = trace(W * state_var) + error^T * W * error
+
+        # First term: trace(W @ state_var)
+        # W @ state_var: shape (Np, Ns, Ns)
+        TS = W @ state_var  # Shape: (Np, Ns, Ns)
+        trace_term = torch.einsum('bii->b', TS)  # Shape: (Np,)
+
+        # Second term: error^T * W * error
+        error = error.unsqueeze(-1)  # Shape: (Np, Ns, 1)
+        quadratic_term = (error.transpose(-2, -1) @ W @ error).squeeze(-1).squeeze(-1)  # Shape: (Np,)
+
+        # Total expected cost
+        cost_mu = trace_term + quadratic_term  # Shape: (Np,)
+        
+        alpha = self.barrier_weight  # You can define this parameter
+        barrier = self.barrier_cost(state_mu, alpha)
+        # Total cost mean
+        cost_mu = cost_mu + barrier
+
+        # Compute the variance of the cost
+        # Var[cost] = 2 * tr((W * state_var)^2) + 4 * error^T * W * state_var * W * error
+
+        # First variance term: 2 * trace((TS)^2)
+        var_term1 = 2 * torch.einsum('bij,bji->b', TS, TS)  # Shape: (Np,)
+
+        # Second variance term: 4 * error^T * W * state_var * W * error
+        W_error = W @ error  # Shape: (Np, Ns, 1)
+        temp = W @ state_var @ W_error  # Shape: (Np, Ns, 1)
+        var_term2 = 4 * (error.transpose(-2, -1) @ temp).squeeze(-1).squeeze(-1)  # Shape: (Np,)
+
+        # Total variance of the cost
+        cost_var = var_term1 + var_term2  # Shape: (Np,)
+
+        if single_timestep:
+            # Remove batch dimension for single time-step inputs
+            cost_mu = cost_mu.squeeze(0)  # Shape: ()
+            cost_var = cost_var.squeeze(0)  # Shape: ()
+
         return cost_mu, cost_var
 
     def compute_cost_unnormalized(self, obs, action, obs_var=None):
@@ -304,28 +501,12 @@ class GpMpcController(BaseControllerObject):
 			beta (torch.Tensor): needed by the gaussian processes models to compute the predictions
 
 		"""
-
-        print('K ' * 50, x.shape)
-        num_models = len(models)
-        indices = [([idx_model] + list(range(num_models, num_models + idx_model + 1))) for idx_model in
-                   range(num_models)]
-        print('indices:', indices)
-        Ks = []
-        for idx_model in range(num_models):
-            print(idx_model, x[:, indices[idx_model]].shape)
-            Ks.append(models[idx_model].covar_module(x[:, indices[idx_model]]).evaluate())
-
-        # K = torch.stack([model.covar_module(x).evaluate() for model in models])
-        K = torch.stack(Ks)
-        print('K:', K.shape)
-
+        K = torch.stack([model.covar_module(x).evaluate() for model in models])
         batched_eye = torch.eye(K.shape[1]).repeat(K.shape[0], 1, 1)
         L = torch.linalg.cholesky(K + torch.stack([model.likelihood.noise for model in models])[:, None] * batched_eye)
         iK = torch.cholesky_solve(batched_eye, L)
         Y_ = (y.t())[:, :, None]
         beta = torch.cholesky_solve(Y_, L)[:, :, 0]
-        print('iK:', iK.shape)
-        print('beta:', beta.shape)
         return iK, beta
 
     def predict_next_state_change(self, state_mu, state_var, iK, beta):
@@ -350,64 +531,53 @@ class GpMpcController(BaseControllerObject):
 
 			where Ns: dimension of state, Na: dimension of action
 		"""
-        print('iK', iK.shape)
-        print('state_var', state_var.shape)
-        for model_selected in self.models:
-            print('state_mu', state_mu.shape)
-            # state_var = state_var[None, None, :, :].repeat([self.num_states, self.num_states, 1, 1])
-            state_var = state_var[None, None, :, :]
-            print('state_var', state_var.shape)
-            # inp = (self.x[self.idxs_mem_gp[:beta.shape[1]]] - state_mu)[None, :, :].repeat([self.num_states, 1, 1]) # (x-mu)
-            inp = (self.x[self.idxs_mem_gp[:beta.shape[1]]] - state_mu)[None, :, :]
-            print('inp', inp.shape)
-            print('model.covar_module.base_kernel.lengthscale', [model.covar_module.base_kernel.lengthscale[0] for model in [model_selected]])
-            print('model.covar_module.outputscale', torch.stack([model.covar_module.outputscale for model in [model_selected]]))
-            lengthscales = torch.stack([model.covar_module.base_kernel.lengthscale[0] for model in [model_selected]])
-            variances = torch.stack([model.covar_module.outputscale for model in [model_selected]])
+        state_var = state_var[None, None, :, :].repeat([self.num_states, self.num_states, 1, 1])
+        inp = (self.x[self.idxs_mem_gp[:beta.shape[1]]] - state_mu)[None, :, :].repeat([self.num_states, 1, 1])
+        lengthscales = torch.stack([model.covar_module.base_kernel.lengthscale[0] for model in self.models])
+        variances = torch.stack([model.covar_module.outputscale for model in self.models])
+        # Calculate M and V: mean and inv(s) times input-output covariance
+        iL = torch.diag_embed(1 / lengthscales)
+        iN = inp @ iL
+        B = iL @ state_var[0, ...] @ iL + torch.eye(self.num_inputs)
 
-            # Calculate M and V: mean and inv(s) times input-output covariance
-            iL = torch.diag_embed(1 / lengthscales)# Λ-1 sqrt matrix
-            iN = inp @ iL # (x-mu)*Λ-1/2
-            B = iL @ state_var[0, ...] @ iL + torch.eye(self.num_inputs) # |ΣΛ-1 +I| = Λ-1|Σ +Λ|
+        # Redefine iN as iN^T and t --> t^T
+        # B is symmetric, so it is equivalent
+        t = torch.transpose(torch.linalg.solve(B, torch.transpose(iN, -1, -2)), -1, -2)
 
-            # Redefine iN as iN^T and t --> t^T
-            # B is symmetric, so it is equivalent
-            t = torch.transpose(torch.linalg.solve(B, torch.transpose(iN, -1, -2)), -1, -2)# t=iN*B-1
+        lb = torch.exp(-torch.sum(iN * t, -1) / 2) * beta
+        tiL = t @ iL
+        c = variances / torch.sqrt(torch.det(B))
 
-            lb = torch.exp(-torch.sum(iN * t, -1) / 2) * beta # −12(xi −μ)⊤(Σ+Λ)−1(xi −μ)*beta
-            tiL = t @ iL
-            c = variances / torch.sqrt(torch.det(B)) # α2|ΣΛ−1+I|−1/2
+        M = (torch.sum(lb, -1) * c)[:, None]
+        V = torch.matmul(torch.transpose(tiL.conj(), -1, -2), lb[:, :, None])[..., 0] * c[:, None]
 
-            M = (torch.sum(lb, -1) * c)[:, None] # μ∗
-            V = torch.matmul(torch.transpose(tiL.conj(), -1, -2), lb[:, :, None])[..., 0] * c[:, None]
+        # Calculate S: Predictive Covariance
+        R = torch.matmul(state_var, torch.diag_embed(
+            1 / torch.square(lengthscales[None, :, :]) +
+            1 / torch.square(lengthscales[:, None, :])
+        )) + torch.eye(self.num_inputs)
 
-            # Calculate S: Predictive Covariance
-            R = torch.matmul(state_var, torch.diag_embed(
-                1 / torch.square(lengthscales[None, :, :]) +
-                1 / torch.square(lengthscales[:, None, :])
-            )) + torch.eye(self.num_inputs)
+        X = inp[None, :, :, :] / torch.square(lengthscales[:, None, None, :])
+        X2 = -inp[:, None, :, :] / torch.square(lengthscales[None, :, None, :])
+        Q = torch.linalg.solve(R, state_var) / 2
+        Xs = torch.sum(X @ Q * X, -1)
+        X2s = torch.sum(X2 @ Q * X2, -1)
+        maha = -2 * torch.matmul(torch.matmul(X, Q), torch.transpose(X2.conj(), -1, -2)) + Xs[:, :, :, None] + X2s[:, :,
+                                                                                                               None, :]
 
-            X = inp[None, :, :, :] / torch.square(lengthscales[:, None, None, :])
-            X2 = -inp[:, None, :, :] / torch.square(lengthscales[None, :, None, :])
-            Q = torch.linalg.solve(R, state_var) / 2
-            Xs = torch.sum(X @ Q * X, -1)
-            X2s = torch.sum(X2 @ Q * X2, -1)
-            maha = -2 * torch.matmul(torch.matmul(X, Q), torch.transpose(X2.conj(), -1, -2)) + Xs[:, :, :, None] + X2s[:, :,
-                                                                                                                   None, :]
+        k = torch.log(variances)[:, None] - torch.sum(torch.square(iN), -1) / 2
+        L = torch.exp(k[:, None, :, None] + k[None, :, None, :] + maha)
+        temp = beta[:, None, None, :].repeat([1, self.num_states, 1, 1]) @ L
+        S = (temp @ beta[None, :, :, None].repeat([self.num_states, 1, 1, 1]))[:, :, 0, 0]
 
-            k = torch.log(variances)[:, None] - torch.sum(torch.square(iN), -1) / 2
-            L = torch.exp(k[:, None, :, None] + k[None, :, None, :] + maha)
-            temp = beta[:, None, None, :].repeat([1, self.num_states, 1, 1]) @ L
-            S = (temp @ beta[None, :, :, None].repeat([self.num_states, 1, 1, 1]))[:, :, 0, 0]
+        diagL = torch.Tensor.permute(torch.diagonal(torch.Tensor.permute(L, dims=(3, 2, 1, 0)), dim1=-2, dim2=-1),
+                                     dims=(2, 1, 0))
+        S = S - torch.diag_embed(torch.sum(torch.mul(iK, diagL), [1, 2]))
+        S = S / torch.sqrt(torch.det(R))
+        S = S + torch.diag_embed(variances)
+        S = S - M @ torch.transpose(M, -1, -2)
 
-            diagL = torch.Tensor.permute(torch.diagonal(torch.Tensor.permute(L, dims=(3, 2, 1, 0)), dim1=-2, dim2=-1),
-                                         dims=(2, 1, 0))
-            S = S - torch.diag_embed(torch.sum(torch.mul(iK, diagL), [1, 2]))
-            S = S / torch.sqrt(torch.det(R))
-            S = S + torch.diag_embed(variances)
-            S = S - M @ torch.transpose(M, -1, -2)
-
-        return aM.t(), S, V.t()
+        return M.t(), S, V.t()
 
     def predict_trajectory(self, actions, obs_mu, obs_var, iK, beta):
         """
@@ -539,16 +709,16 @@ class GpMpcController(BaseControllerObject):
         actions = torch.Tensor(actions)
         actions.requires_grad = True
         # If limit_action_change is true, actions are transformed back into absolute values from relative change
-        if self.limit_action_change:
-            actions_input = actions.clone()
-            actions_input[0] = self.action_previous_iter + actions_input[0]
-            actions_input = torch.clamp(torch.cumsum(actions_input, dim=0), 0, 1)
-        else:
-            actions_input = actions
+        # if self.limit_action_change:
+        #     actions_input = actions.clone()
+        #     actions_input[0] = self.action_previous_iter + actions_input[0]
+        #     actions_input = torch.clamp(torch.cumsum(actions_input, dim=0), 0, 1)
+        # else:
+        actions_input = actions
         mu_states_pred, s_states_pred, costs_traj, costs_traj_var, costs_traj_lcb = \
             self.predict_trajectory(actions_input, obs_mu, obs_var, iK, beta)
-        if self.clip_lower_bound_cost_to_0:
-            costs_traj_lcb = torch.clamp(costs_traj_lcb, 0, np.inf)
+        # if self.clip_lower_bound_cost_to_0:
+        #     costs_traj_lcb = torch.clamp(costs_traj_lcb, 0, np.inf)
         mean_cost_traj_lcb = costs_traj_lcb.mean()
         gradients_dcost_dactions = torch.autograd.grad(mean_cost_traj_lcb, actions, retain_graph=False)[0]
 
@@ -629,24 +799,24 @@ class GpMpcController(BaseControllerObject):
             # If the action is multidimensional, it is resized to a 1d array and passed into the minimize function as
             # a 1d array. The init values and bounds must match the dimension of the passed array.
             # It is reshaped inside the minimize function to get back the true dimensions
-            if self.limit_action_change:
-                init_actions_optim_absolute = np.empty_like(init_actions_optim)
-                init_actions_optim_absolute[0] = self.action_previous_iter
-                init_actions_optim_absolute += init_actions_optim
-                init_actions_optim_absolute = np.cumsum(init_actions_optim_absolute, axis=0)
-                if np.logical_or(np.any(init_actions_optim_absolute > 1),
-                                 np.any(init_actions_optim_absolute < 0)):
-                    for idx_time in range(1, len(init_actions_optim)):
-                        init_actions_optim_absolute[idx_time] = init_actions_optim_absolute[idx_time - 1] + \
-                                                                init_actions_optim[idx_time]
-                        indexes_above_1 = np.nonzero(init_actions_optim_absolute[idx_time] > 1)[0]
-                        indexes_under_0 = np.nonzero(init_actions_optim_absolute[idx_time] < 0)[0]
-                        init_actions_optim[idx_time][indexes_above_1] = \
-                            1 - init_actions_optim_absolute[idx_time - 1][indexes_above_1]
-                        init_actions_optim[idx_time][indexes_under_0] = \
-                            - init_actions_optim_absolute[idx_time - 1][indexes_under_0]
-                        init_actions_optim_absolute[idx_time][indexes_above_1] = 1
-                        init_actions_optim_absolute[idx_time][indexes_under_0] = 0
+            # if self.limit_action_change:
+            #     init_actions_optim_absolute = np.empty_like(init_actions_optim)
+            #     init_actions_optim_absolute[0] = self.action_previous_iter
+            #     init_actions_optim_absolute += init_actions_optim
+            #     init_actions_optim_absolute = np.cumsum(init_actions_optim_absolute, axis=0)
+            #     if np.logical_or(np.any(init_actions_optim_absolute > 1),
+            #                      np.any(init_actions_optim_absolute < 0)):
+            #         for idx_time in range(1, len(init_actions_optim)):
+            #             init_actions_optim_absolute[idx_time] = init_actions_optim_absolute[idx_time - 1] + \
+            #                                                     init_actions_optim[idx_time]
+            #             indexes_above_1 = np.nonzero(init_actions_optim_absolute[idx_time] > 1)[0]
+            #             indexes_under_0 = np.nonzero(init_actions_optim_absolute[idx_time] < 0)[0]
+            #             init_actions_optim[idx_time][indexes_above_1] = \
+            #                 1 - init_actions_optim_absolute[idx_time - 1][indexes_above_1]
+            #             init_actions_optim[idx_time][indexes_under_0] = \
+            #                 - init_actions_optim_absolute[idx_time - 1][indexes_under_0]
+            #             init_actions_optim_absolute[idx_time][indexes_above_1] = 1
+            #             init_actions_optim_absolute[idx_time][indexes_under_0] = 0
 
             init_actions_optim = init_actions_optim.flatten()
         # The optimize function from the scipy library.
@@ -670,13 +840,13 @@ class GpMpcController(BaseControllerObject):
         self.actions_pred_previous_iter = actions_norm.copy()
 
         with torch.no_grad():
-            if self.limit_action_change:
-                actions_norm[0] += np.array(self.action_previous_iter)
-                actions_norm = np.clip(np.cumsum(actions_norm, axis=0), 0, 1)
-                action_next = actions_norm[0]
-                self.action_previous_iter = torch.Tensor(action_next)
-            else:
-                action_next = actions_norm[0]
+            # if self.limit_action_change:
+            #     actions_norm[0] += np.array(self.action_previous_iter)
+            #     actions_norm = np.clip(np.cumsum(actions_norm, axis=0), 0, 1)
+            #     action_next = actions_norm[0]
+            #     self.action_previous_iter = torch.Tensor(action_next)
+            # else:
+            action_next = actions_norm[0]
 
             actions_norm = torch.Tensor(actions_norm)
             action = self.denorm_action(action_next)
@@ -694,7 +864,8 @@ class GpMpcController(BaseControllerObject):
                          'cost': cost.item(), 'cost std': cost_var.sqrt().item(),
                          'predicted costs': self.costs_trajectory[1:],
                          'predicted costs std': self.costs_traj_var[1:].sqrt(),
-                         'mean predicted cost': np.min([self.costs_trajectory[1:].mean().item(), 3]),
+                         # 'mean predicted cost': np.min([self.costs_trajectory[1:].mean().item(), 3]),
+                         'mean predicted cost': self.costs_trajectory[1:].mean().item(),
                          'mean predicted cost std': self.costs_traj_var[1:].sqrt().mean().item(),
                          'lower bound mean predicted cost': self.cost_traj_mean_lcb.item()}
             for key in info_dict.keys():
@@ -702,10 +873,11 @@ class GpMpcController(BaseControllerObject):
                     self.info_iters[key] = [info_dict[key]]
                 else:
                     self.info_iters[key].append(info_dict[key])
-            self.n_iter_ctrl += self.num_repeat_actions
+            self.n_iter_ctrl += 1#self.num_repeat_actions
             return action, info_dict
 
-    def add_memory(self, obs, action, obs_new, reward, check_storage=True,
+    def add_memory(self, obs, action, obs_new, reward,
+                   # check_storage=True,
                    predicted_state=None, predicted_state_std=None):
         """
 		Add an observation, action and observation after applying the action to the memory that is used
@@ -756,13 +928,13 @@ class GpMpcController(BaseControllerObject):
         #     self.x[self.len_mem, -1] = self.n_iter_obs
 
         store_gp_mem = True
-        if check_storage:
-            if predicted_state is not None:
-                error_prediction = torch.abs(predicted_state - obs_new_norm)
-                store_gp_mem = torch.any(error_prediction > self.error_pred_memory)
-
-            if predicted_state_std is not None and store_gp_mem:
-                store_gp_mem = torch.any(predicted_state_std > self.std_pred_memory)
+        # if check_storage:
+        #     if predicted_state is not None:
+        #         error_prediction = torch.abs(predicted_state - obs_new_norm)
+        #         store_gp_mem = torch.any(error_prediction > self.error_pred_memory)
+        #
+        #     if predicted_state_std is not None and store_gp_mem:
+        #         store_gp_mem = torch.any(predicted_state_std > self.std_pred_memory)
 
         if store_gp_mem:
             self.idxs_mem_gp.append(self.len_mem)
@@ -820,23 +992,15 @@ class GpMpcController(BaseControllerObject):
         start_time = time.time()
         # create models, which is necessary since this function is used in a parallel process
         # that do not share memory with the principal process
-        print('Create models for training', '*' * 50)
-        print('parameters', parameters)
         models = create_models(train_inputs, train_targets, parameters, constraints_hyperparams)
-        print('Created models for training', '*' * 50)
         best_outputscales = [model.covar_module.outputscale.detach() for model in models]
         best_noises = [model.likelihood.noise.detach() for model in models]
         best_lengthscales = [model.covar_module.base_kernel.lengthscale.detach() for model in models]
         previous_losses = torch.empty(len(models))
 
         for model_idx in range(len(models)):
-            print('train_inputs[0]', model_idx, models[model_idx].train_inputs[0])
             output = models[model_idx](models[model_idx].train_inputs[0])
-            print('output: ', output)
             mll = gpytorch.mlls.ExactMarginalLogLikelihood(models[model_idx].likelihood, models[model_idx])
-
-            print('mll', mll)
-            print('train_targets: ', models[model_idx].train_targets)
             previous_losses[model_idx] = -mll(output, models[model_idx].train_targets)
 
         best_losses = previous_losses.detach().clone()
@@ -879,7 +1043,6 @@ class GpMpcController(BaseControllerObject):
                         loss.backward()
                         torch.nn.utils.clip_grad_value_(models[model_idx].parameters(), clip_grad_value)
                         return loss
-
                     loss = optimizer.step(closure)
                     if print_train and i % step_print_train == 0:
                         lengthscale = models[model_idx].covar_module.base_kernel.lengthscale.detach().numpy()
@@ -897,14 +1060,14 @@ class GpMpcController(BaseControllerObject):
             except Exception as e:
                 print(e)
 
-            print(
-                'training process - model %d - time train %f - output_scale: %s - lengthscales: %s - noise: %s' % (
-                    model_idx, time.time() - start_time, str(best_outputscales[model_idx].detach().numpy()),
-                    str(best_lengthscales[model_idx].detach().numpy()),
-                    str(best_noises[model_idx].detach().numpy())))
+            # print(
+            #     'training process - model %d - time train %f - output_scale: %s - lengthscales: %s - noise: %s' % (
+            #         model_idx, time.time() - start_time, str(best_outputscales[model_idx].detach().numpy()),
+            #         str(best_lengthscales[model_idx].detach().numpy()),
+            #         str(best_noises[model_idx].detach().numpy())))
 
-        print('training process - previous marginal log likelihood: %s - new marginal log likelihood: %s' %
-              (str(previous_losses.detach().numpy()), str(best_losses.detach().numpy())))
+        # print('training process - previous marginal log likelihood: %s - new marginal log likelihood: %s' %
+        #       (str(previous_losses.detach().numpy()), str(best_losses.detach().numpy())))
         params_dict_list = []
         for model_idx in range(len(models)):
             params_dict_list.append({

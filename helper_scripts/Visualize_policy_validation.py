@@ -1,8 +1,15 @@
+import os
+import pickle
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
+colors = plt.cm.rainbow(np.linspace(0, 1, 10))
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=[color for color in colors])
+colors_for_different_appoaches = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                                  '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 #Todo: legend for states and actions
 
@@ -21,11 +28,12 @@ def ep_success_rates(rewards_per_task, threshold):
     return success_rate
 
 
-def plot_episode_lengths(ax, ax_twin, ep_len_per_task, label=None):
+def plot_episode_lengths(ax, ax_twin, ep_len_per_task, color, label=None):
     for i, ep_len in enumerate(ep_len_per_task):
         x = np.arange(len(ep_len))
-        ax.plot(x, ep_len, label=f"Len Task {i} - {label}", drawstyle='steps')
-        ax_twin.plot(x, np.cumsum(ep_len), label=f"Len Task {i} - {label}", ls=':', drawstyle='steps')
+        ax.plot(x, ep_len, label=f"Len Task {i} - {label}", drawstyle='steps', color=color)
+        ax_twin.plot(x, np.cumsum(ep_len), label=f"Len Task {i} - {label}", ls=':', drawstyle='steps',
+                     color=color)
     ax_twin.set_ylabel('Cumulative episode length')
 
 
@@ -59,14 +67,30 @@ def plot_rms_states(ax, ax_twin, data_per_task, label, ep_len_per_task, rewards_
         ax.set_xlim(-1, cumulative_lengths[-1])
 
 
-def plot_rewards(ax, ax_twin, rewards_per_task, success_rates, label=None):
+def plot_rewards(ax, ax_twin, rewards_per_task, success_rates, color, label=None):
     for i, rews in enumerate(rewards_per_task):
         ep_returns = [np.sum(r) for r in rews]
-        x = np.linspace(0, len(ep_returns), len(ep_returns))
-        ax.plot(x, ep_returns, label=f"Reward Task {i} - {label}", drawstyle='steps')
+        # x = np.linspace(0, len(ep_returns), len(ep_returns))
+        x = np.arange(len(ep_returns))
+        ax.plot(x, ep_returns, label=f"Reward Task {i} - {label}", drawstyle='steps', color=color)
     color = 'tab:red'
     ax_twin.plot(x, success_rates, c=color, drawstyle='steps')
-    ax_twin.set_ylabel('Success Rate', color=color)
+    ax_twin.set_ylabel('Success', color=color)
+    ax_twin.tick_params(axis='y', labelcolor=color)
+    ax_twin.set_ylim(-0.1, 1.1)
+
+
+def plot_regrets(ax, ax_twin, rewards_per_task,  rewards_per_task_benchmark, success_rates, color, label=None):
+    for i in range(len(rewards_per_task)):
+        ep_returns = np.array([np.sum(r) for r in rewards_per_task[i]])
+        rewards_per_task_benchmark = np.array([np.sum(r) for r in rewards_per_task_benchmark[i]])
+        # x = np.linspace(0, len(ep_returns), len(ep_returns))
+        x = np.arange(len(ep_returns))
+        ax.plot(x, rewards_per_task_benchmark-ep_returns, label=f"Regret Task {i} - {label}", drawstyle='steps',
+                color=color)
+    color = 'tab:red'
+    ax_twin.plot(x, success_rates, c=color, drawstyle='steps')
+    ax_twin.set_ylabel('Success', color=color)
     ax_twin.tick_params(axis='y', labelcolor=color)
     ax_twin.set_ylim(-0.1, 1.1)
 
@@ -120,10 +144,7 @@ def create_trajectories(env, policy, episodes, seed_set=None):
 
 def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs):
     labels = kwargs['policy_labels']
-    DoF = kwargs['DoF'] if 'DoF' in kwargs else 10
     seed_set = kwargs['seed_set'] if 'seed_set' in kwargs else None
-    colors = plt.cm.rainbow(np.linspace(0, 1, DoF))
-    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=[color for color in colors])
 
     fig = plt.figure(figsize=(10, 10))
     ax = []
@@ -142,11 +163,34 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
     ax2_twin = ax[2].twinx()
     # policies = [policies] if not isinstance(policies, (list, tuple)) else policies
 
+
+
     success_rates, mean_rewards = [], []
     for i, policy in enumerate(policies):
         label = labels[i]
-        rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = test_policy(env, policy,
-                                                                                           episodes, seed_set=seed_set)
+        if policy == 'policy_mpc_stored' and 'save_results' in kwargs:
+            save_folder_name_results = kwargs['save_results']
+            # Load the dictionary from the file using pickle
+            with open(save_folder_name_results, "rb") as f:
+                save_dict = pickle.load(f)
+            # Extract data from the dictionary
+            rewards_per_task = save_dict.get('rewards_per_task')
+            ep_len_per_task = save_dict.get('ep_len_per_task')
+            actions_per_task = save_dict.get('actions_per_task')
+            states_per_task = save_dict.get('states_per_task')
+
+        else:
+            rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = test_policy(env, policy,
+                                                                                               episodes, seed_set=seed_set)
+
+        if 'save_results' in kwargs:
+            save_folder_name_results = kwargs['save_results']
+            save_dict= {'rewards_per_task': rewards_per_task, 'ep_len_per_task': ep_len_per_task,
+                        'actions_per_task': actions_per_task, 'states_per_task': states_per_task}
+
+            # Save the dictionary to the file using pickle
+            with open(save_folder_name_results, "wb") as f:
+                pickle.dump(save_dict, f)
 
         for task_nr, ep_ret in enumerate(map(ep_mean_return, rewards_per_task)):
             print(f"Mean return for Task nr.{task_nr} - {label}: {ep_ret}")
@@ -155,8 +199,123 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
         for task_nr, ep_suc in enumerate(
                 map(lambda rews: ep_success_rates(rews, threshold=env.threshold), rewards_per_task)):
             print(f"Success rate Task nr.{task_nr} - {label}: {np.mean(ep_suc)}")
-            success_rate_per_taks = ep_suc
-            success_rates.append(success_rate_per_taks)
+            success_rate_per_tasks = ep_suc
+            success_rates.append(success_rate_per_tasks)
+
+        # Plot actions and states and reward per step
+        if i == 0:
+            print('Plotting actions and states', i)
+            plot_actions_states(ax[4], actions_per_task, "Actions", ep_len_per_task)
+            ax[4].set_ylabel("Actions")
+            ax[4].set_xlabel("Step")
+            plot_actions_states(ax[3], states_per_task, "States", ep_len_per_task)
+            ax[3].set_ylabel("States")
+            plot_rms_states(ax[2], ax2_twin, states_per_task, "States", ep_len_per_task, rewards_per_task,
+                            threshold=env.threshold)
+            ax[2].set_ylabel("negative RMS")
+            ax[2].set_ylim(-1, 0)
+
+        # Plot episode lengths
+        plot_episode_lengths(ax[0], ax0_twin, ep_len_per_task, label=label, color=colors_for_different_appoaches[i])
+        ax[0].set_ylabel("Ep. lengths")
+        ax[0].legend()
+        # Plot rewards
+        plot_rewards(ax[1], ax1_twin, rewards_per_task, success_rate_per_tasks, label=label,
+                     color=colors_for_different_appoaches[i])
+
+        ax[1].set_ylabel("Regret")
+        ax[1].set_xlabel("Episode")
+        ax[1].legend()
+
+    # Handle additional kwargs
+    title = kwargs.get('title', '') + f' - policy shown from {labels[0]}'
+    if title:
+        plt.suptitle(title)
+    fig.align_ylabels(ax)
+    plt.tight_layout()
+    if 'save_folder' in kwargs:
+        save_folder = kwargs.get('save_folder')
+        save_name = f'Verification_{kwargs.get("num_samples")}'
+        os.makedirs(save_folder, exist_ok=True)
+        plt.savefig(os.path.join(save_folder,save_name + '.pdf'), format='pdf')  # Specify the format as needed
+        plt.savefig(os.path.join(save_folder,save_name + '.png'), format='png')  # Specify the format as needed
+    plt.show()
+
+    return np.mean(success_rates), mean_rewards
+
+def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmark, episodes=50, **kwargs):
+    labels = kwargs['policy_labels']
+    seed_set = kwargs['seed_set'] if 'seed_set' in kwargs else None
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = []
+    ax.append(fig.add_subplot(511))
+    ax.append(fig.add_subplot(512, sharex=ax[0]))
+    ax.append(fig.add_subplot(513))
+    ax.append(fig.add_subplot(514, sharex=ax[2]))
+    ax.append(fig.add_subplot(515, sharex=ax[2]))
+
+    ax[0].tick_params('x', labelbottom=False)
+    ax[2].tick_params('x', labelbottom=False)
+    ax[3].tick_params('x', labelbottom=False)
+
+    ax0_twin = ax[0].twinx()
+    ax1_twin = ax[1].twinx()
+    ax2_twin = ax[2].twinx()
+
+    if policy_benchmark == 'policy_mpc_stored' and 'save_results' in kwargs:
+        save_location_name_results = kwargs['save_results']
+        # Load the dictionary from the file using pickle
+        with open(save_location_name_results, "rb") as f:
+            save_dict = pickle.load(f)
+        # Extract data from the dictionary
+        rewards_per_task_benchmark = save_dict.get('rewards_per_task')
+        ep_len_per_task_benchmark = save_dict.get('ep_len_per_task')
+        actions_per_task_benchmark = save_dict.get('actions_per_task')
+        states_per_task_benchmark = save_dict.get('states_per_task')
+
+    else:
+        rewards_per_task_benchmark, ep_len_per_task_benchmark, actions_per_task_benchmark, states_per_task_benchmark = test_policy(env, policy_benchmark,
+                                                                                           episodes, seed_set=seed_set)
+
+
+
+    success_rates, mean_rewards = [], []
+    for i, policy in enumerate(policies):
+        label = labels[i]
+        if policy == 'policy_mpc_stored' and 'save_results' in kwargs:
+            save_location_name_results = kwargs['save_results']
+            # Load the dictionary from the file using pickle
+            with open(save_location_name_results, "rb") as f:
+                save_dict = pickle.load(f)
+            # Extract data from the dictionary
+            rewards_per_task = save_dict.get('rewards_per_task')
+            ep_len_per_task = save_dict.get('ep_len_per_task')
+            actions_per_task = save_dict.get('actions_per_task')
+            states_per_task = save_dict.get('states_per_task')
+
+        else:
+            rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = test_policy(env, policy,
+                                                                                               episodes, seed_set=seed_set)
+
+        if 'save_results' in kwargs:
+            save_location_name_results = kwargs['save_results']
+            save_dict= {'rewards_per_task': rewards_per_task, 'ep_len_per_task': ep_len_per_task,
+                        'actions_per_task': actions_per_task, 'states_per_task': states_per_task}
+
+            # Save the dictionary to the file using pickle
+            with open(save_location_name_results, "wb") as f:
+                pickle.dump(save_dict, f)
+
+        for task_nr, ep_ret in enumerate(map(ep_mean_return, rewards_per_task)):
+            print(f"Mean return for Task nr.{task_nr} - {label}: {ep_ret}")
+            mean_rewards.append(ep_ret)
+
+        for task_nr, ep_suc in enumerate(
+                map(lambda rews: ep_success_rates(rews, threshold=env.threshold), rewards_per_task)):
+            print(f"Success rate Task nr.{task_nr} - {label}: {np.mean(ep_suc)}")
+            success_rate_per_tasks = ep_suc
+            success_rates.append(success_rate_per_tasks)
 
         # Plot actions and states
         if i == 0:
@@ -172,12 +331,14 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
             ax[2].set_ylim(-1, 0)
 
         # Plot episode lengths
-        plot_episode_lengths(ax[0], ax0_twin, ep_len_per_task, label=label)
+        plot_episode_lengths(ax[0], ax0_twin, ep_len_per_task, label=label, color=colors_for_different_appoaches[i])
         ax[0].set_ylabel("Ep. lengths")
         ax[0].legend()
-        # Plot rewards
-        plot_rewards(ax[1], ax1_twin, rewards_per_task, success_rate_per_taks, label=label)
-        ax[1].set_ylabel("Cum. reward")
+
+        # Plot regrets
+        plot_regrets(ax[1], ax1_twin, rewards_per_task, rewards_per_task_benchmark, success_rate_per_tasks, label=label,
+                     color=colors_for_different_appoaches[i])
+        ax[1].set_ylabel("Regret")
         ax[1].set_xlabel("Episode")
         ax[1].legend()
 
@@ -188,12 +349,13 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
     fig.align_ylabels(ax)
     plt.tight_layout()
     if 'save_folder' in kwargs:
-        plt.savefig(f"{kwargs.get('save_folder')}.pdf", format='pdf')  # Specify the format as needed
-        plt.savefig(f"{kwargs.get('save_folder')}.png", format='png')  # Specify the format as needed
+        save_folder = kwargs.get('save_folder')
+        save_name = f'Verification_{kwargs.get("num_samples")}'
+        os.makedirs(save_folder, exist_ok=True)
+        plt.savefig(os.path.join(save_folder,save_name + '.pdf'), format='pdf')  # Specify the format as needed
+        plt.savefig(os.path.join(save_folder,save_name + '.png'), format='png')  # Specify the format as needed
     plt.show()
 
     return np.mean(success_rates), mean_rewards
-
-
 if __name__ == "__main__":
     pass

@@ -6,15 +6,10 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
-from environment.helpers import load_predefined_task, load_env_config, read_yaml_file
+from environment.helpers import load_env_config, read_yaml_file
 from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
 
-
 # Todo: Make plots interactive and add variance
-
-# Select on algorithm
-# algorithm = 'TRPO'  #
-algorithm = 'PPO'  #
 
 # Here we select one possible MDP out of a set of MDPs - not important at this stage
 environment_settings = read_yaml_file('config/environment_setting.yaml')
@@ -31,17 +26,20 @@ validation_seeds = environment_settings['validation-settings']['validation-seeds
 nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
 
 # Specific for RL training savings
+# Select on algorithm
+algorithm = environment_settings['rl-settings']['algorithm']  #
+# algorithm = 'PPO'  #
 
 optimization_type = 'RL'
 experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', 'verification')
-save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', 'verification')
+save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', f'Dof_{DoF}')
+save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', f'Dof_{DoF}')
 
 os.makedirs(save_folder_figures, exist_ok=True)
 os.makedirs(save_folder_weights, exist_ok=True)
 
 
-def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation_episodes):
+def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation_episodes, save_figure=False):
     """
     Plot the progress of training over episodes or time.
 
@@ -71,65 +69,67 @@ def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation
     ax1.legend(lines + lines2, labels + labels2, loc='upper left')
 
     plt.tight_layout()
+    if save_figure:
+        save_name = os.path.join(save_folder_figures, f'Learning_{num_samples}')
+        plt.savefig(save_name + '.pdf', format='pdf')  # Specify the format as needed
+        plt.savefig(save_name + '.png', format='png')  # Specify the format as needed
     plt.show()
-
 
 
 if algorithm == 'TRPO':
     model = TRPO("MlpPolicy", env)
 elif algorithm == 'PPO':
     model = PPO("MlpPolicy", env)
-else: print('Select valid algorithm')
+else:
+    print('Select valid algorithm')
 
 success_rates, mean_rewards, x_plot = [], [], []
 
 # For Olga-change here
-total_steps = int(1e6)
-evaluation_steps = 50
+total_steps = int(2e5)
+evaluation_steps = 10
 increments = total_steps // evaluation_steps
-
-
 
 for i in tqdm(range(0, evaluation_steps)):
     num_samples = increments * i
-    save_folder_figures_individual = f'{save_folder_figures}_{DoF}_{num_samples}'
-    save_folder_weights_individual = f'{save_folder_weights}_{DoF}_{num_samples}'
+    save_folder_figures_individual = os.path.join(save_folder_figures, f'{num_samples:07}')
+    save_folder_weights_individual = os.path.join(save_folder_weights, f'{num_samples:07}')
     if i > 0:
         model.learn(total_timesteps=increments)
     model.save(save_folder_weights_individual)
     vec_env = model.get_env()
-    policy = lambda x: model.predict(x)[0]
+    policy = lambda x: model.predict(x, deterministic=True)[0]
     title = f'{algorithm}_{DoF}_{num_samples} samples, threshold={env.threshold}'
     success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy],
-                                                                       # tasks=verification_task,
+                                                                       num_samples=num_samples,
                                                                        episodes=nr_validation_episodes,
                                                                        title=title,
-                                                                       save_folder=save_folder_figures_individual,
+                                                                       save_folder=save_folder_figures,
                                                                        policy_labels=[algorithm], DoF=DoF,
                                                                        nr_validation_episodes=nr_validation_episodes,
                                                                        seed_set=validation_seeds)
 
     print(success_rate)
-    time.sleep(5)
+    time.sleep(2)
     success_rates.append(success_rate)
     mean_rewards.append(mean_reward)
 
     x_plot.append(num_samples)
     plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
-                  nr_validation_episodes=nr_validation_episodes)
+                  nr_validation_episodes=nr_validation_episodes, save_figure=True)
 
 x = [i * increments for i in (range(0, evaluation_steps))]
 plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
-              nr_validation_episodes=nr_validation_episodes)
+              nr_validation_episodes=nr_validation_episodes, save_figure=True)
 
 model = TRPO.load(save_folder_weights_individual)
 
 vec_env = model.get_env()
-policy = lambda x: model.predict(x)[0]
+policy = lambda x: model.predict(x, deterministic=True)[0]
 
 verify_external_policy_on_specific_env(env, [policy],
-                                       # tasks=verification_task,
+                                       num_samples=num_samples,
                                        episodes=10, title=algorithm,
-                                       save_folder=save_folder_figures_individual, policy_labels=[algorithm],
+                                       save_folder=save_folder_figures, policy_labels=[algorithm],
                                        DoF=DoF, nr_validation_episodes=nr_validation_episodes,
                                        seed_set=validation_seeds)

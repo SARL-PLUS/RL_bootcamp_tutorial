@@ -1,4 +1,4 @@
-import math
+import logging
 import os
 import pickle
 from enum import Enum
@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
-from cpymad.madx import Madx
 from gymnasium import Wrapper
 from gymnasium import spaces
 
@@ -20,82 +19,137 @@ class Plane(Enum):
     horizontal = 0
     vertical = 1
 
-
-
+from typing import Optional, Any, Dict
 
 
 class DoFWrapper(gym.Wrapper):
-    def __init__(self, env, DoF, **kwargs):
-        super(DoFWrapper, self).__init__(env)
+    """
+    Gym Wrapper to limit the environment to a subset of degrees of freedom (DoF).
+    This wrapper modifies the action and observation spaces to include only the first 'DoF' elements.
+    It also modifies the reward and termination conditions based on the subset of observations.
+    """
+
+    def __init__(self, env: gym.Env, DoF: int, **kwargs):
+        """
+        Initialize the DoFWrapper.
+
+        Args:
+            env: The original Gym environment.
+            DoF: The number of degrees of freedom to limit the action and observation spaces to.
+            **kwargs: Additional keyword arguments, such as 'threshold' and 'boundary_conditions'.
+        """
+        super().__init__(env)
         self.DoF = DoF
-        # self.threshold = -0.005 * DoF if (DoF <= 6) else -0.1
-        self.threshold = -0.1
-        self.env = env
-        (self.boundary_conditions) = kwargs.get("boundary_conditions", False)
+        self.threshold = kwargs.get("threshold", -0.1)
+        self.boundary_conditions = kwargs.get("boundary_conditions", False)
+        self.env.init_scaling = kwargs.get("init_scaling", 1.0)
+        self.action_scale = kwargs.get("action_scale", 1.0)
+        print('self.action_scale: ', self.action_scale)
 
-        self.observation_space = spaces.Box(low=env.observation_space.low[:self.DoF],
-                                            high=env.observation_space.high[:self.DoF],
-                                            # shape=env.observation_space.shape[:self.DoF],
-                                            dtype=np.float32)
-        self.action_space = spaces.Box(low=env.action_space.low[:self.DoF],
-                                       high=env.action_space.high[:self.DoF],
-                                       # shape=env.action_space.shape[:self.DoF],
-                                       dtype=np.float32)
 
-    def reset(self, seed: Optional[int] = None):
-        observation, info = self.env.reset(seed=seed)
-        observation = observation[:self.DoF]
+        # Modify the action and observation spaces
+        self.action_space = spaces.Box(
+            low=env.action_space.low[:DoF],
+            high=env.action_space.high[:DoF],
+            dtype=env.action_space.dtype,
+        )
+        self.observation_space = spaces.Box(
+            low=env.observation_space.low[:DoF],
+            high=env.observation_space.high[:DoF],
+            dtype=env.observation_space.dtype,
+        )
+
+    def reset(
+        self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Reset the environment and return the initial observation limited to the specified DoF.
+
+        Args:
+            seed: Optional seed for the environment.
+            options: Optional dictionary of options.
+
+        Returns:
+            observation: The initial observation limited to the specified DoF.
+            info: Additional information from the environment.
+        """
+        observation, info = self.env.reset(seed=seed, options=options)
+        observation = observation[: self.DoF]
         return observation, info
 
-    def step(self, action):
-        # Initialize a zero-filled array for the action space
-        full_action_space = np.zeros(self.env.action_space.shape)
-        full_action_space[:self.DoF] = action  # Set the first 'DoF' elements with the provided action
+    def step(self, action: np.ndarray):
+        """
+        Step the environment with the given action, limited to the specified DoF.
+
+        Args:
+            action: The action to take, limited to the DoF.
+
+        Returns:
+            observation: The observation after the action, limited to the DoF.
+            reward: The reward after the action.
+            terminated: Whether the episode has terminated.
+            truncated: Whether the episode was truncated.
+            info: Additional information from the environment.
+        """
+
+        action = action*self.action_scale
+        # Initialize a zero-filled array for the full action space
+        full_action = np.zeros(self.env.action_space.shape, dtype=self.env.action_space.dtype)
+        full_action[: self.DoF] = action  # Set the first 'DoF' elements with the provided action
 
         # Execute the action in the environment
-        observation, reward, terminated, truncated, info = self.env.step(full_action_space)
-
-        # # Reset termination status and check for step limit
-        # truncated = self.env.current_steps >= self.env.MAX_TIME
+        observation, reward, terminated, truncated, info = self.env.step(full_action)
 
         # Focus only on the degrees of freedom for observations
-        observation = observation[:self.DoF]
+        observation = observation[: self.DoF]
 
         # Update the reward based on the current observation
         reward = self.env._get_reward(observation)
 
-        # Terminate if the reward exceeds the threshold
+        # Check for termination based on the reward threshold
         if reward >= self.threshold:
             terminated = True
 
-        # observation = observation * self.pot_function(
-        #     observation)  # Ensure observation is a NumPy array
-        reward = self.env._get_reward(observation)
-
         # Check for any violations where the absolute values in observations exceed 1
-        violations = np.where(abs(observation) >= 1)[0]
+        violations = np.where(np.abs(observation) >= 1)[0]
         if violations.size > 0:
             # Modify observation from the first violation onward
-            observation[violations[0]:] = np.sign(observation[violations[0]])
+            first_violation = violations[0]
+            observation[first_violation:] = np.sign(observation[first_violation])
 
             # Recalculate reward after modification
-            # observation = observation * self.pot_function(
-            #     observation)  # Ensure observation is a NumPy array
-            reward = self.env._get_reward(observation)*100
-            # print('reward', reward)
+            reward = self.env._get_reward(observation) * 100
+
+            # Terminate if boundary conditions are set
             terminated = self.boundary_conditions
 
-            # truncated = True  # Terminate due to the violation
-        #
         return observation, reward, terminated, truncated, info
 
-    def seed(self, seed):
-        self.env.seed(seed)
+    def seed(self, seed: Optional[int] = None):
+        """
+        Set the seed for the environment's random number generator(s).
 
-    def pot_function(self, x, k=1000, x0=1):
+        Args:
+            seed: The seed value.
+
+        Returns:
+            A list containing the seed.
+        """
+        return self.env.seed(seed)
+
+    # Optional function, not currently used
+    def pot_function(self, x: np.ndarray, k: float = 1000, x0: float = 1) -> np.ndarray:
         """
         Compute a potential function using a modified sigmoid to handle deviations.
         The output scales transformations symmetrically for positive and negative values of x.
+
+        Args:
+            x: Input array.
+            k: Steepness of the sigmoid.
+            x0: Center point of the sigmoid.
+
+        Returns:
+            Transformed array with values scaled between 1 and 11.
         """
         # Precompute the exponential terms to use them efficiently.
         exp_pos = np.exp(k * (x - x0))
@@ -104,8 +158,9 @@ class DoFWrapper(gym.Wrapper):
         # Calculate the transformation symmetrically for both deviations
         result = (1 - 1 / (1 + exp_pos)) + (1 - 1 / (1 + exp_neg))
 
-        # Scale and shift the output between 1 and 10
+        # Scale and shift the output between 1 and 11
         return 1 + 10 * result
+
 
 
 class Awake_Benchmarking_Wrapper(Wrapper):
@@ -210,8 +265,12 @@ class Awake_Benchmarking_Wrapper(Wrapper):
         plt.pause(1)
 
 
-def load_predefined_task(task_nr, full_path):
-    with open(full_path, "rb") as input_file:  # Load in tasks
+def load_predefined_task(task_nr, task_location):
+    # Check if the file exists
+    if not os.path.exists(task_location):
+        task_location = os.path.join(os.getcwd(), '..', task_location)
+
+    with open(task_location, "rb") as input_file:  # Load in tasks
         tasks = pickle.load(input_file)
     return tasks[task_nr]
 
@@ -298,7 +357,7 @@ def get_model_parameters(environment):
         action_matrix_reduced = action_matrix[:environment.DoF, :environment.DoF]
 
         # Scale the action matrix by the environment's action scale factor.
-        action_matrix_scaled = action_matrix_reduced * environment.unwrapped.action_scale
+        action_matrix_scaled = action_matrix_reduced * environment.action_scale
 
         # Define the threshold for MPC, converting it to a positive value if necessary.
         threshold = -environment.threshold if environment.threshold < 0 else environment.threshold
@@ -332,19 +391,73 @@ class RewardScalingWrapper(gym.Wrapper):
         return observation, info
 
 
-def load_env_config(env_config='config/environment_setting.yaml'):
+def load_env_config(env_config: str = 'config/environment_setting.yaml') -> Any:
+    """
+    Load the environment configuration from a YAML file and initialize the environment.
+
+    Args:
+        env_config (str): Path to the environment configuration YAML file.
+
+    Returns:
+        env: An initialized environment object based on the configuration.
+
+    Raises:
+        FileNotFoundError: If the configuration file does not exist.
+        KeyError: If required configuration keys are missing.
+    """
+
+    # Read environment settings from the YAML configuration file
+    logging.info(f"Loading environment configuration from {env_config}")
     environment_settings = read_yaml_file(env_config)
 
+    # Extract task settings with error handling
+    try:
+        task_settings = environment_settings['task_setting']
+        task_nr = task_settings['task_nr']
+        task_location = task_settings['task_location']
+    except KeyError as e:
+        raise KeyError(f"Missing key in 'task_setting' configuration: {e}")
+
     # Load a predefined task for verification
-    verification_task = load_predefined_task(environment_settings['task_setting']['task_nr'],
-                                             environment_settings['task_setting']['task_location'])
+    verification_task = load_predefined_task(
+        task_nr=task_nr,
+        task_location=task_location
+    )
+    logging.info(f"Loaded task number {task_nr} from {task_location}")
 
-    DoF = environment_settings['degrees-of-freedom']  # Degrees of Freedom
+    # Get the Degrees of Freedom (DoF) setting from the configuration
+    try:
+        DoF = environment_settings['degrees-of-freedom']  # Degrees of Freedom
+    except KeyError as e:
+        raise KeyError(f"Missing key 'degrees-of-freedom' in configuration: {e}")
 
-    MAX_TIME = environment_settings['terminal-conditions']['MAX-TIME']
-    boundary_conditions = environment_settings['terminal-conditions']['boundary-conditions']
+    # Get terminal conditions with error handling
+    try:
+        terminal_conditions = environment_settings['terminal-conditions']
+        MAX_TIME = terminal_conditions['MAX-TIME']
+        boundary_conditions = terminal_conditions['boundary-conditions']
+    except KeyError as e:
+        raise KeyError(f"Missing key in 'terminal-conditions' configuration: {e}")
 
-    env = DoFWrapper(AwakeSteering(task=verification_task, MAX_TIME=MAX_TIME), DoF,
-                     boundary_conditions=boundary_conditions)
+    # Get initial scaling parameters, providing a default if necessary
+    init_scaling = environment_settings['init_scaling']  # Default scaling factor is 1.0
+    action_scale = environment_settings['action_scale']
 
+    # Initialize the base environment with the loaded task and maximum time
+    base_env = AwakeSteering(
+        task=verification_task,
+        MAX_TIME=MAX_TIME
+    )
+
+    # Initialize the environment wrapper with DoF, boundary conditions, and initial scaling
+    env = DoFWrapper(
+        env=base_env,
+        DoF=DoF,
+        boundary_conditions=boundary_conditions,
+        init_scaling=init_scaling,
+        action_scale=action_scale
+    )
+
+    logging.info("Environment initialized successfully.")
     return env
+

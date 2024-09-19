@@ -1,66 +1,89 @@
 # General Parameters
-num_steps_env: 1000
-random_actions_init: 25
+# num_steps_env: Total number of steps the environment will run (500 steps).
+# random_actions_init: Number of initial steps where random actions are taken (10 steps).
+# verbose: Controls the verbosity of output (false means less detailed output).
+num_steps_env: 500
+random_actions_init: 100
 verbose: false
 
 # Gaussian Process Initialization Parameters
+# noise_covar.noise: Initial noise levels for the Gaussian process.
+# base_kernel.lengthscale: Lengthscale for the kernel, affects function smoothness.
+# outputscale: Output scale for the Gaussian process, impacts prediction variance.
 gp_init:
-  noise_covar.noise: [1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15]
-  base_kernel.lengthscale: [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
-  outputscale: [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
+  noise_covar.noise: [1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5]
+  base_kernel.lengthscale: [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 5.0]
+  outputscale: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
 # Gaussian Process Constraints
+# Constraints on GP hyperparameters to ensure they remain reasonable.
+# min_std_noise/max_std_noise: Minimum and maximum noise standard deviation.
+# min_outputscale/max_outputscale: Bounds for the output scale of the GP.
+# min_lengthscale/max_lengthscale: Constraints on the lengthscale of the GP's kernel.
 gp_constraints:
-  min_std_noise: 1.0e-20
+  min_std_noise: 1.0e-10
   max_std_noise: 2.5e-2
   min_outputscale: 1.0e-20
-  max_outputscale: 5.0
-  min_lengthscale: 1.0e-10
-  max_lengthscale: 100.0
-  min_lengthscale_time: 0.01
-  max_lengthscale_time: 5.0
+  max_outputscale: 10.0
+  min_lengthscale: 1.0e-20
+  max_lengthscale: 1000.0
 
 # Controller Configuration
+# Parameters for the controller using the Gaussian Process.
+# target_state_norm: Target state for the controller.
+# weight_state: Importance weights for state dimensions in cost function.
+# weight_state_terminal: Weights for terminal cost calculation.
+# target_action_norm: Desired action values.
+# weight_action: Weights for action dimensions, currently set to 0 (no penalty on actions).
+# obs_var_norm: Assumed normalized variance of observations.
+# len_horizon: Length of the control horizon.
+# exploration_factor: Exploration amount in decision making, set to 0 (deterministic).
+# barrier_weight: Weight of the barrier function for state boundary penalties.
 controller:
   target_state_norm: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-  weight_state: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 5.0]
-  weight_state_terminal: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 5.0]
+  weight_state: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  weight_state_terminal: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
   target_action_norm: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
   weight_action: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-  obs_var_norm: [1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15, 1.0e-15]
-
-  len_horizon: 10
+  obs_var_norm: [1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5]
+  len_horizon: 15
   exploration_factor: 0.0
-  limit_action_change: false
-  max_change_action_norm: [0.5]
-  num_repeat_actions: 1
-  # avoid negative cost
-  clip_lower_bound_cost_to_0: false
-
+  barrier_weight: 0.0
 
 # Training Configuration of GP hyperparameters
+# Settings for training the Gaussian Process.
+# lr_train: Learning rate for GP training.
+# iter_train: Number of training iterations.
+# training_frequency: How often training occurs relative to other operations.
+# clip_grad_value: Maximum gradient value for clipping during optimization.
+# print_train: Toggle for printing training progress.
+# step_print_train: Step frequency for printing training information.
 train:
   lr_train: 1.0e-3
   iter_train: 25
   training_frequency: 1
   clip_grad_value: 1.0e-4
-  print_train: false
-  step_print_train: 100
+  print_train: true
+  step_print_train: 1000
 
 # Action Optimizer Configuration
+# Parameters for the optimizer that finds optimal actions.
+# disp: Display optimization progress.
+# maxcor: Maximum corrections in LBFGS.
+# ftol/gtol: Function and gradient tolerances for stopping.
+# eps: Step size for numerical approximation.
+# maxfun/maxiter: Limits on function evaluations and iterations.
+# iprint: Print frequency.
+# maxls: Maximum line search steps.
+# finite_diff_rel_step: Relative step size for finite difference approximation.
 actions_optimizer:
-  disp: null
-  maxcor: 15
-  ftol: 1.0e-5
-  gtol: 1.0e-5
-  eps: 1.0e-3
-  maxfun: 15
-  maxiter: 15
+  disp: false
+  maxcor: 25
+  ftol: 1.0e-10
+  gtol: 1.0e-10
+  eps: 1.0e-5
+  maxfun: 25
+  maxiter: 50
   iprint: -1
-  maxls: 40
+  maxls: 15
   finite_diff_rel_step: null
-
-# Memory Configuration for reducing the amount of data in the buffer
-memory:
-  min_error_prediction_state_for_memory: [1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20]
-  min_prediction_state_std_for_memory: [1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20, 1.0e-20]

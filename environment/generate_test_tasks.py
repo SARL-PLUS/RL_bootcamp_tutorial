@@ -3,7 +3,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt, colors
 
-from environment.environment_awake_steering import MamlHelpers
+from environment.environment_awake_steering import DynamicsHelper
 
 # Define file location and name
 verification_tasks_loc = 'tasks'
@@ -11,14 +11,14 @@ filename = 'verification_tasks.pkl'  # Adding .pkl extension for clarity
 
 # Create an instance of MamlHelpers and sample tasks
 nr_tasks = 5
-tasks_new = [MamlHelpers().get_origin_task(idx=0)] + [{'id': task['id'] + 1, **task}
-                                                      for task in MamlHelpers().sample_tasks(nr_tasks)]
+tasks_new = [DynamicsHelper().get_origin_task(idx=0)] + [{'id': task['id'] + 1, **task}
+                                                         for task in DynamicsHelper().sample_tasks(nr_tasks)]
 tasks = []
 max_variation = 20
 nr_tasks = 5  # Assuming nr_tasks is defined
 
 while len(tasks) < nr_tasks:
-    sampled_task = MamlHelpers().sample_tasks(num_tasks=1)[0]  # Assuming sample_tasks returns a list of tasks
+    sampled_task = DynamicsHelper().sample_tasks(num_tasks=1)[0]  # Assuming sample_tasks returns a list of tasks
     task_goal_values = sampled_task['goal'][0]
 
     max_value = np.max(task_goal_values)
@@ -27,8 +27,8 @@ while len(tasks) < nr_tasks:
     if max_value < max_variation and abs(min_value) < max_variation:
         tasks.append(sampled_task)
 
-tasks_new = [MamlHelpers().get_origin_task(idx=0)] + [{'id': task['id'] + 1, **task}
-                                                      for task in tasks]
+tasks_new = [DynamicsHelper().get_origin_task(idx=0)] + [{'id': task['id'] + 1, **task}
+                                                         for task in tasks]
 # print(tasks_new)
 
 num_tasks = len(tasks_new)

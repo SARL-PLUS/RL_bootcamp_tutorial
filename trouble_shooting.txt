@@ -1,2 +1,0 @@
-Just a collection of problem which occurred along the way and possible solutions:
-
