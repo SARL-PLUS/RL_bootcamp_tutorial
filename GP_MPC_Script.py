@@ -9,7 +9,7 @@ from environment.helpers import (
     RewardScalingWrapper,
 )
 from control_objects.utils import init_visu_and_folders, init_control, close_run
-from wrapper import SmartEpisodeTrackerWithPlottingWrapper
+# from wrapper import SmartEpisodeTrackerWithPlottingWrapper
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
