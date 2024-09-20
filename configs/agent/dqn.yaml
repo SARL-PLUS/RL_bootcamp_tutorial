@@ -1,0 +1,28 @@
+
+_target_: src.agents.dqn.DeepQAgent
+
+# define the experience buffer
+buffer:
+  _target_: src.agents.dqn.ReplayBuffer
+  buffer_size: 10000
+
+criterion:
+  _target_: torch.nn.MSELoss
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.0005
+
+batch_size: 64
+
+# discounting
+gamma: 0.99
+
+tau: 0.005
+
+num_updates: 1
+
+update_every: 1
+
+

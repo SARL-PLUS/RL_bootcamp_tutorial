@@ -1,0 +1,7 @@
+
+_target_: gymnasium.make
+_partial_: true
+id: LunarLander-v2
+max_episode_steps: 1000
+
+

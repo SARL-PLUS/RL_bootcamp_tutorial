@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - policy: epsilon_greedy.yaml
+  - agent: dqn.yaml
+  - environment: default.yaml
+  - logger: tensorboard.yaml
+  - hparams_search: null
+
+
+seed: 0
+
+num_envs: 1
+
+max_episodes: 2000
+
+solved_at: 200
+avg_window: 100
+
+# task name, determines output directory path
+task_name: "train_default"
+
+
+log_dir: ./logs
+
+
+hydra:
+  run:
+    dir: ${log_dir}/runs/${task_name}/${now:%Y-%m-%d_%H-%M-%S}
+
+  sweep:
+    dir: ${log_dir}/multiruns/${task_name}/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}
+
+checkpoint_path: ${hydra:runtime.output_dir}/checkpoints/

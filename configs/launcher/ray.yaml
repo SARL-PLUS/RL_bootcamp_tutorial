@@ -1,0 +1,14 @@
+
+# @package _global_
+
+# example hyperparameter optimization of some experiment with Optuna:
+# python train.py -m hparams_search=optuna experiment=example
+
+defaults:
+  - override /hydra/sweeper: ray
+
+hydra:
+  launcher:
+    ray:
+      remote:
+        num_cpus: 4

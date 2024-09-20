@@ -1,0 +1,13 @@
+
+_target_: src.policies.epsilon_greedy.EpsilonGreedy
+
+Qnet: 
+  _target_: src.models.fully_connected.QNet
+  _partial_: true
+  hidden_layers: [128,128,128]
+  activation: 
+    _target_: torch.nn.ReLU
+    _partial_: true
+eps_max: 1.0
+eps_min: 0.01
+eps_decay: 0.97

@@ -1,0 +1,4 @@
+
+_target_: torch.utils.tensorboard.SummaryWriter
+log_dir: ${hydra:runtime.output_dir}/tensorboard
+flush_secs: 120
