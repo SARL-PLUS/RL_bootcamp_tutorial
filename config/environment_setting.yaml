@@ -11,9 +11,42 @@ mpc-settings:
   disp: False
 
 rl-settings:
-  algorithm: 'PPO' # 'TRPO' ... from stable baselines
+  algorithm: 'TRPO' # Change this to 'TRPO' to use TRPO from stable-baselines
   total_steps: 10000
   evaluation_steps: 50
+
+  # PPO specific hyperparameters
+  ppo:
+    learning_rate: 3.0e-4
+    n_steps: 2048
+    batch_size: 64
+    n_epochs: 10
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    ent_coef: 0.0
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    use_sde: False
+    sde_sample_freq: -1
+
+  # TRPO specific hyperparameters
+  trpo:
+    learning_rate: 1.0e-3
+    n_steps: 2048
+    batch_size: 128
+    gamma: 0.99
+    cg_max_steps: 15
+    cg_damping: 0.1
+    line_search_shrinking_factor: 0.8
+    line_search_max_iter: 10
+    n_critic_updates: 10
+    gae_lambda: 0.95
+    use_sde: False
+    sde_sample_freq: -1
+    normalize_advantage: True
+    target_kl: 0.01
+    sub_sampling_factor: 1
 
 # Advanced settings
 # don't touch this if not necessary

@@ -1,9 +1,8 @@
 # Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
 ## Closer to real worl applications
-[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu
+[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova, Catherine Laflamme, Thomas Gallien, [Marius-Constantin Dinu](https://www.linkedin.com/in/mariusconstantindinu/)
 
-## Todo: 
-* Marius PPO Challenge - hyperparameter model and so on...
+## Todo:
 * Simon and Catherine tomorrow
 * Simon Deep Dive
 * Final round weekend
@@ -16,11 +15,11 @@ There are several possibilities to attack the problem, and we can highlight some
 Now I implement a noise study, a study of a POMDP environment.
 
 Part I:
-   1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE 
-environment and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
-as the original environment. 
-   2. The script [Train_policy_gradients_off_the_shelf.py](RL_approach.py) contains the training 
-   procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
+   1. The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE
+environment and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten,
+as the original environment.
+   2. The script [Train_policy_gradients_off_the_shelf.py](RL_approach.py) contains the training
+   procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a
    defined numer of training steps. The plot shows the statistics of the validations during the training.
    3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
    4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
@@ -116,8 +115,136 @@ Part II:
 4. **Code Snippets:**
    - Well-commented code snippets to illustrate key concepts.
 
-## Todos:
-1. Explain the environment motivation
+
+## AWAKE Environment Motivation
+
+### Overview
+The AWAKE (Advanced WAKefield Experiment) steering problem is a real-world application of reinforcement learning (RL) in the field of particle physics. This environment simulates the challenge of steering a particle beam in a plasma wakefield accelerator.
+
+### Key Features
+
+1. **Complex Dynamics**: The environment models the non-linear dynamics of particle beam propagation in a plasma, which is difficult to control using traditional methods.
+
+2. **High-Dimensional State Space**: The full state space includes multiple parameters describing the beam's properties and the plasma conditions, making it a challenging problem for RL algorithms.
+
+3. **Continuous Action Space**: The control actions involve adjusting magnetic fields to steer the beam, represented as continuous values.
+
+4. **Long-Term Dependencies**: The effects of actions can have long-term consequences on the beam's trajectory, requiring the RL agent to learn long-term planning.
+
+5. **Noise and Uncertainty**: Real-world factors like measurement errors and plasma fluctuations are modeled as noise in the environment.
+
+### Why RL is Suitable
+
+1. **Model-Free Approach**: RL can learn optimal control policies without requiring a precise analytical model of the complex plasma-beam interactions.
+
+2. **Adaptability**: RL agents can adapt to changing conditions in the accelerator, which is crucial for maintaining beam quality over long periods.
+
+3. **Handling High-Dimensional Spaces**: Modern RL algorithms are capable of handling the high-dimensional state and action spaces present in this problem.
+
+
+## General Hyperparameters
+
+
+### Environment Settings
+
+- `degrees-of-freedom` (int): Number of degrees of freedom in the environment. Default: 1
+
+- `terminal-conditions`:
+  - `MAX-TIME` (int): Maximum number of timesteps per episode. Default: 1000
+  - `boundary-conditions` (bool): Whether to use boundary conditions. Default: true
+  - `penalty-scaling` (float): Scaling factor for penalties. Default: 10.0
+
+### Training Settings
+
+- `algorithm` (str): RL algorithm to use. Options: 'PPO', 'TRPO'. Default: 'PPO'
+- `total_steps` (int): Total number of timesteps for training. Default: 10000
+- `evaluation_steps` (int): Number of steps for evaluation. Default: 50
+
+### Advanced Settings
+
+- `noise_setting`:
+  - `std_noise` (str or float): Standard deviation of noise. Default: none
+- `init_scaling` (float): Scaling factor for initialization. Default: 0.9
+- `action_scale` (float): Scaling factor for actions. Default: 1.0
+- `validation-settings`:
+  - `validation-seeds` (list): List of seeds for validation episodes. Default: [0, 2, 3, 4, 5, 7, 8, 11, 12, 14]
+
+## TRPO Hyperparameters
+
+### Key Hyperparameters for TRPO (Trust Region Policy Optimization)
+
+- `learning_rate` (float): The learning rate for the value function optimizer. Default: 1e-3
+  - Controls the step size for updating the value function.
+
+- `n_steps` (int): The number of steps to run for each environment per update. Default: 2048
+  - Determines the size of each rollout. Must be greater than 1 for advantage normalization.
+
+- `batch_size` (int): Minibatch size for the value function updates. Default: 128
+  - Number of samples used in each optimization step for the value function.
+
+- `gamma` (float): Discount factor. Default: 0.99
+  - Determines the importance of future rewards. Value between 0 and 1.
+
+- `cg_max_steps` (int): Maximum number of steps in the Conjugate Gradient algorithm. Default: 15
+  - Used for computing the Hessian vector product.
+
+- `cg_damping` (float): Damping factor in the Hessian vector product computation. Default: 0.1
+  - Helps stabilize the Conjugate Gradient algorithm.
+
+- `line_search_shrinking_factor` (float): Step-size reduction factor for the line search. Default: 0.8
+  - Controls how quickly the step size is reduced during line search (theta_new = theta + alpha^i * step).
+
+- `line_search_max_iter` (int): Maximum number of iterations for the backtracking line search. Default: 10
+  - Limits the number of attempts to find an acceptable step size.
+
+- `n_critic_updates` (int): Number of critic (value function) updates per policy update. Default: 10
+  - Determines how many times the value function is updated for each policy update.
+
+- `gae_lambda` (float): Factor for trade-off of bias vs variance for Generalized Advantage Estimator. Default: 0.95
+  - Controls the bias-variance tradeoff in advantage estimation. Value between 0 and 1.
+
+- `normalize_advantage` (bool): Whether to normalize the advantage. Default: True
+  - Normalizing can help stabilize training.
+
+- `target_kl` (float): Target Kullback-Leibler divergence between updates. Default: 0.01
+  - Helps maintain stability by limiting the size of policy updates.
+
+- `sub_sampling_factor` (int): Factor for sub-sampling the batch to reduce computation time. Default: 1
+  - Can speed up computations at the cost of using less data.
+
+## PPO Hyperparameters
+
+### Key Hyperparameters
+
+- `learning_rate` (float): The learning rate for the optimizer. Default: 3e-4
+  - Controls the step size at each iteration while moving toward a minimum of the loss function.
+
+- `n_steps` (int): The number of steps to run for each environment per update. Default: 2048
+  - Determines the size of each rollout. Must be greater than 1 for advantage normalization.
+
+- `batch_size` (int): Minibatch size for each gradient update. Default: 64
+  - Number of samples used in each optimization step.
+
+- `n_epochs` (int): Number of epochs when optimizing the surrogate loss. Default: 10
+  - How many times to update the policy using the collected data.
+
+- `gamma` (float): Discount factor. Default: 0.99
+  - Determines the importance of future rewards. Value between 0 and 1.
+
+- `gae_lambda` (float): Factor for trade-off of bias vs variance for Generalized Advantage Estimator. Default: 0.95
+  - Controls the bias-variance tradeoff in advantage estimation. Value between 0 and 1.
+
+- `clip_range` (float): Clipping parameter for the policy loss. Default: 0.2
+  - Limits the range of policy updates to stabilize training.
+
+- `ent_coef` (float): Entropy coefficient for the loss calculation. Default: 0.0
+  - Encourages exploration by adding an entropy bonus to the loss function.
+
+- `vf_coef` (float): Value function coefficient for the loss calculation. Default: 0.5
+  - Controls the importance of the value function loss in the total loss.
+
+- `max_grad_norm` (float): The maximum value for the gradient clipping. Default: 0.5
+  - Helps prevent exploding gradients by clipping the gradient norm.
 
 
 [//]: # (<img src="miscellaneous/img.png" alt="RL Process" width="800">)
