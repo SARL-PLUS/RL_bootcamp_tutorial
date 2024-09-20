@@ -3,7 +3,7 @@
 # random_actions_init: Number of initial steps where random actions are taken (10 steps).
 # verbose: Controls the verbosity of output (false means less detailed output).
 num_steps_env: 500
-random_actions_init: 100
+random_actions_init: 10
 verbose: false
 
 # Gaussian Process Initialization Parameters
@@ -13,7 +13,7 @@ verbose: false
 gp_init:
   noise_covar.noise: [1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5, 1.0e-5]
   base_kernel.lengthscale: [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 5.0]
-  outputscale: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  outputscale: [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
 
 # Gaussian Process Constraints
 # Constraints on GP hyperparameters to ensure they remain reasonable.
@@ -24,7 +24,7 @@ gp_constraints:
   min_std_noise: 1.0e-10
   max_std_noise: 2.5e-2
   min_outputscale: 1.0e-20
-  max_outputscale: 10.0
+  max_outputscale: 50.0
   min_lengthscale: 1.0e-20
   max_lengthscale: 1000.0
 
@@ -37,7 +37,7 @@ gp_constraints:
 # weight_action: Weights for action dimensions, currently set to 0 (no penalty on actions).
 # obs_var_norm: Assumed normalized variance of observations.
 # len_horizon: Length of the control horizon.
-# exploration_factor: Exploration amount in decision making, set to 0 (deterministic).
+# exploration_factor: Exploration amount in decision-making, set to 0 (deterministic).
 # barrier_weight: Weight of the barrier function for state boundary penalties.
 controller:
   target_state_norm: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]

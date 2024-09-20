@@ -12,7 +12,6 @@ Dependencies:
 - matplotlib for plotting results.
 - concurrent.futures for parallel execution.
 """
-import concurrent.futures
 import time
 
 import matplotlib.pyplot as plt
@@ -20,15 +19,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
 
-from environment.environment_awake_steering import AwakeSteering
-from environment.helpers import load_predefined_task, DoFWrapper, read_yaml_file, load_env_config
-
 
 def rms(x):
     return np.sqrt(np.mean((x ** 2)))
 
 
-def predict_actions(initial_state, horizon_length, response_matrix, threshold, tol=1e-8, disp=False):
+def predict_actions(initial_state, horizon_length, response_matrix, threshold, **kwargs):
+    disp = kwargs.get('disp', False)
+    tol = kwargs.get('tol', 1e-8)
+
     dimension = response_matrix.shape[0]
 
     def rms(x):
@@ -113,8 +112,7 @@ def predict_actions(initial_state, horizon_length, response_matrix, threshold, t
 
 
 def model_predictive_control(x0, N, b, threshold, plot=False, **kwargs):
-    tol = kwargs['tol'] if 'tol' in kwargs else 1e-16
-    x_final, u_final, costs, rms_final, time_run = predict_actions(x0, N, b, threshold, tol=tol)
+    x_final, u_final, costs, rms_final, time_run = predict_actions(x0, N, b, threshold, **kwargs)
     if plot:
         plot_results(x_final, u_final, costs, time_run, threshold)
     return u_final[0]

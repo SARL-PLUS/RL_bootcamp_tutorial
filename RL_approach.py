@@ -6,74 +6,32 @@ from sb3_contrib import TRPO
 from stable_baselines3 import PPO
 from tqdm import tqdm
 
-from environment.helpers import load_env_config, read_yaml_file
-from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env
+from environment.environment_helpers import load_env_config, read_experiment_config
+from helper_scripts.general_helpers import make_experiment_folder, plot_progress, \
+    verify_external_policy_on_specific_env
 
-# Todo: Make plots interactive and add variance
+# Todo: Make plots interactive!!!
 
 # Here we select one possible MDP out of a set of MDPs - not important at this stage
-environment_settings = read_yaml_file('config/environment_setting.yaml')
+environment_settings = read_experiment_config('config/environment_setting.yaml')
 predefined_task = environment_settings['task_setting']['task_nr']
 task_location = environment_settings['task_setting']['task_location']
+DoF = environment_settings['degrees-of-freedom']
 
-# For Olga-change here
 # Train on different size of the environment
 env = load_env_config(env_config='config/environment_setting.yaml')
-DoF = env.DoF
-# verification_task = env.get_task()
+
 
 validation_seeds = environment_settings['validation-settings']['validation-seeds']
 nr_validation_episodes = len(validation_seeds)  # Number of validation episodes
 
+
 # Specific for RL training savings
 # Select on algorithm
-algorithm = environment_settings['rl-settings']['algorithm']  #
-# algorithm = 'PPO'  #
-
+algorithm = environment_settings['rl-settings']['algorithm']
 optimization_type = 'RL'
-experiment_name = f'predefined_task_{predefined_task}'
-save_folder_figures = os.path.join(optimization_type, algorithm, experiment_name, 'Figures', f'Dof_{DoF}')
-save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', f'Dof_{DoF}')
-
-os.makedirs(save_folder_figures, exist_ok=True)
-os.makedirs(save_folder_weights, exist_ok=True)
-
-
-def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation_episodes, save_figure=False):
-    """
-    Plot the progress of training over episodes or time.
-
-    Parameters:
-    - x: Iterable with x-axis values (e.g., episode numbers).
-    - mean_rewards: Iterable with mean rewards corresponding to x.
-    - success_rate: Iterable with success rates corresponding to x.
-    - DoF: Degree of Freedom for the AWAKE environment.
-    - num_samples: Number of samples used for training.
-    """
-    fig, ax = plt.subplots()
-    ax.plot(x, mean_rewards, color='blue', label='Mean Rewards')
-    ax.set_xlabel('Interactions with the system')
-    ax.set_ylabel('Cumulative Reward', color='blue')
-    ax.tick_params(axis='y', labelcolor='blue')
-    ax.set_title(
-        f"{algorithm} on AWAKE with DoF: {DoF} and trained on {num_samples} samples\n averaged over {nr_validation_episodes} validation episodes")
-
-    ax1 = ax.twinx()
-    ax1.plot(x, success_rate, color='green', label='Success Rate')
-    ax1.set_ylabel('Success Rate (%)', color='green')
-    ax1.tick_params(axis='y', labelcolor='green')
-
-    # Creating a legend that includes all labels
-    lines, labels = ax.get_legend_handles_labels()
-    lines2, labels2 = ax1.get_legend_handles_labels()
-    ax1.legend(lines + lines2, labels + labels2, loc='upper left')
-
-    plt.tight_layout()
-    if save_figure:
-        save_name = os.path.join(save_folder_figures, f'Learning_{num_samples}')
-        plt.savefig(save_name + '.pdf', format='pdf')  # Specify the format as needed
-        plt.savefig(save_name + '.png', format='png')  # Specify the format as needed
-    plt.show()
+save_folder_figures = make_experiment_folder(optimization_type, algorithm, environment_settings, purpose='Figures')
+save_folder_weights = make_experiment_folder(optimization_type, algorithm, environment_settings, purpose='Weights')
 
 
 if algorithm == 'TRPO':
@@ -85,9 +43,8 @@ else:
 
 success_rates, mean_rewards, x_plot = [], [], []
 
-# For Olga-change here
-total_steps = int(5e4)
-evaluation_steps = 50
+total_steps = environment_settings['rl-settings']['total_steps']
+evaluation_steps =  environment_settings['rl-settings']['evaluation_steps']
 increments = total_steps // evaluation_steps
 
 for i in tqdm(range(0, evaluation_steps)):
@@ -97,7 +54,7 @@ for i in tqdm(range(0, evaluation_steps)):
     if i > 0:
         model.learn(total_timesteps=increments)
     model.save(save_folder_weights_individual)
-    vec_env = model.get_env()
+    # vec_env = model.get_env()
     policy = lambda x: model.predict(x, deterministic=True)[0]
     title = f'{algorithm}_{DoF}_{num_samples} samples, threshold={env.threshold}'
     success_rate, mean_reward = verify_external_policy_on_specific_env(env, [policy],
@@ -116,15 +73,15 @@ for i in tqdm(range(0, evaluation_steps)):
 
     x_plot.append(num_samples)
     plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
-                  nr_validation_episodes=nr_validation_episodes, save_figure=True)
+                  nr_validation_episodes=nr_validation_episodes, algorithm=algorithm, save_figure=save_folder_figures)
 
 x = [i * increments for i in (range(0, evaluation_steps))]
 plot_progress(x_plot, mean_rewards, success_rates, DoF, num_samples=num_samples,
-              nr_validation_episodes=nr_validation_episodes, save_figure=True)
+              nr_validation_episodes=nr_validation_episodes, algorithm=algorithm, save_figure=save_folder_figures)
 
 model = TRPO.load(save_folder_weights_individual)
 
-vec_env = model.get_env()
+# vec_env = model.get_env()
 policy = lambda x: model.predict(x, deterministic=True)[0]
 
 verify_external_policy_on_specific_env(env, [policy],

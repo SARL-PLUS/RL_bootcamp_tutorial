@@ -1,18 +1,14 @@
 import glob
 import os
-
 import numpy as np
-from sb3_contrib import TRPO
-from stable_baselines3 import PPO
-from torch.backends.cudnn import benchmark
-
-from environment.helpers import read_yaml_file, load_env_config, get_model_parameters
-from helper_scripts.MPC_script import model_predictive_control
-from helper_scripts.Visualize_policy_validation import verify_external_policy_on_specific_env_regret
+from environment.environment_helpers import read_experiment_config, load_env_config, get_model_parameters
+from helper_scripts.MPC import model_predictive_control
+from helper_scripts.general_helpers import make_experiment_folder, verify_external_policy_on_specific_env_regret, \
+    load_latest_policy
 
 # ToDo: store the trajectories of the MPC policy
 
-environment_settings = read_yaml_file('config/environment_setting.yaml')
+environment_settings = read_experiment_config('config/environment_setting.yaml')
 predefined_task = environment_settings['task_setting']['task_nr']
 task_location = environment_settings['task_setting']['task_location']
 
@@ -46,11 +42,12 @@ def policy_response_matrix(state):
 experiment_name = f'predefined_task_{predefined_task}'
 
 # Create the save folder for figures
-save_folder = os.path.join('Comparing', experiment_name, 'Figures', f'Dof_{DoF}', 'Comparison')
+save_folder = os.path.join('results', 'comparison', experiment_name, 'Figures', f'Dof_{DoF}')
 os.makedirs(save_folder, exist_ok=True)
 
 # Define the save folder for results
-save_folder_results = os.path.join('MPC', experiment_name, 'MPC_results', f'Dof_{DoF}')
+save_folder_results = make_experiment_folder('MPC', '', environment_settings,
+                                             purpose='MPC_results', generate=False)
 save_folder_name_results = os.path.join(save_folder_results, 'MPC_results.pkl')
 
 # Check if save_folder_name_results exists
@@ -60,43 +57,24 @@ if not os.path.exists(save_folder_name_results):
 # If it exists, you can proceed with your operations on save_folder_name_results
 print(f"Results file found: {save_folder_name_results}")
 
-
-optimization_type = 'RL'
-
-
-# Select on algorithm
-
-algorithm = environment_settings['rl-settings']['algorithm']
-
-# Construct the save folder path for weights
-save_folder_weights = os.path.join(optimization_type, algorithm, experiment_name, 'Weights', f'Dof_{DoF}')
-
-# Get the list of files in the weights folder
-files = glob.glob(os.path.join(save_folder_weights, '*'))
-files.sort()
-
-# Check if there are any files found
-if not files:
-    raise FileNotFoundError(f"No model files found in {save_folder_weights} to load. Run training (Train_policy_gradients_off_the_shelf.py)!")
-
-# Get the latest model file
-latest_model_file = files[-1]
-print(f"Loading the latest model from: {latest_model_file}")
-
-# Load the model
-if algorithm == 'TRPO':
-    model = TRPO.load(latest_model_file)  # , verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
-else:
-    model = PPO.load(latest_model_file)
-
-def policy_rl_agent(state):
- return model.predict(state, deterministic=True)[0]
+policy_rl_agent, algorithm = load_latest_policy(environment_settings)
 
 policy_benchmark = 'policy_mpc_stored'
+
 verify_external_policy_on_specific_env_regret(env, [policy_rl_agent, 'policy_mpc_stored'],
                                               policy_benchmark='policy_mpc_stored',
                                               tasks=verification_task, episodes=nr_validation_episodes,
                                               title=f'Regret to {policy_benchmark} of {algorithm}',
                                               save_folder=save_folder+'_2',
                                               policy_labels=[algorithm, 'MPC'],
+                                              DoF=DoF, read_results=save_folder_name_results)
+
+policy_benchmark = policy_response_matrix
+
+verify_external_policy_on_specific_env_regret(env, [policy_rl_agent, policy_response_matrix],
+                                              policy_benchmark=policy_response_matrix,
+                                              tasks=verification_task, episodes=nr_validation_episodes,
+                                              title=f'Regret to {policy_benchmark} of {algorithm}',
+                                              save_folder=save_folder+'_2',
+                                              policy_labels=[algorithm, 'policy_response_matrix'],
                                               DoF=DoF, read_results=save_folder_name_results)

@@ -2,12 +2,11 @@ import multiprocessing
 import time
 from typing import Tuple
 
-import gpytorch
 import numpy as np
 import torch
 from scipy.optimize import minimize
 
-from control_objects.utils import create_models
+from helper_scripts.utils import create_models
 
 import gpytorch
 

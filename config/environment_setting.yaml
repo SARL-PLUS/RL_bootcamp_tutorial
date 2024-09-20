@@ -1,23 +1,26 @@
-# Gaussian Process Constraints
-noise_setting:
-  std_noise: none
-init_scaling: 0.9
-action_scale: 1.0
-
-degrees-of-freedom: 5
+degrees-of-freedom: 1
 
 terminal-conditions:
   MAX-TIME : 1000
   boundary-conditions: true
+  penalty-scaling: 10.0
 
 mpc-settings:
   horizon-length: 8
+  tol: 1.0e-8
+  disp: False
 
 rl-settings:
   algorithm: 'PPO' # 'TRPO' ... from stable baselines
+  total_steps: 10000
+  evaluation_steps: 50
 
 # Advanced settings
 # don't touch this if not necessary
+noise_setting:
+  std_noise: none
+init_scaling: 0.9
+action_scale: 1.0
 validation-settings:
   validation-seeds: [0, 2, 3, 4, 5, 7, 8, 11, 12, 14]
 task_setting:

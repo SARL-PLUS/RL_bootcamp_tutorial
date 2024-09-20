@@ -2,18 +2,23 @@ import time
 import logging
 from typing import Any, Tuple
 
-from control_objects.gp_mpc_controller import GpMpcController
-from environment.helpers import (
-    read_yaml_file,
+import matplotlib
+
+matplotlib.use('TkAgg')  # Force the use of the TkAgg backend for external windows
+
+from helper_scripts.gp_mpc_controller import GpMpcController
+from environment.environment_helpers import (
+    read_experiment_config,
     load_env_config,
-    RewardScalingWrapper,
+    RewardScalingWrapper, SmartEpisodeTrackerWithPlottingWrapper,
 )
-from control_objects.utils import init_visu_and_folders, init_control, close_run
+from helper_scripts.utils import init_visu_and_folders, init_control, close_run
 # from wrapper import SmartEpisodeTrackerWithPlottingWrapper
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 
 def init_graphics_and_controller(
@@ -75,19 +80,23 @@ def main():
     """
     Main function to run the GP-MPC controller with the environment.
     """
-    params_controller_dict = read_yaml_file("config/data_driven_mpc_config.yaml")
+    params_controller_dict = read_experiment_config("config/data_driven_mpc_config.yaml")
 
     num_steps = params_controller_dict.get("num_steps_env", 1000)
     num_repeat_actions = params_controller_dict["controller"].get("num_repeat_actions", 1)
     random_actions_init = params_controller_dict.get("random_actions_init", 0)
+
 
     env = load_env_config(env_config="config/environment_setting.yaml")
     DoF = env.DoF
 
     adjust_params_for_DoF(params_controller_dict, DoF)
 
+    # env = SmartEpisodeTrackerWithPlottingWrapper(
+    #     RewardScalingWrapper(env, scale=1.0)
+    # )
     env = SmartEpisodeTrackerWithPlottingWrapper(
-        RewardScalingWrapper(env, scale=0.1)
+        env
     )
 
     live_plot_obj, ctrl_obj = init_graphics_and_controller(

@@ -1,15 +1,26 @@
+import glob
 import os
 import pickle
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from sb3_contrib import TRPO
+from stable_baselines3 import PPO
 from tqdm import tqdm
 
 colors = plt.cm.rainbow(np.linspace(0, 1, 10))
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=[color for color in colors])
 colors_for_different_appoaches = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
                                   '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
+def make_experiment_folder(optimization_type, algorithm, environment_settings, purpose, generate = True):
+    experiment_name = f'predefined_task_{environment_settings["task_setting"]["task_nr"]}'
+    save_folder = os.path.join('results', optimization_type, algorithm, experiment_name, purpose, f'Dof_{environment_settings["degrees-of-freedom"]}')
+    if generate:
+        os.makedirs(save_folder, exist_ok=True)
+    return save_folder
+
 
 #Todo: legend for states and actions
 
@@ -205,7 +216,6 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
 
         # Plot actions and states and reward per step
         if i == 0:
-            print('Plotting actions and states', i)
             plot_actions_states(ax[4], actions_per_task, "Actions", ep_len_per_task)
             ax[4].set_ylabel("Actions")
             ax[4].set_xlabel("Step")
@@ -321,7 +331,6 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
 
         # Plot actions and states
         if i == 0:
-            print('Plotting actions and states', label)
             plot_actions_states(ax[4], actions_per_task, "Actions", ep_len_per_task)
             ax[4].set_ylabel("Actions")
             ax[4].set_xlabel("Step")
@@ -360,6 +369,80 @@ def verify_external_policy_on_specific_env_regret(env, policies, policy_benchmar
         plt.savefig(os.path.join(save_folder,save_name + '.png'), format='png')  # Specify the format as needed
     plt.show()
 
+
     return np.mean(success_rates), mean_rewards
+
+
+def plot_progress(x, mean_rewards, success_rate, DoF, num_samples, nr_validation_episodes, algorithm, save_figure=False):
+    """
+    Plot the progress of training over episodes or time.
+
+    Parameters:
+    - x: Iterable with x-axis values (e.g., episode numbers).
+    - mean_rewards: Iterable with mean rewards corresponding to x.
+    - success_rate: Iterable with success rates corresponding to x.
+    - DoF: Degree of Freedom for the AWAKE environment.
+    - num_samples: Number of samples used for training.
+    """
+    fig, ax = plt.subplots()
+    ax.plot(x, mean_rewards, color='blue', label='Mean Rewards')
+    ax.set_xlabel('Interactions with the system')
+    ax.set_ylabel('Cumulative Reward', color='blue')
+    ax.tick_params(axis='y', labelcolor='blue')
+    ax.set_title(
+        f"{algorithm} on AWAKE with DoF: {DoF} and trained on {num_samples} samples\n averaged over {nr_validation_episodes} validation episodes")
+
+    ax1 = ax.twinx()
+    ax1.plot(x, success_rate, color='green', label='Success Rate')
+    ax1.set_ylabel('Success Rate (%)', color='green')
+    ax1.tick_params(axis='y', labelcolor='green')
+
+    # Creating a legend that includes all labels
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax1.get_legend_handles_labels()
+    ax1.legend(lines + lines2, labels + labels2, loc='upper left')
+
+    plt.tight_layout()
+    if save_figure:
+        save_name = os.path.join(save_figure, f'Learning_{num_samples}')
+        plt.savefig(save_name + '.pdf', format='pdf')  # Specify the format as needed
+        plt.savefig(save_name + '.png', format='png')  # Specify the format as needed
+    plt.show()
+
+
+def load_latest_policy(environment_settings):
+    optimization_type = 'RL'
+
+    # Select on algorithm
+
+    algorithm = environment_settings['rl-settings']['algorithm']
+
+    # Construct the save folder path for weights
+    save_folder_weights = make_experiment_folder(optimization_type, algorithm, environment_settings,
+                                                 purpose='Weights', generate=False)
+    # Get the list of files in the weights folder
+    files = glob.glob(os.path.join(save_folder_weights, '*'))
+    files.sort()
+
+    # Check if there are any files found
+    if not files:
+        raise FileNotFoundError(
+            f"No model files found in {save_folder_weights} to load. Run training (Train_policy_gradients_off_the_shelf.py)!")
+
+    # Get the latest model file
+    latest_model_file = files[-1]
+    print(f"Loading the latest model from: {latest_model_file}")
+
+    # Load the model
+    if algorithm == 'TRPO':
+        model = TRPO.load(latest_model_file)  # , verbose=1, clip_range=.1, learning_rate=5e-4, gamma=1)
+    else:
+        model = PPO.load(latest_model_file)
+
+    def policy_rl_agent(state):
+        return model.predict(state, deterministic=True)[0]
+
+    return policy_rl_agent, algorithm
+
 if __name__ == "__main__":
     pass

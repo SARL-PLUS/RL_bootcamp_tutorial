@@ -2,9 +2,10 @@ import logging
 import os
 import pickle
 from enum import Enum
-from typing import Optional
 
 import gymnasium as gym
+import matplotlib.cm as cm
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -44,6 +45,7 @@ class DoFWrapper(gym.Wrapper):
         self.boundary_conditions = kwargs.get("boundary_conditions", False)
         self.env.init_scaling = kwargs.get("init_scaling", 1.0)
         self.action_scale = kwargs.get("action_scale", 1.0)
+        self.penalty_scaling = kwargs.get("penalty_scaling", 1.0)
 
 
         # Modify the action and observation spaces
@@ -117,7 +119,7 @@ class DoFWrapper(gym.Wrapper):
             observation[first_violation:] = np.sign(observation[first_violation])
 
             # Recalculate reward after modification
-            reward = self.env._get_reward(observation) * 100
+            reward = self.env._get_reward(observation) * self.penalty_scaling
 
             # Terminate if boundary conditions are set
             terminated = self.boundary_conditions
@@ -310,7 +312,7 @@ def plot_optimal_policy(states_opt_list, actions_opt_list, returns_opt_list, env
     plt.show()
 
 
-def read_yaml_file(filepath):
+def read_experiment_config(filepath):
     """
     Reads a YAML file and returns the data.
 
@@ -407,7 +409,7 @@ def load_env_config(env_config: str = 'config/environment_setting.yaml') -> Any:
 
     # Read environment settings from the YAML configuration file
     logging.info(f"Loading environment configuration from {env_config}")
-    environment_settings = read_yaml_file(env_config)
+    environment_settings = read_experiment_config(env_config)
 
     # Extract task settings with error handling
     try:
@@ -435,6 +437,7 @@ def load_env_config(env_config: str = 'config/environment_setting.yaml') -> Any:
         terminal_conditions = environment_settings['terminal-conditions']
         MAX_TIME = terminal_conditions['MAX-TIME']
         boundary_conditions = terminal_conditions['boundary-conditions']
+        penalty_scaling = terminal_conditions['penalty-scaling']
     except KeyError as e:
         raise KeyError(f"Missing key in 'terminal-conditions' configuration: {e}")
 
@@ -454,9 +457,257 @@ def load_env_config(env_config: str = 'config/environment_setting.yaml') -> Any:
         DoF=DoF,
         boundary_conditions=boundary_conditions,
         init_scaling=init_scaling,
-        action_scale=action_scale
+        action_scale=action_scale,
+        penalty_scaling=penalty_scaling
     )
 
     logging.info("Environment initialized successfully.")
     return env
 
+class EpisodeData:
+    def __init__(self):
+        self.states = []
+        self.actions = []
+        self.rewards = []
+        self.is_done = False
+
+    def add_step(self, state, action, reward):
+        self.states.append(state)
+        self.actions.append(action)
+        self.rewards.append(reward)
+
+    def end_episode(self):
+        self.is_done = True
+
+
+class SmartEpisodeTrackerWithPlottingWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.episodes = []
+        self.current_episode = None
+        self._setup_plotting()
+
+    def _setup_plotting(self):
+        self.fig, (self.ax1, self.ax2) = plt.subplots(
+            2, 1, figsize=(6, 8), tight_layout=True
+        )
+        self.cumulative_step = 0
+        self.n_states = self.env.observation_space.shape[0]
+        self.n_actions = self.env.action_space.shape[0]
+        self.colors_states = cm.rainbow(np.linspace(0, 1, self.n_states))
+        self.colors_actions = cm.rainbow(np.linspace(0, 1, self.n_actions))
+        plt.show(block=False)
+
+
+    def _update_plots(self):
+        self.ax1.clear()
+        self.ax2.clear()
+
+        cumulative_step = 0
+
+        # Function to plot data for an episode
+        def plot_episode(episode, start_step):
+            if not episode:
+                return start_step
+
+            trajectory = (
+                np.array(episode.states)
+                if episode.states
+                else np.zeros((0, self.n_states))
+            )
+            steps = range(start_step, start_step + len(trajectory))
+
+            for i in range(self.n_states):
+                self.ax1.plot(steps, trajectory[:, i], color=self.colors_states[i])
+
+            if episode is not None:
+                try:
+                    # Filtere None-Werte aus den Rewards und konvertiere sie in ein NumPy-Array
+                    rewards = np.array([reward for reward in episode.rewards if reward is not None])
+                    # Finde Indizes, wo die Rewards den Schwellenwert überschreiten
+                    indices_success = np.where(rewards > self.env.threshold)[0]
+                    # Stelle sicher, dass 'steps' die gleiche Länge wie 'rewards' hat
+                    if len(steps) >= len(indices_success):
+                        successful_steps = [steps[i] for i in indices_success]
+                        for step in successful_steps:
+                            self.ax1.axvline(x=step, color='green', linestyle='--', linewidth=2, label='Success')
+                    else:
+                        print("Warnung: Die Länge von 'steps' ist kürzer als die Anzahl der erfolgreichen Indizes.")
+
+                except AttributeError as e:
+                    print(f"Attributfehler: {e}")
+                except IndexError as e:
+                    print(f"Indexfehler: {e}")
+                except Exception as e:
+                    print(f"Unexpected errpor: {e}")
+            else:
+                print("Das 'episode' Objekt ist None und kann nicht verarbeitet werden.")
+
+            for i in range(self.n_actions):
+                action_values = [
+                    action[i] if action is not None and i < len(action) else np.nan
+                    for action in episode.actions
+                ]
+                self.ax2.plot(
+                    steps,
+                    action_values,
+                    color=self.colors_actions[i],
+                    ls="--",
+                    marker=".",
+                )
+
+            return start_step + len(trajectory)
+
+        # Plot data for each completed episode
+        for episode in self.episodes:
+            cumulative_step = plot_episode(episode, cumulative_step)
+
+        # Plot data for the current (incomplete) episode
+        cumulative_step = plot_episode(self.current_episode, cumulative_step)
+
+        self.ax1.set_title("Trajectories for Each Episode")
+        self.ax1.set_xlabel("Cumulative Step")
+        self.ax1.set_ylabel("State Value")
+        self.ax1.grid()
+
+        self.ax2.set_title("Actions for Each Episode")
+        self.ax2.set_xlabel("Cumulative Step")
+        self.ax2.set_ylabel("Action Value")
+        self.ax2.grid()
+
+        # Update legends
+        legend_handles_states = [
+            mlines.Line2D([], [], color=self.colors_states[i], label=f"State {i + 1}")
+            for i in range(self.n_states)
+        ]
+
+        legend_handles_succes = [
+            mlines.Line2D([], [], color='green', label=f"success")
+            for i in range(self.n_states)
+        ]
+
+        legend_handles_actions = [
+            mlines.Line2D([], [], color=self.colors_actions[i], label=f"Action {i + 1}")
+            for i in range(self.n_actions)
+        ]
+
+
+        # self.ax1.legend(handles=legend_handles_states)
+        # self.ax2.legend(handles=legend_handles_actions)
+        self.ax1.legend(
+            handles=legend_handles_states, loc="upper left", bbox_to_anchor=(1, 1)
+        )
+        self.ax2.legend(
+            handles=legend_handles_actions, loc="upper left", bbox_to_anchor=(1, 1)
+        )
+
+        self.fig.canvas.draw()
+        # self.fig.canvas.flush_events()
+
+    def step(self, action):
+        observation, reward, done, _, info = self.env.step(action)
+
+        if self.current_episode is None:
+            self.current_episode = EpisodeData()
+
+        self.current_episode.add_step(observation, action, reward)
+
+        if done:
+            self.current_episode.end_episode()
+            self.episodes.append(self.current_episode)
+            self.current_episode = None
+
+        self._update_plots()
+        return observation, reward, done, False, info
+
+    def reset(self, **kwargs):
+        observation, info = self.env.reset(**kwargs)
+
+        if self.current_episode is not None and not self.current_episode.is_done:
+            self.current_episode.end_episode()
+            self.episodes.append(self.current_episode)
+
+        self.current_episode = EpisodeData()
+        self.current_episode.add_step(
+            observation, None, None
+        )  # Initial state with no action or reward
+
+        self._update_plots()
+        return observation, info
+
+
+def plot_trajectories_and_actions(env, n_episodes):
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 16))
+
+    cumulative_step = 0  # To track the cumulative number of steps across episodes
+
+    n_states = env.observation_space.shape[0]
+    n_actions = env.action_space.shape[0]
+    colors_states = cm.rainbow(np.linspace(0, 1, n_states))
+    colors_actions = cm.rainbow(np.linspace(0, 1, n_actions))
+
+    # Create legend handles
+    legend_handles_states = [
+        mlines.Line2D([], [], color=colors_states[i], label=f"State {i + 1}")
+        for i in range(n_states)
+    ]
+    legend_handles_actions = [
+        mlines.Line2D([], [], color=colors_actions[i], label=f"Action {i + 1}")
+        for i in range(n_actions)
+    ]
+
+    for _ in range(n_episodes):
+        _, _ = env.reset()
+        done = False
+        trajectory = []
+        actions = []
+
+        while not done:
+            action = env.action_space.sample()
+            next_state, reward, done, _, _ = env.step(action)
+            trajectory.append(next_state)
+            actions.append(action)
+
+        trajectory = np.array(trajectory)
+        actions = np.array(actions)
+
+        steps = range(cumulative_step, cumulative_step + len(trajectory))
+
+        for i in range(n_states):
+            ax1.plot(steps, trajectory[:, i], color=colors_states[i])
+        for i in range(n_actions):
+            ax2.plot(steps, actions[:, i], color=colors_actions[i])
+
+        cumulative_step += len(trajectory)
+
+    ax1.set_title("Trajectories for Each Episode")
+    ax1.set_xlabel("Cumulative Step")
+    ax1.set_ylabel("State Value")
+    ax1.legend(handles=legend_handles_states)
+    ax1.grid()
+
+    ax2.set_title("Actions for Each Episode")
+    ax2.set_xlabel("Cumulative Step")
+    ax2.set_ylabel("Action Value")
+    ax2.legend(handles=legend_handles_actions)
+    ax2.grid()
+
+    plt.show()
+
+
+if __name__ == "__main__":
+    # Initialize the environment
+    env = AwakeSteering()
+    # plot_trajectories_and_actions(env, 3)  # Plot for 3 episodes
+
+    wrapped_env = SmartEpisodeTrackerWithPlottingWrapper(env)
+
+    for _ in range(10):  # Number of episodes
+        obs, _ = wrapped_env.reset()
+        done = False
+        while not done:
+            action = wrapped_env.action_space.sample()
+            obs, reward, done, _, _ = wrapped_env.step(action)
+
+    plt.ioff()  # Turn off interactive mode
+    plt.show()
