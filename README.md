@@ -282,7 +282,7 @@ The **Analytical Approach** leverages the inverse of the linear dynamics matrice
 - **Does Not Account for Non-Linearities:** Struggles to handle non-linear dynamics, making it less effective in scenarios where such complexities are present.
 
 #### Mathematical Foundation:
-The Analytical Approach uses the inverse of the response matrix ($\mathbb{B}$) derived from the linear dynamics of the beam steering system. By applying this inverse matrix to the current state, the method calculates the precise control actions required to correct deviations from the desired beam position:
+The Analytical Approach uses the inverse of the response matrix ($\mathbf{B}$) derived from the linear dynamics of the beam steering system. By applying this inverse matrix to the current state, the method calculates the precise control actions required to correct deviations from the desired beam position:
 $$
 \mathbf{a}_t = \mathbf {B}^{-1} \mathbf{s}_t
 $$
@@ -405,6 +405,7 @@ RL offers adaptability and can handle more complex, non-linear dynamics, which t
 The Analytical Approach serves as a foundational control method that can be effective in environments with well-defined linear dynamics and minimal uncertainties. While it lacks the adaptability and learning capabilities of RL, it offers simplicity and computational efficiency, making it a valuable tool for benchmarking and comparison against more advanced control strategies like MPC and RL.
 
 ## Preliminary conclusion RL with guarantees - a dream?:
+
 Can we somehow get the advantages of having a model and purly learning from data?
 
 Let us draw some conclusion in a sketch:
@@ -752,136 +753,6 @@ After training, compare the performance of RL agents with the MPC and response m
 ### Overview
 
 The **RL Bootcamp Tutorial** leverages a custom Gym environment, `AwakeSteering`, tailored for beam steering tasks using reinforcement learning (RL). The environment is enhanced with several wrappers and helper functions to provide flexibility, scalability, and robust functionality.
-
-### Key Imports
-
-- **Standard Libraries:**
-  - `logging`: Enables logging for debugging and information tracking.
-  - `os`: Facilitates interaction with the operating system, such as file path manipulations.
-  - `pickle`: Handles serialization and deserialization of Python objects.
-  - `enum`: Provides support for enumeration classes.
-  - `typing`: Offers type hints for improved code clarity and type checking.
-
-- **Third-Party Libraries:**
-  - `gymnasium as gym`: Core library for creating and interacting with RL environments.
-  - `matplotlib`: Utilized for data visualization and plotting.
-    - `matplotlib.cm as cm`
-    - `matplotlib.lines as mlines`
-    - `matplotlib.pyplot as plt`
-  - `numpy as np`: Supports numerical operations and array manipulations.
-  - `pandas as pd`: Facilitates data manipulation and analysis.
-  - `yaml`: Parses YAML configuration files for environment settings.
-
-- **Custom Modules:**
-  - `environment.environment_awake_steering import AwakeSteering`: Imports the custom `AwakeSteering` environment.
-
-### Core Classes
-
-- **`Plane` (Enum):**
-  - Defines operational planes for the environment:
-    - `horizontal = 0`
-    - `vertical = 1`
-
-- **`DoFWrapper` (gym.Wrapper):**
-  - **Purpose:** Restricts the environment to a specified number of Degrees of Freedom (DoF).
-  - **Functionality:**
-    - Adjusts action and observation spaces to include only the first `DoF` elements.
-    - Modifies reward and termination conditions based on the limited observations.
-    - Scales actions and applies penalties as configured.
-
-- **`Awake_Benchmarking_Wrapper` (gym.Wrapper):**
-  - **Purpose:** Provides benchmarking capabilities by tracking and evaluating optimal trajectories and actions.
-  - **Functionality:**
-    - Computes optimal actions using inverse response matrices.
-    - Records and visualizes state-action-reward trajectories.
-    - Facilitates comparison between agent performance and optimal policies.
-
-- **`RewardScalingWrapper` (gym.Wrapper):**
-  - **Purpose:** Scales rewards to adjust the learning incentives for the RL agent.
-  - **Functionality:**
-    - Multiplies rewards by a specified scaling factor.
-    - Introduces minor noise to observations to enhance robustness.
-
-- **`SmartEpisodeTrackerWithPlottingWrapper` (gym.Wrapper):**
-  - **Purpose:** Tracks and visualizes episode data in real-time.
-  - **Functionality:**
-    - Records states, actions, and rewards for each episode.
-    - Generates dynamic plots for state trajectories and action sequences.
-    - Highlights successful steps and episode durations.
-
-- **`EpisodeData`:**
-  - **Purpose:** Serves as a container for storing data related to individual episodes.
-  - **Functionality:**
-    - Stores lists of states, actions, and rewards.
-    - Tracks the completion status of episodes.
-
-### Helper Functions
-
-- **`load_predefined_task(task_nr, task_location)`**
-  - **Purpose:** Loads predefined tasks from a specified location using `pickle`.
-  - **Functionality:** Retrieves task configurations for initializing the environment.
-
-- **`plot_results(states, actions, rewards, env, title)`**
-  - **Purpose:** Visualizes the states, actions, and rewards of a single episode.
-  - **Functionality:** Generates subplots for each component and marks threshold crossings.
-
-- **`plot_optimal_policy(states_opt_list, actions_opt_list, returns_opt_list, env)`**
-  - **Purpose:** Plots optimal policies across multiple episodes.
-  - **Functionality:** Aggregates and visualizes state trajectories, actions, and rewards.
-
-- **`read_experiment_config(filepath)`**
-  - **Purpose:** Reads and parses a YAML configuration file.
-  - **Functionality:** Loads environment and task settings for initializing the environment.
-
-- **`get_model_parameters(environment)`**
-  - **Purpose:** Extracts and processes model parameters for Model Predictive Control (MPC).
-  - **Functionality:** Retrieves and scales the action matrix and defines MPC thresholds.
-
-- **`load_env_config(env_config)`**
-  - **Purpose:** Loads environment configurations and initializes the environment with appropriate wrappers.
-  - **Functionality:** Sets up tasks, degrees of freedom, terminal conditions, and scaling factors based on YAML configurations.
-
-- **`plot_trajectories_and_actions(env, n_episodes)`**
-  - **Purpose:** Plots trajectories and actions for a specified number of episodes.
-  - **Functionality:** Iteratively runs episodes and visualizes the resulting state and action sequences.
-
-### Usage Example
-
-```python
-import gym
-from environment.environment_awake_steering import AwakeSteering
-
-# Initialize the base environment
-env = AwakeSteering(
-    task={'goal': [responseH, responseV], 'id': 'task_1'},
-    MAX_TIME=200
-)
-
-# Wrap the environment to limit Degrees of Freedom
-wrapped_env = DoFWrapper(
-    env=env,
-    DoF=5,
-    boundary_conditions=True,
-    init_scaling=1.0,
-    action_scale=1.0,
-    penalty_scaling=1.0
-)
-
-# Further wrap with benchmarking capabilities
-benchmark_env = Awake_Benchmarking_Wrapper(wrapped_env)
-
-# Interact with the environment
-observation, info = benchmark_env.reset()
-done = False
-while not done:
-    action = benchmark_env.action_space.sample()
-    observation, reward, done, truncated, info = benchmark_env.step(action)
-    benchmark_env.render()
-
-# Close the environment
-benchmark_env.close()
-```
-# Description of the content
 ## `AwakeSteering` Gym Environment
 The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE
 ### Overview
@@ -998,11 +869,6 @@ env.close()
 - [Reinforcement Learning Overview](https://en.wikipedia.org/wiki/Reinforcement_learning)
 
 ---
-## Environment Components
-
-### Overview
-
-The **RL Bootcamp Tutorial** leverages a custom Gym environment, `AwakeSteering`, tailored for beam steering tasks using reinforcement learning (RL). The environment is enhanced with several wrappers and helper functions to provide flexibility, scalability, and robust functionality.
 
 ### Key Imports
 
@@ -1131,6 +997,247 @@ while not done:
 
 # Close the environment
 benchmark_env.close()
+```
+
+[//]: # ()
+[//]: # ()
+[//]: # (## Environment Components)
+
+[//]: # ()
+[//]: # (### Overview)
+
+[//]: # ()
+[//]: # (The **RL Bootcamp Tutorial** leverages a custom Gym environment, `AwakeSteering`, tailored for beam steering tasks using reinforcement learning &#40;RL&#41;. The environment is enhanced with several wrappers and helper functions to provide flexibility, scalability, and robust functionality.)
+
+[//]: # ()
+[//]: # (### Key Imports)
+
+[//]: # ()
+[//]: # (- **Standard Libraries:**)
+
+[//]: # (  - `logging`: Enables logging for debugging and information tracking.)
+
+[//]: # (  - `os`: Facilitates interaction with the operating system, such as file path manipulations.)
+
+[//]: # (  - `pickle`: Handles serialization and deserialization of Python objects.)
+
+[//]: # (  - `enum`: Provides support for enumeration classes.)
+
+[//]: # (  - `typing`: Offers type hints for improved code clarity and type checking.)
+
+[//]: # ()
+[//]: # (- **Third-Party Libraries:**)
+
+[//]: # (  - `gymnasium as gym`: Core library for creating and interacting with RL environments.)
+
+[//]: # (  - `matplotlib`: Utilized for data visualization and plotting.)
+
+[//]: # (    - `matplotlib.cm as cm`)
+
+[//]: # (    - `matplotlib.lines as mlines`)
+
+[//]: # (    - `matplotlib.pyplot as plt`)
+
+[//]: # (  - `numpy as np`: Supports numerical operations and array manipulations.)
+
+[//]: # (  - `pandas as pd`: Facilitates data manipulation and analysis.)
+
+[//]: # (  - `yaml`: Parses YAML configuration files for environment settings.)
+
+[//]: # ()
+[//]: # (- **Custom Modules:**)
+
+[//]: # (  - `environment.environment_awake_steering import AwakeSteering`: Imports the custom `AwakeSteering` environment.)
+
+[//]: # ()
+[//]: # (### Core Classes)
+
+[//]: # ()
+[//]: # (- **`Plane` &#40;Enum&#41;:**)
+
+[//]: # (  - Defines operational planes for the environment:)
+
+[//]: # (    - `horizontal = 0`)
+
+[//]: # (    - `vertical = 1`)
+
+[//]: # ()
+[//]: # (- **`DoFWrapper` &#40;gym.Wrapper&#41;:**)
+
+[//]: # (  - **Purpose:** Restricts the environment to a specified number of Degrees of Freedom &#40;DoF&#41;.)
+
+[//]: # (  - **Functionality:**)
+
+[//]: # (    - Adjusts action and observation spaces to include only the first `DoF` elements.)
+
+[//]: # (    - Modifies reward and termination conditions based on the limited observations.)
+
+[//]: # (    - Scales actions and applies penalties as configured.)
+
+[//]: # ()
+[//]: # (- **`Awake_Benchmarking_Wrapper` &#40;gym.Wrapper&#41;:**)
+
+[//]: # (  - **Purpose:** Provides benchmarking capabilities by tracking and evaluating optimal trajectories and actions.)
+
+[//]: # (  - **Functionality:**)
+
+[//]: # (    - Computes optimal actions using inverse response matrices.)
+
+[//]: # (    - Records and visualizes state-action-reward trajectories.)
+
+[//]: # (    - Facilitates comparison between agent performance and optimal policies.)
+
+[//]: # ()
+[//]: # (- **`RewardScalingWrapper` &#40;gym.Wrapper&#41;:**)
+
+[//]: # (  - **Purpose:** Scales rewards to adjust the learning incentives for the RL agent.)
+
+[//]: # (  - **Functionality:**)
+
+[//]: # (    - Multiplies rewards by a specified scaling factor.)
+
+[//]: # (    - Introduces minor noise to observations to enhance robustness.)
+
+[//]: # ()
+[//]: # (- **`SmartEpisodeTrackerWithPlottingWrapper` &#40;gym.Wrapper&#41;:**)
+
+[//]: # (  - **Purpose:** Tracks and visualizes episode data in real-time.)
+
+[//]: # (  - **Functionality:**)
+
+[//]: # (    - Records states, actions, and rewards for each episode.)
+
+[//]: # (    - Generates dynamic plots for state trajectories and action sequences.)
+
+[//]: # (    - Highlights successful steps and episode durations.)
+
+[//]: # ()
+[//]: # (- **`EpisodeData`:**)
+
+[//]: # (  - **Purpose:** Serves as a container for storing data related to individual episodes.)
+
+[//]: # (  - **Functionality:**)
+
+[//]: # (    - Stores lists of states, actions, and rewards.)
+
+[//]: # (    - Tracks the completion status of episodes.)
+
+[//]: # ()
+[//]: # (### Helper Functions)
+
+[//]: # ()
+[//]: # (- **`load_predefined_task&#40;task_nr, task_location&#41;`**)
+
+[//]: # (  - **Purpose:** Loads predefined tasks from a specified location using `pickle`.)
+
+[//]: # (  - **Functionality:** Retrieves task configurations for initializing the environment.)
+
+[//]: # ()
+[//]: # (- **`plot_results&#40;states, actions, rewards, env, title&#41;`**)
+
+[//]: # (  - **Purpose:** Visualizes the states, actions, and rewards of a single episode.)
+
+[//]: # (  - **Functionality:** Generates subplots for each component and marks threshold crossings.)
+
+[//]: # ()
+[//]: # (- **`plot_optimal_policy&#40;states_opt_list, actions_opt_list, returns_opt_list, env&#41;`**)
+
+[//]: # (  - **Purpose:** Plots optimal policies across multiple episodes.)
+
+[//]: # (  - **Functionality:** Aggregates and visualizes state trajectories, actions, and rewards.)
+
+[//]: # ()
+[//]: # (- **`read_experiment_config&#40;filepath&#41;`**)
+
+[//]: # (  - **Purpose:** Reads and parses a YAML configuration file.)
+
+[//]: # (  - **Functionality:** Loads environment and task settings for initializing the environment.)
+
+[//]: # ()
+[//]: # (- **`get_model_parameters&#40;environment&#41;`**)
+
+[//]: # (  - **Purpose:** Extracts and processes model parameters for Model Predictive Control &#40;MPC&#41;.)
+
+[//]: # (  - **Functionality:** Retrieves and scales the action matrix and defines MPC thresholds.)
+
+[//]: # ()
+[//]: # (- **`load_env_config&#40;env_config&#41;`**)
+
+[//]: # (  - **Purpose:** Loads environment configurations and initializes the environment with appropriate wrappers.)
+
+[//]: # (  - **Functionality:** Sets up tasks, degrees of freedom, terminal conditions, and scaling factors based on YAML configurations.)
+
+[//]: # ()
+[//]: # (- **`plot_trajectories_and_actions&#40;env, n_episodes&#41;`**)
+
+[//]: # (  - **Purpose:** Plots trajectories and actions for a specified number of episodes.)
+
+[//]: # (  - **Functionality:** Iteratively runs episodes and visualizes the resulting state and action sequences.)
+
+[//]: # ()
+[//]: # (### Usage Example)
+
+[//]: # ()
+[//]: # (```python)
+
+[//]: # (import gym)
+
+[//]: # (from environment.environment_awake_steering import AwakeSteering)
+
+[//]: # ()
+[//]: # (# Initialize the base environment)
+
+[//]: # (env = AwakeSteering&#40;)
+
+[//]: # (    task={'goal': [responseH, responseV], 'id': 'task_1'},)
+
+[//]: # (    MAX_TIME=200)
+
+[//]: # (&#41;)
+
+[//]: # ()
+[//]: # (# Wrap the environment to limit Degrees of Freedom)
+
+[//]: # (wrapped_env = DoFWrapper&#40;)
+
+[//]: # (    env=env,)
+
+[//]: # (    DoF=5,)
+
+[//]: # (    boundary_conditions=True,)
+
+[//]: # (    init_scaling=1.0,)
+
+[//]: # (    action_scale=1.0,)
+
+[//]: # (    penalty_scaling=1.0)
+
+[//]: # (&#41;)
+
+[//]: # ()
+[//]: # (# Further wrap with benchmarking capabilities)
+
+[//]: # (benchmark_env = Awake_Benchmarking_Wrapper&#40;wrapped_env&#41;)
+
+[//]: # ()
+[//]: # (# Interact with the environment)
+
+[//]: # (observation, info = benchmark_env.reset&#40;&#41;)
+
+[//]: # (done = False)
+
+[//]: # (while not done:)
+
+[//]: # (    action = benchmark_env.action_space.sample&#40;&#41;)
+
+[//]: # (    observation, reward, done, truncated, info = benchmark_env.step&#40;action&#41;)
+
+[//]: # (    benchmark_env.render&#40;&#41;)
+
+[//]: # ()
+[//]: # (# Close the environment)
+
+[//]: # (benchmark_env.close&#40;&#41;)
 ```
 By utilizing the `AwakeSteering` environment, you can develop and train reinforcement learning agents to perform beam steering tasks effectively. Whether you're conducting research or developing practical applications, this environment provides a robust foundation for your RL experiments.
 ```yaml
