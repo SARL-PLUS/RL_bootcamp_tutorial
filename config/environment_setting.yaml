@@ -1,5 +1,5 @@
-# Configuration File for RL Bootcamp Tutorial
 
+# Configuration File for RL Bootcamp Tutorial
 # Degrees of Freedom: Specifies the number of control inputs and observed states in the environment.
 degrees-of-freedom: 10
 
@@ -7,10 +7,10 @@ degrees-of-freedom: 10
 terminal-conditions:
   # Maximum number of steps allowed per episode.
   MAX-TIME: 1000
-  
+
   # Whether to enforce boundary conditions on beam positions.
   boundary-conditions: true
-  
+
   # Scaling factor applied to penalties when boundary conditions are violated.
   penalty-scaling: 10.0
 
@@ -18,23 +18,55 @@ terminal-conditions:
 mpc-settings:
   # Length of the prediction horizon for MPC.
   horizon-length: 8
-  
+
   # Tolerance for convergence in the MPC solver.
   tol: 1.0e-8
-  
+
   # Whether to display solver output during optimization.
   disp: False
 
 # RL (Reinforcement Learning) Settings: Parameters for the RL algorithm.
 rl-settings:
+  algorithm: 'TRPO' # Change this to 'TRPO' to use TRPO from stable-baselines
   # RL algorithm to use. Examples: 'PPO', 'TRPO' from Stable Baselines.
-  algorithm: 'PPO' # 'TRPO' ... from stable baselines
-  
   # Total number of training steps for the RL agent.
   total_steps: 10000
-  
+
   # Number of steps between each evaluation of the RL agent.
   evaluation_steps: 50
+
+  # PPO specific hyperparameters
+  ppo:
+    learning_rate: 3.0e-4
+    n_steps: 2048
+    batch_size: 64
+    n_epochs: 10
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    ent_coef: 0.0
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    use_sde: False
+    sde_sample_freq: -1
+
+  # TRPO specific hyperparameters
+  trpo:
+    learning_rate: 1.0e-3
+    n_steps: 2048
+    batch_size: 128
+    gamma: 0.99
+    cg_max_steps: 15
+    cg_damping: 0.1
+    line_search_shrinking_factor: 0.8
+    line_search_max_iter: 10
+    n_critic_updates: 10
+    gae_lambda: 0.95
+    use_sde: False
+    sde_sample_freq: -1
+    normalize_advantage: True
+    target_kl: 0.01
+    sub_sampling_factor: 1
 
 # Advanced Settings
 # Note: Modify these settings only if necessary.
@@ -57,6 +89,6 @@ validation-settings:
 task_setting:
   # Path to the file containing predefined tasks for verification.
   task_location: 'environment/tasks/verification_tasks.pkl'
-  
+
   # Task number to load from the task file.
   task_nr: 0
