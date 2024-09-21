@@ -34,7 +34,7 @@ Before we start, these are the **learning goals**:
    - Please discuss questions.
    - Facilitate sessions where learners and experts debate and reach consensus on RL concepts and implementation strategies.
 
-# Open questions for the programmes? - these are the notes I took during our discussions:
+# Open questions for the programme? - these are the notes I took during our discussions:
 
 Part II:
    1. Elements of model-based RL
@@ -89,7 +89,7 @@ Part II:
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
 - 
-## Table of Contents
+# Table of Contents
 
 - [Introduction](#introduction)
   - [Problem Definition](#problem-definition)
