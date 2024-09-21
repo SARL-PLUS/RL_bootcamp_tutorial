@@ -234,7 +234,7 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
         plot_rewards(ax[1], ax1_twin, rewards_per_task, success_rate_per_tasks, label=label,
                      color=colors_for_different_appoaches[i])
 
-        ax[1].set_ylabel("Regret")
+        ax[1].set_ylabel("Cum. Reward")
         ax[1].set_xlabel("Episode")
         ax[1].legend()
 

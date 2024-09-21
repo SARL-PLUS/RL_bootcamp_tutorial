@@ -1,10 +1,9 @@
 # Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
 
-## Getting Closer to Real-World Reinforcement Learning Applications
+## Getting Closer to Real-World Reinforcement Learning Applications - the AWAKE RL Playground
 
-[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova
+[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova (, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu)
 
-[//]: # (, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu  )
 **Contact:** [simon.hirlaender@plus.ac.at](mailto:simon.hirlaender@plus.ac.at) or [sarl.ida.plus@gmail.com](mailto:sarl.ida.plus@gmail.com) 
 
 Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through implementing reinforcement learning (RL) techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness, and conduct a comprehensive noise study to evaluate performance under different conditions.
@@ -114,10 +113,10 @@ The states are denoted by $\mathbf s$ and the actions by $\mathbf a$. We want to
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
 
 - **State Space ($\mathcal{S}$):**  
-  A 10-dimensional continuous space representing the current beam positions and related parameters. Each state $ \mathbf{s}_t \in \mathcal{S} $ is a vector of real numbers capturing the system's state at time step $ t $.
+  A $N$-dimensional (10 in the real scenario) continuous space representing the current beam positions and related parameters. Each state $ \mathbf{s}_t \in \mathcal{S} $ is a vector of real numbers capturing the system's state at time step $ t $.
 
 - **Action Space ($\mathcal{A}$):**  
-  A 10-dimensional continuous space corresponding to control inputs, such as corrector magnets. Actions $ \mathbf{a}_t \in \mathcal{A} $ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
+  A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $ \mathbf{a}_t \in \mathcal{A} $ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
 
 - **Observation:**  
   The observation provided to the agent is identical to the state $ \mathbf{s}_t $.
@@ -125,7 +124,7 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
 - **Reward Function ($R$):**  
   The reward is defined as the negative Root Mean Square (RMS) of the state vector:
   $$
-  R(\mathbf{s}_t) = -\sqrt{\frac{1}{10} \sum_{i=1}^{10} s_{t,i}^2}
+  R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}
   $$
 
 - **Dynamics:**  
@@ -135,7 +134,7 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
   $$
   where $ \mathbf{B} $ is the response matrix and $ \mathbf{I} $ is the identity matrix.
 
-A good resource for linear dynamics is: Margellos, K. (2023). *B15 Linear Dynamic Systems and Optimal Control*. Michaelmas Term, University of Oxford. Email: [kostas.margellos@eng.ox.ac.uk](mailto:kostas.margellos@eng.ox.ac.uk)
+[A good resource for linear dynamics and control](#a-good-resource-for-linear-dynamics-and-control)
 
 - **Initial Criteria:**  
   States are initialized based on an initial distribution, typically a Gaussian distribution centered around the desired beam position with a specified variance.
@@ -627,11 +626,11 @@ Successfully managing these hyperparameters is crucial, as improper settings can
 [//]: # ()
 [//]: # (---)
 
-## Getting Started
+# Getting Started
 
 Follow these steps to set up the environment, run control algorithms, and perform comparative analyses.
 
-### 1. Configuration
+## 1. Configuration
 
 Begin by reviewing the [configuration file](config/environment_setting.yaml) for the environment defined in [`environment/environment_awake_steering.py`](environment/environment_awake_steering.py). This file contains essential parameters that define the environment's behavior, such as degrees of freedom, terminal conditions, MPC settings, and RL algorithm configurations.
 
@@ -690,7 +689,7 @@ task_setting:
 - **validation-settings:** Seeds for reproducible validation runs.
 - **task_setting:** Location and identifier for predefined tasks used in environment verification.
 
-### 2. Running Model Predictive Control
+## 2. Running Model Predictive Control
 
 Execute the script [`MPC_approach.py`](MPC_approach.py) to run the **Model Predictive Control (MPC)** approach on the **AWAKE** environment. MPC serves as a near-optimal control strategy based on a model of the environment's dynamics.
 
@@ -711,7 +710,7 @@ Execute the script [`MPC_approach.py`](MPC_approach.py) to run the **Model Predi
    - **Optimization:** Handled in [`helper_scripts/MPC.py`](helper_scripts/MPC.py).
    - **Validation:** Conducted within [`MPC_approach.py`](MPC_approach.py) across validation episodes to ensure performance consistency.
 
-### 3. Training RL Agents
+## 3. Training RL Agents
 
 Train reinforcement learning agents using the script [`Train_policy_gradients_off_the_shelf.py`](RL_approach.py). This script implements training procedures for two mainstream RL algorithms: **Proximal Policy Optimization (PPO)** and **Trust Region Policy Optimization (TRPO)**.
 
@@ -729,7 +728,7 @@ Train reinforcement learning agents using the script [`Train_policy_gradients_of
    - **Evaluation:** Performs `ten` fixed validation episodes at defined training intervals to monitor agent performance.
    - **Visualization:** Generates plots showcasing validation statistics throughout the training process, enabling performance tracking and comparison.
 
-### 4. Comparing Approaches
+## 4. Comparing Approaches
 
 After training, compare the performance of RL agents with the MPC and response matrix approaches using the script [`Compare_different_approaches.py`](Compare_different_approaches.py).
 
@@ -746,12 +745,40 @@ After training, compare the performance of RL agents with the MPC and response m
    - **Metrics:** Analyzes key performance indicators such as reward accumulation, state deviations, and action efficiencies.
    - **Visualization:** Produces comparative plots to illustrate strengths and weaknesses of each approach, facilitating informed decisions on methodology suitability.
 
+
+## 5. Running the GP-MPC Controller
+
+Utilize the Gaussian Process-based Model Predictive Control (GP-MPC) framework to manage and optimize the Beam Steering Environment. This script integrates GP regression with MPC to handle uncertainties and complex dynamics effectively.
+
+**Script:** [`Run_gp_mpc.py`](Run_gp_mpc.py)
+
+**Steps:**
+
+1. **Execute the GP-MPC Controller Script:**
+
+   ```bash
+   python Run_gp_mpc.py
+   ```
+
+2. **Overview:**
+   - **Objective:** Implement and evaluate the GP-MPC controller within the Beam Steering Environment to achieve robust and adaptive control of beam parameters.
+   - **Configuration:** Loads environment and controller settings from YAML configuration files, ensuring flexibility and ease of experimentation.
+   - **Visualization:** Initializes live plotting tools to monitor real-time performance, including state trajectories, actions, and cost metrics.
+   - **Control Loop:** Executes the control loop where the GP-MPC controller computes optimal actions based on current observations, interacts with the environment, and updates the model with new data.
+   - **Outcome Logging:** Saves comprehensive results, including rewards, episode lengths, actions, and states, facilitating further analysis and benchmarking.
+
+**Outcome:**
+
+- **Performance Metrics:** Tracks cumulative rewards, success rates, and cost minimization, providing insights into the controller's effectiveness.
+- **Visual Insights:** Real-time plots display state and action trajectories, enabling immediate assessment of control strategies.
+- **Data Persistence:** Stores detailed results in organized folders for subsequent evaluation and comparison with other control approaches.
+- **Adaptability Demonstration:** Showcases the GP-MPC controller's ability to adapt to dynamic changes and uncertainties within the Beam Steering Environment.
+
+This script serves as a critical component in demonstrating the advantages of integrating Gaussian Processes with Model Predictive Control, highlighting its potential in managing complex and uncertain control scenarios effectively.
+
 ---
 
-## Environment Components
-
-### Overview
-
+# Environment Components
 The **RL Bootcamp Tutorial** leverages a custom Gym environment, `AwakeSteering`, tailored for beam steering tasks using reinforcement learning (RL). The environment is enhanced with several wrappers and helper functions to provide flexibility, scalability, and robust functionality.
 ## `AwakeSteering` Gym Environment
 The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE
@@ -1238,7 +1265,8 @@ benchmark_env.close()
 [//]: # (# Close the environment)
 
 [//]: # (benchmark_env.close&#40;&#41;)
-```
+[//]: # (```)
+
 By utilizing the `AwakeSteering` environment, you can develop and train reinforcement learning agents to perform beam steering tasks effectively. Whether you're conducting research or developing practical applications, this environment provides a robust foundation for your RL experiments.
 ```yaml
 # Configuration File for RL Bootcamp Tutorial
@@ -1423,32 +1451,6 @@ task_setting:
 
 [//]: # ()
 [//]: # (Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through implementing reinforcement learning &#40;RL&#41; techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness, and conduct a comprehensive noise study to evaluate performance under different conditions.)
-
-## Todo: 
-* Marius PPO Challenge - hyperparameter model and so on...
-* Simon and Catherine tomorrow
-* Simon Deep Dive
-* Final round weekend
-
-We will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it (there are two ingredients, making the control problem interesting).
-There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL
-Now I implement a noise study.
-
-   1. We have a look at the [configiguration file](config/environment_setting.yaml) for the [environment](environment/environment_awake_steering.py).
-   2. We start the script [MPC_approach.py](MPC_approach.py) to run the MPC on AWAKE. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
-   3. The script [Train_policy_gradients_off_the_shelf.py](RL_approach.py) contains the training 
-      procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
-      defined numer of training steps. The plot shows the statistics of the validations during the training.
-   4. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
-
-### reward to penalty for specific boundary conditions
-Part II:
-   1. Elements of model-based RL
-   2. Elements of data-driven MPC design and optimization
-   3. Gaussian processes in a nut-shell
-   4. Running GP-MPC on the AWAKE environment
-   5. Alternative advanced ideas - non-stationary (shifts), masking, domain randomization, domain generalisation.
-
 
 ## RL Bootcamp Tutorial Installation Guide
 
@@ -1720,6 +1722,10 @@ pandas          1.4.2
 
 [//]: # (python train_agent.py --config config.yaml)
 
+---
+
+
+## Open questions for the programmes - these are the notes I took during our discussions:
 
 Ensure that the `train_agent.py` script is designed to parse and apply the settings from `config.yaml`. Adjust the command as necessary based on the repository's structure and available scripts.
 
@@ -1750,7 +1756,6 @@ Part II:
    4. Running GP-MPC on the AWAKE environment
    5. Alternative advanced ideas - non-stationary (shifts), masking, domain randomization, domain generalisation.
 
-## Open questions for the programmes - these are the notes I took during our discussions:
 1. MDP shaping as a part of the tutorial also as a contest?
 
 2. One of the main goals is to understand every aspect of the (an) MDP:
@@ -1849,6 +1854,9 @@ Part II:
 
 
 # References
+#### A good resource for linear dynamics and control
+A good resource for linear dynamics is: Margellos, K. (2023). *B15 Linear Dynamic Systems and Optimal Control*. Michaelmas Term, University of Oxford. Email: [kostas.margellos@eng.ox.ac.uk](mailto:kostas.margellos@eng.ox.ac.uk)
+
 #### References on Model Predictive Control (MPC)
 
 1. **Maciejowski, J. M. (2002).** _Predictive Control: with Constraints_. Prentice Hall.
