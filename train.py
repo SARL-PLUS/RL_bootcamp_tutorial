@@ -2,19 +2,10 @@ import hydra
 from omegaconf import DictConfig
 from gymnasium.vector import AsyncVectorEnv
 import numpy as np
+import random
 from pathlib import Path
 from src.utils.utils import seed_erverything
 
-
-
-import torch
-import random
-from collections import deque
-
-
-
-import os
-os.environ["HYDRA_FULL_ERROR"] = "1"
 
 
 
@@ -42,7 +33,7 @@ def main(cfg: DictConfig) -> int:
     agent = hydra.utils.instantiate(
         cfg.agent,
         qnet_local=policy.Qnet,
-    )
+    ).to(cfg.device)
 
   
     logger =  hydra.utils.instantiate(cfg.logger) if "logger" in cfg else None

@@ -19,7 +19,7 @@ batch_size: 64
 # discounting
 gamma: 0.99
 
-tau: 0.005
+tau: 0.09
 
 num_updates: 1
 

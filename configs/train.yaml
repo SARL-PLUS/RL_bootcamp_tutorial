@@ -21,9 +21,9 @@ avg_window: 100
 # task name, determines output directory path
 task_name: "train_default"
 
+device: cpu
 
 log_dir: ./logs
-
 
 hydra:
   run:
