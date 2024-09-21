@@ -14,12 +14,79 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=[color for color in colors])
 colors_for_different_appoaches = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
                                   '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-def make_experiment_folder(optimization_type, algorithm, environment_settings, purpose, generate = True):
-    experiment_name = f'predefined_task_{environment_settings["task_setting"]["task_nr"]}'
-    save_folder = os.path.join('results', optimization_type, algorithm, experiment_name, purpose, f'Dof_{environment_settings["degrees-of-freedom"]}')
+import os
+import shutil
+import logging
+from typing import Any, Dict
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def make_experiment_folder(
+    optimization_type: str,
+    algorithm: str,
+    environment_settings: Dict[str, Any],
+    purpose: str,
+    generate: bool = True,
+    delete: bool = False
+) -> str:
+    """
+    Creates a directory path for storing experiment results based on the provided parameters.
+
+    Args:
+        optimization_type (str): The type of optimization being used (e.g., 'RL', 'MPC').
+        algorithm (str): The specific algorithm name (e.g., 'PPO', 'TRPO').
+        environment_settings (Dict[str, Any]): Configuration settings for the environment.
+            Must contain:
+                - "task_setting": Dict with "task_nr" key.
+                - "degrees-of-freedom": int.
+        purpose (str): The purpose or phase of the experiment (e.g., 'weights', 'results').
+        generate (bool, optional): Whether to create the directory if it does not exist. Defaults to True.
+        delete (bool, optional): Whether to delete the existing directory before creating a new one. Defaults to False.
+
+    Returns:
+        str: The path to the created or existing experiment folder.
+
+    Raises:
+        KeyError: If required keys are missing in environment_settings.
+        OSError: If the directory cannot be created or deleted.
+    """
+    try:
+        experiment_name = f'predefined_task_{environment_settings["task_setting"]["task_nr"]}'
+        degrees_of_freedom = environment_settings["degrees-of-freedom"]
+    except KeyError as e:
+        logger.error(f"Missing key in environment_settings: {e}")
+        raise KeyError(f"Missing key in environment_settings: {e}")
+
+    save_folder = os.path.join(
+        'results',
+        optimization_type,
+        algorithm,
+        experiment_name,
+        purpose,
+        f'Dof_{degrees_of_freedom}'
+    )
+
+    if delete:
+        if os.path.exists(save_folder):
+            try:
+                shutil.rmtree(save_folder)
+                logger.info(f"Deleted existing folder: {save_folder}")
+            except OSError as e:
+                logger.error(f"Error deleting folder {save_folder}: {e}")
+                raise
+
     if generate:
-        os.makedirs(save_folder, exist_ok=True)
+        try:
+            os.makedirs(save_folder, exist_ok=True)
+            logger.info(f"Created folder: {save_folder}")
+        except OSError as e:
+            logger.error(f"Error creating folder {save_folder}: {e}")
+            raise
+
     return save_folder
+
 
 
 #Todo: legend for states and actions
@@ -193,7 +260,8 @@ def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs)
 
         else:
             rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = test_policy(env, policy,
-                                                                                               episodes, seed_set=seed_set)
+                                                                                               episodes,
+                                                                                               seed_set=seed_set)
 
         if 'save_results' in kwargs:
             save_folder_name_results = kwargs['save_results']

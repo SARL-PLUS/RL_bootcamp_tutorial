@@ -3,7 +3,7 @@
 # random_actions_init: Number of initial steps where random actions are taken (10 steps).
 # verbose: Controls the verbosity of output (false means less detailed output).
 num_steps_env: 500
-random_actions_init: 10
+random_actions_init: 5
 verbose: false
 
 # Gaussian Process Initialization Parameters

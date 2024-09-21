@@ -25,12 +25,12 @@ env = load_env_config(env_config='config/environment_setting.yaml')
 verification_task = env.get_task()
 
 
-# MPC specific parameters
-mpc_horizon = environment_settings['mpc-settings']['horizon-length'] # Number of steps for MPC horizon
-action_matrix_scaled, threshold = get_model_parameters(env)
-# Define the policy for MPC
-policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
+# # MPC specific parameters
+# mpc_horizon = environment_settings['mpc-settings']['horizon-length'] # Number of steps for MPC horizon
 
+# # Define the policy for MPC
+# policy_mpc = lambda x: model_predictive_control(x, mpc_horizon, action_matrix_scaled, threshold, plot=False)
+action_matrix_scaled, threshold = get_model_parameters(env)
 b_inv = np.linalg.inv(action_matrix_scaled)
 def policy_response_matrix(state):
     action = -b_inv @ state
@@ -52,7 +52,8 @@ save_folder_name_results = os.path.join(save_folder_results, 'MPC_results.pkl')
 
 # Check if save_folder_name_results exists
 if not os.path.exists(save_folder_name_results):
-    raise FileNotFoundError(f"The results file does not exist: {save_folder_name_results}")
+    raise FileNotFoundError(f"The results file does not exist: {save_folder_name_results}. "
+                            f"Did you run the MPC_approach.py script wiht this configuration?")
 
 # If it exists, you can proceed with your operations on save_folder_name_results
 print(f"Results file found: {save_folder_name_results}")
@@ -65,7 +66,7 @@ verify_external_policy_on_specific_env_regret(env, [policy_rl_agent, 'policy_mpc
                                               policy_benchmark='policy_mpc_stored',
                                               tasks=verification_task, episodes=nr_validation_episodes,
                                               title=f'Regret to {policy_benchmark} of {algorithm}',
-                                              save_folder=save_folder+'_2',
+                                              save_folder=save_folder+'_MPC',
                                               policy_labels=[algorithm, 'MPC'],
                                               DoF=DoF, read_results=save_folder_name_results)
 
@@ -74,7 +75,7 @@ policy_benchmark = policy_response_matrix
 verify_external_policy_on_specific_env_regret(env, [policy_rl_agent, policy_response_matrix],
                                               policy_benchmark=policy_response_matrix,
                                               tasks=verification_task, episodes=nr_validation_episodes,
-                                              title=f'Regret to {policy_benchmark} of {algorithm}',
-                                              save_folder=save_folder+'_2',
+                                              title=f'Regret to {'policy_response_matrix'} of {algorithm}',
+                                              save_folder=save_folder+'_Response_matrix',
                                               policy_labels=[algorithm, 'policy_response_matrix'],
                                               DoF=DoF, read_results=save_folder_name_results)

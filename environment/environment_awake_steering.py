@@ -216,7 +216,7 @@ class AwakeSteering(gym.Env):
             # Assign the sign (+1 or -1) of the violating element to the remaining elements
             return_state[violation_index:] = np.sign(return_state[violation_index])
             # Compute a penalty reward based on the modified return_state
-            reward = -np.sqrt(np.mean(np.square(return_state)))
+            reward = self._get_reward(return_state)
         info = {"task": self._id, 'time': self.current_steps}
         return return_state, reward, done, truncated, info
 

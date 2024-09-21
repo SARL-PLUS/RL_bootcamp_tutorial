@@ -1,7 +1,7 @@
 
 # Configuration File for RL Bootcamp Tutorial
 # Degrees of Freedom: Specifies the number of control inputs and observed states in the environment.
-degrees-of-freedom: 10
+degrees-of-freedom: 5
 
 # Terminal Conditions: Defines conditions under which an episode ends.
 terminal-conditions:
@@ -12,7 +12,7 @@ terminal-conditions:
   boundary-conditions: true
 
   # Scaling factor applied to penalties when boundary conditions are violated.
-  penalty-scaling: 10.0
+  penalty-scaling: 100.0
 
 # MPC (Model Predictive Control) Settings: Parameters for the MPC algorithm.
 mpc-settings:
@@ -27,13 +27,13 @@ mpc-settings:
 
 # RL (Reinforcement Learning) Settings: Parameters for the RL algorithm.
 rl-settings:
-  algorithm: 'TRPO' # Change this to 'TRPO' to use TRPO from stable-baselines
+  algorithm: 'PPO' # Change this to 'TRPO' to use TRPO from stable-baselines
   # RL algorithm to use. Examples: 'PPO', 'TRPO' from Stable Baselines.
   # Total number of training steps for the RL agent.
-  total_steps: 10000
+  total_steps: 150000
 
   # Number of steps between each evaluation of the RL agent.
-  evaluation_steps: 50
+  evaluation_steps: 20
 
   # PPO specific hyperparameters
   ppo:
