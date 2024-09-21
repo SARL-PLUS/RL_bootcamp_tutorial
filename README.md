@@ -71,13 +71,11 @@ Just before entering the plasma cell, the electron beam undergoes final adjustme
 
 This precise insertion into the wakefield allows the electrons to be rapidly accelerated over a short distance, gaining significant energy from the wakefields created by the proton beam in the plasma. The effectiveness of this entire process hinges on the precise control and optimization of the electron line, showcasing its importance in the AWAKE experiment.
 
-We focus on the part, right before entering the plasma cell.
-
-The steering problem, we want to solve in our tutorial is shown in the following image:
+We focus on the part, right before entering the plasma cell. The steering problem, we want to solve in our tutorial is shown in the following image:
 
 <img src="miscellaneous/AWAKE_steering_image.png" width="600">
 
-The states are denoted by s and the actions by a. We want to bring the current trajectory (blue) to a target trajectory (red) as fast as possible by modifying the magnets (violet).
+The states are denoted by $\mathbf s$ and the actions by $\mathbf a$. We want to bring the current trajectory (blue) to a target trajectory (red) as fast as possible by modifying the magnets (violet).
 ### Environment Properties and Markov Decision Process (MDP) Definition
 
 [//]: # (From a control-theoretical perspective, the environment possesses the following properties:)
@@ -115,16 +113,16 @@ The states are denoted by s and the actions by a. We want to bring the current t
 
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
 
-- **State Space (\(\mathcal{S}\)):**  
-  A 10-dimensional continuous space representing the current beam positions and related parameters. Each state \( \mathbf{s}_t \in \mathcal{S} \) is a vector of real numbers capturing the system's state at time step \( t \).
+- **State Space ($\mathcal{S}$):**  
+  A 10-dimensional continuous space representing the current beam positions and related parameters. Each state $ \mathbf{s}_t \in \mathcal{S} $ is a vector of real numbers capturing the system's state at time step $ t $.
 
-- **Action Space (\(\mathcal{A}\)):**  
-  A 10-dimensional continuous space corresponding to control inputs, such as corrector magnets. Actions \( \mathbf{a}_t \in \mathcal{A} \) are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
+- **Action Space ($\mathcal{A}$):**  
+  A 10-dimensional continuous space corresponding to control inputs, such as corrector magnets. Actions $ \mathbf{a}_t \in \mathcal{A} $ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
 
 - **Observation:**  
-  The observation provided to the agent is identical to the state \( \mathbf{s}_t \).
+  The observation provided to the agent is identical to the state $ \mathbf{s}_t $.
 
-- **Reward Function (\(R\)):**  
+- **Reward Function ($R$):**  
   The reward is defined as the negative Root Mean Square (RMS) of the state vector:
   $$
   R(\mathbf{s}_t) = -\sqrt{\frac{1}{10} \sum_{i=1}^{10} s_{t,i}^2}
@@ -135,7 +133,7 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
   $$
   \mathbf{s}_{t+1} = \mathbf{B} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t
   $$
-  where \( \mathbf{R} \) is the response matrix and \( \mathbf{I} \) is the identity matrix.
+  where $ \mathbf{B} $ is the response matrix and $ \mathbf{I} $ is the identity matrix.
 
 A good resource for linear dynamics is: Margellos, K. (2023). *B15 Linear Dynamic Systems and Optimal Control*. Michaelmas Term, University of Oxford. Email: [kostas.margellos@eng.ox.ac.uk](mailto:kostas.margellos@eng.ox.ac.uk)
 
@@ -156,8 +154,8 @@ A good resource for linear dynamics is: Margellos, K. (2023). *B15 Linear Dynami
   3. **Unsuccessful Termination:**  
      If any state component exceeds the beam pipe boundaries, leading to an unsafe or failed steering attempt.
 
-- **Discount Factor (\(\gamma\)):**  
-  The discount factor is set to \( \gamma = 1 \), indicating that future rewards are valued equally to immediate rewards.
+- **Discount Factor ($\gamma$):**  
+  The discount factor is set to $ \gamma = 1 $, indicating that future rewards are valued equally to immediate rewards.
 
 
 ### Why This Environment?
@@ -190,13 +188,17 @@ These characteristics render the beam steering problem both intriguing and signi
 - **Implementation Complexity:** Designing and tuning MPC controllers can be complex, requiring expertise in both control theory and optimization.
 
 #### Mathematical Foundation:
-MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon \( N \):
+MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $ N $:
 $$
-\min_{\mathbf{a}_{t}, \dots, \mathbf{a}_{t+N-1}} \sum_{k=0}^{N-1} \left( \mathbf{s}_{t+k}^T \mathbf{Q} \mathbf{s}_{t+k} + \mathbf{a}_{t+k}^T \mathbf{R} \mathbf{a}_{t+k} \right)
+\min_{\mathbf{a}_{t}, \dots, \mathbf{a}_{t+N-1}} \sum_{k=0}^{N-1} \mathbf{R}(\mathbf{s}_{t+k}, \mathbf{a}_{t+k}) 
 $$
 subject to the system dynamics:
 $$
 \mathbf{s}_{t+k+1} = \mathbf{A} \mathbf{s}_{t+k} + \mathbf{B} \mathbf{a}_{t+k}
+$$
+and:
+$$
+\mathbf{s}_{0} = S_0 \qquad (given)
 $$
 and any state or action constraints.
 
@@ -245,7 +247,11 @@ Model Predictive Control (MPC), also known as Receding Horizon Control or Moving
 - **Sample Efficiency:** Often requires a large number of interactions to learn effectively, which can be time-consuming and resource-intensive.
 - **Stability:** Training can be unstable and sensitive to hyperparameters, making the tuning process challenging.
 - **Guarantees:** Only in specific Markov Decision Processes (MDPs) and with certain algorithms can performance guarantees be provided. Generally, these guarantees break down when using function approximators like neural networks.
-
+#### Mathematical Foundation:
+RL frameworks are typically defined by the MDP components: state space $ \mathcal{S} $, action space $ \mathcal{A} $, reward function $ R $, transition dynamics $ P $, and discount factor $ \gamma $. The goal is to find a policy $ \pi: \mathcal{S} \rightarrow \mathcal{A} $ that maximizes the expected cumulative reward:
+$$
+\pi^* = \arg\max_{\pi} \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(\mathbf{s}_t, \mathbf{a}_t) \right]
+$$
 #### Comparison with Other Methods:
 - **Versus Model Predictive Control (MPC):**
   - **Adaptability vs. Optimality:** RL offers greater adaptability to dynamic and uncertain environments, whereas MPC provides near-optimal control based on a predefined model.
@@ -258,6 +264,7 @@ Model Predictive Control (MPC), also known as Receding Horizon Control or Moving
 
 
 By comparing MPC and RL, we aim to highlight the strengths and limitations of each approach in the context of beam steering.
+
 [References on Reinforcement Learning](#references-on-reinforcement-learning)
 ### 3. Analytical Approach
 
@@ -275,18 +282,18 @@ The **Analytical Approach** leverages the inverse of the linear dynamics matrice
 - **Does Not Account for Non-Linearities:** Struggles to handle non-linear dynamics, making it less effective in scenarios where such complexities are present.
 
 #### Mathematical Foundation:
-The Analytical Approach uses the inverse of the response matrix (\(\mathbb{B}\)) derived from the linear dynamics of the beam steering system. By applying this inverse matrix to the current state, the method calculates the precise control actions required to correct deviations from the desired beam position:
+The Analytical Approach uses the inverse of the response matrix ($\mathbb{B}$) derived from the linear dynamics of the beam steering system. By applying this inverse matrix to the current state, the method calculates the precise control actions required to correct deviations from the desired beam position:
 $$
 \mathbf{a}_t = \mathbf {B}^{-1} \mathbf{s}_t
 $$
 where:
-- \( \mathbf{s}_t \) is the state vector at time \( t \).
-- \( \mathbf{a}_t \) is the action vector at time \( t \).
-- \( \mathbb{B} \) is the response matrix.
+- $ \mathbf{s}_t $ is the state vector at time $ t $.
+- $ \mathbf{a}_t $ is the action vector at time $ t $.
+- $ \mathbb{B} $ is the response matrix.
 
 #### Implementation in the Tutorial:
 1. **Inverse Matrix Calculation:**
-   - Compute the pseudo-inverse of the response matrix \(\mathbold{B}\) to ensure numerical stability.
+   - Compute the pseudo-inverse of the response matrix $\mathbf{B}$ to ensure numerical stability.
    - ```python
      import numpy as np
      
@@ -295,7 +302,7 @@ where:
 
 2. **Control Action Computation:**
    - Calculate the control action by multiplying the inverse matrix with the current state.
-   - $$ \mathbf{a}_t = \mathbbf{B}^{-1} \mathbf{s}_t $$
+   - $$ \mathbf{a}_t = \mathbf{B}^{-1} \mathbf{s}_t $$
    - ```python
      action = -self.rmatrix_inverse.dot(state * self.state_scale)
      ```
@@ -398,27 +405,82 @@ RL offers adaptability and can handle more complex, non-linear dynamics, which t
 The Analytical Approach serves as a foundational control method that can be effective in environments with well-defined linear dynamics and minimal uncertainties. While it lacks the adaptability and learning capabilities of RL, it offers simplicity and computational efficiency, making it a valuable tool for benchmarking and comparison against more advanced control strategies like MPC and RL.
 
 ## Preliminary conclusion RL with guarantees - a dream?:
+Can we somehow get the advantages of having a model and purly learning from data?
+
 Let us draw some conclusion in a sketch:
 
 <img src="miscellaneous/Overview_ideas.png" width="300">
+
+Model-Based Reinforcement Learning (MBRL) combines the strengths of model-based approaches with the adaptability of reinforcement learning. While MBRL offers enhanced sample efficiency and the potential for more informed decision-making, it also presents several significant challenges that can impact its effectiveness and applicability. Understanding these challenges is crucial for developing robust and efficient MBRL systems.
+
+#### 1. **Model Accuracy**
+   - **Description:** Learning an accurate model of the environment's dynamics is fundamental to MBRL. However, in complex or high-dimensional systems, capturing the true dynamics accurately can be exceedingly difficult.
+   - **Impact:** Inaccurate models can lead to suboptimal or even detrimental control actions, as the agent relies on flawed predictions to make decisions.
+
+#### 2. **Computational Complexity**
+   - **Description:** MBRL involves both learning the environment model and planning based on that model. This dual requirement increases the computational burden compared to model-free approaches.
+   - **Impact:** High computational demands can limit the applicability of MBRL in real-time or resource-constrained environments, where rapid decision-making is essential.
+
+#### 3. **Error Propagation**
+   - **Description:** Errors in the learned model can propagate through the planning and decision-making processes, exacerbating inaccuracies over time.
+   - **Impact:** Compounded errors can degrade the performance of the RL agent, leading to unstable or inefficient control policies.
+
+#### 4. **Balancing Exploration and Exploitation**
+   - **Description:** MBRL agents often rely heavily on their models to make decisions, which can bias them towards exploiting known information and limit exploration of the state-action space.
+   - **Impact:** Reduced exploration can hinder the discovery of optimal policies, especially in environments with sparse or deceptive reward signals.
+
+#### 5. **Data Efficiency vs. Model Complexity**
+   - **Description:** While MBRL is generally more data-efficient than model-free RL, achieving high model accuracy may require large and diverse datasets, especially for complex environments.
+   - **Impact:** Gathering sufficient data to train accurate models can be time-consuming and resource-intensive, potentially negating some of the sample efficiency benefits.
+
+#### 6. **Generalization and Transferability**
+   - **Description:** Models trained in specific environments may struggle to generalize to new or slightly altered scenarios. Ensuring that the learned model remains effective across varying conditions is a significant challenge.
+   - **Impact:** Poor generalization can limit the applicability of MBRL agents to dynamic or evolving environments, reducing their robustness and versatility.
+
+#### 7. **Integration of Learning and Planning**
+   - **Description:** Seamlessly integrating the processes of model learning and planning is non-trivial. Coordinating these components to work harmoniously without introducing instability is a complex task.
+   - **Impact:** Inefficient integration can lead to delays in decision-making, increased computational overhead, and potential conflicts between the learning and planning modules.
+
+#### 8. **Handling Uncertainty**
+   - **Description:** Accurately quantifying and managing uncertainty in model predictions is crucial for reliable decision-making in MBRL. This includes both epistemic uncertainty (model uncertainty) and aleatoric uncertainty (inherent randomness).
+   - **Impact:** Inadequate handling of uncertainty can result in overconfident predictions, leading to risky or unsafe control actions, especially in critical applications.
+
+#### 9. **Scalability**
+   - **Description:** Scaling MBRL methods to environments with large or continuous state and action spaces poses significant challenges. Ensuring that the model remains tractable and the planning process remains efficient is essential.
+   - **Impact:** Limited scalability can restrict the use of MBRL to smaller or simpler systems, reducing its applicability to real-world, complex control problems.
+
+#### 10. **Hyperparameter Tuning**
+- **Description:** MBRL frameworks often involve numerous hyperparameters related to model architecture, learning rates, planning horizons, and more. Effectively tuning these hyperparameters is critical for optimal performance.
+- **Impact:** Extensive hyperparameter tuning can be time-consuming and may require expert knowledge, making the development process more resource-intensive and less accessible to practitioners.
+
+#### 11. **Robustness to Model Mis-specification**
+- **Description:** MBRL assumes that the learned model sufficiently captures the true environment dynamics. However, model mis-specification can occur due to incorrect assumptions or limitations in the modeling approach.
+- **Impact:** Robustness to such mis-specifications is essential to maintain reliable control performance, especially in environments where accurate modeling is challenging.
+
+#### 12. **Exploration in Model Space**
+- **Description:** Efficiently exploring the space of possible models to discover accurate representations of the environment is a complex aspect of MBRL. This involves balancing the exploration of different model hypotheses with the exploitation of known good models.
+- **Impact:** Ineffective exploration can lead to premature convergence to suboptimal models, limiting the agent's ability to improve its understanding and control of the environment.
+
+#### **Conclusion**
+Model-Based Reinforcement Learning offers promising advantages by leveraging learned models to enhance control and decision-making. However, the inherent challenges—ranging from model accuracy and computational complexity to robustness and scalability—necessitate careful consideration and innovative solutions. Addressing these challenges is key to unlocking the full potential of MBRL in complex, real-world control applications.
+
 ---
 
 ### 4. More advanded part: Gaussian Process-based MPC (GP-MPC)
 
-**Gaussian Process-based Model Predictive Control (gp-MPC)** integrates Gaussian Process (GP) regression with traditional MPC to enhance the controller's ability to handle model uncertainties and non-linear dynamics. This hybrid approach leverages the strengths of both MPC and GP to provide a more robust and adaptive control strategy.
+**Gaussian Process-based Model Predictive Control (GP-MPC)** integrates Gaussian Process (GP) regression with traditional MPC to enhance the controller's ability to handle model uncertainties and non-linear dynamics. This hybrid approach leverages the strengths of both MPC and GP to provide a more robust and adaptive control strategy.
 
 #### Advantages:
 - **Uncertainty Quantification:** GP provides probabilistic predictions, allowing MPC to account for model uncertainties effectively.
 - **Adaptability:** Capable of adapting to non-linear dynamics by learning from data, improving performance in complex environments.
 - **Data Efficiency:** GP models can achieve high accuracy with relatively small datasets, making them suitable for scenarios with limited data.
-
 #### Drawbacks:
 - **Scalability:** GP regression can become computationally expensive as the size of the dataset increases, limiting its applicability to very large-scale systems.
 - **Implementation Complexity:** Integrating GP with MPC requires careful tuning of hyperparameters and may involve more intricate implementation compared to standard MPC.
 - **Real-Time Constraints:** The additional computational overhead of GP may pose challenges for real-time control applications where rapid decision-making is essential.
 
 #### Mathematical Foundation:
-The gp-MPC approach augments the traditional MPC framework by incorporating a GP model to predict system dynamics. This combination allows the controller to adaptively update its predictions based on observed data, enhancing its ability to manage uncertainties and non-linearities.
+The GP-MPC approach augments the traditional MPC framework by incorporating a GP model to predict system dynamics. This combination allows the controller to adaptively update its predictions based on observed data, enhancing its ability to manage uncertainties and non-linearities.
 
 1. **Gaussian Process Regression:**
    - **Training:** Collect data from system interactions to train the GP model, which learns the relationship between states and control actions.
@@ -426,7 +488,7 @@ The gp-MPC approach augments the traditional MPC framework by incorporating a GP
    - $$
      \mathbf{s}_{t+1} = \mathbf{R} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t + \epsilon
      $$
-     where \( \epsilon \) represents the uncertainty modeled by the GP.
+     where $ \epsilon $ represents the uncertainty modeled by the GP.
 
 2. **MPC Integration:**
    - **Optimization:** Incorporate the GP's predictions and uncertainties into the MPC optimization problem, allowing the controller to plan actions that account for model confidence.
@@ -445,23 +507,23 @@ The gp-MPC approach augments the traditional MPC framework by incorporating a GP
 
 #### Comparison with Other Methods:
 - **Versus Model Predictive Control (MPC):**
-  - **Enhanced Robustness:** gp-MPC accounts for model uncertainties and non-linearities, providing more reliable performance in uncertain environments compared to standard MPC, which relies on a fixed model.
-  - **Adaptive Learning:** While standard MPC uses a predefined model, gp-MPC can adapt its predictions based on new data through GP learning, improving over time as more data becomes available.
+  - **Enhanced Robustness:** -MPC accounts for model uncertainties and non-linearities, providing more reliable performance in uncertain environments compared to standard MPC, which relies on a fixed model.
+  - **Adaptive Learning:** While standard MPC uses a predefined model, -MPC can adapt its predictions based on new data through GP learning, improving over time as more data becomes available.
 
 - **Versus Reinforcement Learning (RL):**
-  - **Model-Based Efficiency:** gp-MPC leverages model-based predictions, offering greater sample efficiency compared to model-free RL approaches that require extensive interactions to learn effective policies.
-  - **Controlled Adaptability:** While RL learns policies through extensive interactions and can handle highly non-linear dynamics, gp-MPC maintains a structured optimization framework enhanced by GP learning, providing a balance between model-based control and data-driven adaptability.
+  - **Model-Based Efficiency:** -MPC leverages model-based predictions, offering greater sample efficiency compared to model-free RL approaches that require extensive interactions to learn effective policies.
+  - **Controlled Adaptability:** While RL learns policies through extensive interactions and can handle highly non-linear dynamics, -MPC maintains a structured optimization framework enhanced by GP learning, providing a balance between model-based control and data-driven adaptability.
 
 #### Challenges with Hyperparameters in Model-Based RL:
-One of the most significant challenges in deploying gp-MPC is the tuning of hyperparameters. The gp-MPC framework contains a larger number of hyperparameters compared to other control strategies, primarily due to the dual nature of learning and optimization. Hyperparameters affect both the GP model (learning the dynamics) and the MPC (optimizing the control), creating a complex interaction that requires careful adjustment:
+One of the most significant challenges in deploying -MPC is the tuning of hyperparameters. The -MPC framework contains a larger number of hyperparameters compared to other control strategies, primarily due to the dual nature of learning and optimization. Hyperparameters affect both the GP model (learning the dynamics) and the MPC (optimizing the control), creating a complex interaction that requires careful adjustment:
 
 - **Model Complexity:** The GP model must balance complexity and computational efficiency, necessitating hyperparameters that govern the kernel functions, noise levels, and regularization parameters.
 - **Optimization Horizon:** The MPC's prediction horizon and constraints also serve as hyperparameters that need to be synchronized with the learning model to ensure optimal performance.
 
-Successfully managing these hyperparameters is crucial, as improper settings can lead to suboptimal control actions, increased computational load, and slower response times. Consequently, tuning these parameters becomes a critical task that can significantly impact the effectiveness and efficiency of the gp-MPC approach.
+Successfully managing these hyperparameters is crucial, as improper settings can lead to suboptimal control actions, increased computational load, and slower response times. Consequently, tuning these parameters becomes a critical task that can significantly impact the effectiveness and efficiency of the -MPC approach.
 
 #### Conclusion:
-Gaussian Process-based MPC bridges the gap between traditional model-based control and data-driven learning approaches. By integrating GP regression with MPC, gp-MPC offers a more adaptable and robust control strategy capable of handling uncertainties and complex dynamics. This makes it a compelling alternative to both standard MPC and Reinforcement Learning (RL), particularly in environments where model accuracy is challenging to maintain and adaptability is crucial. However, the increased complexity in hyperparameter tuning presents a significant challenge, necessitating careful calibration to harness the full potential of gp-MPC.
+Gaussian Process-based MPC bridges the gap between traditional model-based control and data-driven learning approaches. By integrating GP regression with MPC, -MPC offers a more adaptable and robust control strategy capable of handling uncertainties and complex dynamics. This makes it a compelling alternative to both standard MPC and Reinforcement Learning (RL), particularly in environments where model accuracy is challenging to maintain and adaptability is crucial. However, the increased complexity in hyperparameter tuning presents a significant challenge, necessitating careful calibration to harness the full potential of -MPC.
 
 [//]: # (The **Gaussian Process-based Model Predictive Control &#40;gp-MPC&#41;** integrates Gaussian Process &#40;GP&#41; regression with traditional MPC to enhance the controller's ability to handle model uncertainties and non-linear dynamics. This hybrid approach leverages the strengths of both MPC and GP to provide a more robust and adaptive control strategy.)
 
