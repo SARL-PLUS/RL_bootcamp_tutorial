@@ -1,28 +1,62 @@
-degrees-of-freedom: 1
+# Configuration File for RL Bootcamp Tutorial
 
+# Degrees of Freedom: Specifies the number of control inputs and observed states in the environment.
+degrees-of-freedom: 10
+
+# Terminal Conditions: Defines conditions under which an episode ends.
 terminal-conditions:
-  MAX-TIME : 1000
+  # Maximum number of steps allowed per episode.
+  MAX-TIME: 1000
+  
+  # Whether to enforce boundary conditions on beam positions.
   boundary-conditions: true
+  
+  # Scaling factor applied to penalties when boundary conditions are violated.
   penalty-scaling: 10.0
 
+# MPC (Model Predictive Control) Settings: Parameters for the MPC algorithm.
 mpc-settings:
+  # Length of the prediction horizon for MPC.
   horizon-length: 8
+  
+  # Tolerance for convergence in the MPC solver.
   tol: 1.0e-8
+  
+  # Whether to display solver output during optimization.
   disp: False
 
+# RL (Reinforcement Learning) Settings: Parameters for the RL algorithm.
 rl-settings:
+  # RL algorithm to use. Examples: 'PPO', 'TRPO' from Stable Baselines.
   algorithm: 'PPO' # 'TRPO' ... from stable baselines
+  
+  # Total number of training steps for the RL agent.
   total_steps: 10000
+  
+  # Number of steps between each evaluation of the RL agent.
   evaluation_steps: 50
 
-# Advanced settings
-# don't touch this if not necessary
+# Advanced Settings
+# Note: Modify these settings only if necessary.
 noise_setting:
+  # Standard deviation of noise added to observations. Set to 'none' to disable noise.
   std_noise: none
+
+# Initial Scaling: Scaling factor applied to initial observations to normalize state values.
 init_scaling: 0.9
+
+# Action Scale: Scaling factor applied to actions to control the magnitude of control inputs.
 action_scale: 1.0
+
+# Validation Settings: Parameters for validating the trained RL agent.
 validation-settings:
+  # Seeds used for reproducible validation runs.
   validation-seeds: [0, 2, 3, 4, 5, 7, 8, 11, 12, 14]
+
+# Task Settings: Defines which task to load and its location.
 task_setting:
+  # Path to the file containing predefined tasks for verification.
   task_location: 'environment/tasks/verification_tasks.pkl'
+  
+  # Task number to load from the task file.
   task_nr: 0

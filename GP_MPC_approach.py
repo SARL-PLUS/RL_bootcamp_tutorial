@@ -1,7 +1,6 @@
 import time
 import logging
 from typing import Any, Tuple
-
 import matplotlib
 
 matplotlib.use('TkAgg')  # Force the use of the TkAgg backend for external windows
