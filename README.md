@@ -34,30 +34,8 @@ Before we start, these are the **learning goals**:
    - Please discuss questions.
    - Facilitate sessions where learners and experts debate and reach consensus on RL concepts and implementation strategies.
 
-## Open questions for the programmes - these are the notes I took during our discussions:
+# Open questions for the programmes? - these are the notes I took during our discussions:
 
-Ensure that the `train_agent.py` script is designed to parse and apply the settings from `config.yaml`. Adjust the command as necessary based on the repository's structure and available scripts.
-
----
-
-By meticulously configuring these parameters, you can tailor the RL environment to match your experimental requirements, facilitating effective learning and benchmarking of reinforcement learning agents in beam steering tasks.
-
-
-We will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it (there are two ingredients, making the control problem interesting).
-There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL
-Now I implement a noise study.
-
-
-environment and the wrapper to reduce the Degrees of Freedom (DoF) from one to the maximum of ten, 
-as the original environment. 
-   2. The script [Train_policy_gradients_off_the_shelf.py](RL_approach.py) contains the training 
-   procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
-   defined numer of training steps. The plot shows the statistics of the validations during the training.
-   3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
-   4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
-   5. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
-
-6. reward to penalty for specific boundary conditions
 Part II:
    1. Elements of model-based RL
    2. Elements of data-driven MPC design and optimization
@@ -257,8 +235,6 @@ These characteristics render the beam steering problem both intriguing and signi
 - **Implementation Complexity:** Designing and tuning MPC controllers can be complex, requiring expertise in both control theory and optimization.
 
 #### Mathematical Foundation:
-MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $ N $:
-
 Want to solve:
 $$
 \text{maximise}_{\pi_t} \lim_{T\to\infty}\mathbb E_{W_t}[\frac 1 T \sum_{t=0}^T R_t(S_t,A_t,W_t)]
@@ -275,8 +251,7 @@ and:
 $$
 \mathbf{s}_{0} = S_0 \qquad (given)
 $$
-
-Approximate by:
+MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $ N $:
 $$
 \text{maximise}_{\{a_t\}} \mathbb E_{W_t}[ \sum_{t=0}^{H-1} R_t(S_t,A_t,W_t)+ V(S_H)]
 $$
@@ -286,7 +261,7 @@ $$
 $$
 and
 $$
-S_0=s
+\mathbf{s}_{0} = S_0 \qquad (given)
 $$
 
 and any state or action constraints.
