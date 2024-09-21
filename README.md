@@ -412,6 +412,7 @@ Let us draw some conclusion in a sketch:
 <img src="miscellaneous/Overview_ideas.png" width="300">
 
 Model-Based Reinforcement Learning (MBRL) combines the strengths of model-based approaches with the adaptability of reinforcement learning. While MBRL offers enhanced sample efficiency and the potential for more informed decision-making, it also presents several significant challenges that can impact its effectiveness and applicability. Understanding these challenges is crucial for developing robust and efficient MBRL systems.
+![img.png](img.png)
 
 #### 1. **Model Accuracy**
    - **Description:** Learning an accurate model of the environment's dynamics is fundamental to MBRL. However, in complex or high-dimensional systems, capturing the true dynamics accurately can be exceedingly difficult.
@@ -486,24 +487,35 @@ The GP-MPC approach augments the traditional MPC framework by incorporating a GP
    - **Training:** Collect data from system interactions to train the GP model, which learns the relationship between states and control actions.
    - **Prediction:** Use the trained GP to predict future states and uncertainties, providing probabilistic estimates for MPC optimization.
    - $$
-     \mathbf{s}_{t+1} = \mathbf{R} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t + \epsilon
+     \mathbf{s}_{t+1} = f(\mathbf{a}_t, \mathbf{s}_t) + \epsilon
      $$
      where $ \epsilon $ represents the uncertainty modeled by the GP.
 
-2. **MPC Integration:**
-   - **Optimization:** Incorporate the GP's predictions and uncertainties into the MPC optimization problem, allowing the controller to plan actions that account for model confidence.
-   - **Action Selection:** Similar to standard MPC, select the first action from the optimized action sequence to apply to the environment.
-   - ```python
-     # Predicting future states with GP
-     predicted_actions, uncertainty = gp.predict(future_states, return_std=True)
-     
-     # Incorporate predictions and uncertainties into MPC optimization
-     optimized_actions = mpc_optimizer.optimize(predicted_actions, uncertainty)
-     
-     # Execute the first optimized action
-     action = optimized_actions[0]
-     next_state, reward, done, truncated, info = env.step(action)
-     ```
+[//]: # (2. **MPC Integration:**)
+
+[//]: # (   - **Optimization:** Incorporate the GP's predictions and uncertainties into the MPC optimization problem, allowing the controller to plan actions that account for model confidence.)
+
+[//]: # (   - **Action Selection:** Similar to standard MPC, select the first action from the optimized action sequence to apply to the environment.)
+
+[//]: # (   - ```python)
+
+[//]: # (     # Predicting future states with GP)
+
+[//]: # (     predicted_actions, uncertainty = gp.predict&#40;future_states, return_std=True&#41;)
+
+[//]: # (     )
+[//]: # (     # Incorporate predictions and uncertainties into MPC optimization)
+
+[//]: # (     optimized_actions = mpc_optimizer.optimize&#40;predicted_actions, uncertainty&#41;)
+
+[//]: # (     )
+[//]: # (     # Execute the first optimized action)
+
+[//]: # (     action = optimized_actions[0])
+
+[//]: # (     next_state, reward, done, truncated, info = env.step&#40;action&#41;)
+
+[//]: # (     ```)
 
 #### Comparison with Other Methods:
 - **Versus Model Predictive Control (MPC):**
@@ -604,7 +616,7 @@ Gaussian Process-based MPC bridges the gap between traditional model-based contr
 
 Successfully managing these hyperparameters is crucial, as improper settings can lead to suboptimal control actions, increased computational load, and slower response times. Consequently, tuning these parameters becomes a critical task that can significantly impact the effectiveness and efficiency of the gp-MPC approach.
 
-![img.png](img.png)
+
 
 [//]: # (## Noise Study)
 
@@ -869,335 +881,6 @@ while not done:
 # Close the environment
 benchmark_env.close()
 ```
-
----
-
-## Additional Resources
-
-- **Documentation:**
-  - [OpenAI Gymnasium Documentation](https://gymnasium.farama.org/)
-  - [Stable Baselines3 Documentation](https://stable-baselines3.readthedocs.io/)
-  
-- **Libraries:**
-  - [NumPy](https://numpy.org/)
-  - [Pandas](https://pandas.pydata.org/)
-  - [Matplotlib](https://matplotlib.org/)
-  - [PyYAML](https://pyyaml.org/)
-
-- **Community Support:**
-  - [Stack Overflow](https://stackoverflow.com/)
-  - [RL Community Forums](https://www.reddit.com/r/reinforcementlearning/)
-  
----
-
-## Contributing
-
-Contributions are welcome! If you encounter issues or have suggestions for improvements, please open an issue or submit a pull request. Ensure that your contributions adhere to the project's coding standards and include relevant documentation.
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-```
-
-
-
-# Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24](https://sarl-plus.github.io/RL-Bootcamp/)
-
-## Getting Closer to Real-World Reinforcement Learning Applications
-
-[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu
-
-Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through implementing reinforcement learning (RL) techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness, and conduct a comprehensive noise study to evaluate performance under different conditions.
-
-## Todo: 
-* Marius PPO Challenge - hyperparameter model and so on...
-* Simon and Catherine tomorrow
-* Simon Deep Dive
-* Final round weekend
-
-We will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it (there are two ingredients, making the control problem interesting).
-There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL
-Now I implement a noise study.
-
-   1. We have a look at the [configiguration file](config/environment_setting.yaml) for the [environment](environment/environment_awake_steering.py).
-   2. We start the script [MPC_approach.py](MPC_approach.py) to run the MPC on AWAKE. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
-   3. The script [Train_policy_gradients_off_the_shelf.py](RL_approach.py) contains the training 
-      procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
-      defined numer of training steps. The plot shows the statistics of the validations during the training.
-   4. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
-
-### reward to penalty for specific boundary conditions
-Part II:
-   1. Elements of model-based RL
-   2. Elements of data-driven MPC design and optimization
-   3. Gaussian processes in a nut-shell
-   4. Running GP-MPC on the AWAKE environment
-   5. Alternative advanced ideas - non-stationary (shifts), masking, domain randomization, domain generalisation.
-
-
-## RL Bootcamp Tutorial Installation Guide
-
-Welcome to the **RL Bootcamp Tutorial**! This guide will help you set up a Python environment using `requirements.txt` to ensure you have all the necessary dependencies to run the tutorials smoothly. Follow the steps below to get started.
-
-### Table of Contents
-
-- [Prerequisites](#prerequisites)
-- [Step 1: Install Python 3.11.9 or Higher](#step-1-install-python-3119-or-higher)
-  - [On Windows](#on-windows)
-  - [On macOS](#on-macos)
-- [Step 2: Clone the Repository](#step-2-clone-the-repository)
-- [Step 3: Create a Virtual Environment](#step-3-create-a-virtual-environment)
-- [Step 4: Activate the Virtual Environment](#step-4-activate-the-virtual-environment)
-  - [On Windows](#on-windows-1)
-  - [On macOS/Linux](#on-macoslinux)
-- [Step 5: Install Dependencies](#step-5-install-dependencies)
-- [Step 6: Verify the Installation](#step-6-verify-the-installation)
-- [Step 7: Deactivate the Virtual Environment](#step-7-deactivate-the-virtual-environment)
-- [Additional Tips](#additional-tips)
-- [Troubleshooting](#troubleshooting)
-- [Further Assistance](#further-assistance)
-
----
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed on your system:
-
-- **Git**: [Install Git](https://git-scm.com/downloads)
-- **Python 3.11.9 or higher**: [Download Python](https://www.python.org/downloads/)
-- **pip**: Comes bundled with Python. Verify installation with `pip --version`
-
----
-
-### Step 1: Install Python 3.11.9 or Higher
-
-#### On Windows
-
-1. **Download the Python Installer:**
-
-   - Visit the [Python Downloads for Windows](https://www.python.org/downloads/windows/) page.
-   - Download the latest Python 3.11.x installer (e.g., `python-3.11.9-amd64.exe`).
-
-2. **Run the Installer:**
-
-   - Locate the downloaded `.exe` file and double-click to run it.
-   - **Important:** Check the box that says `Add Python 3.11 to PATH`.
-   - Click on `Install Now`.
-   - Follow the on-screen instructions to complete the installation.
-
-3. **Verify the Installation:**
-
-   - Open Command Prompt (`Win + R`, type `cmd`, and press `Enter`).
-   - Run:
-     ```bash
-     python --version
-     ```
-     You should see:
-     ```
-     Python 3.11.9
-     ```
-
-#### On macOS
-
-1. **Download the Python Installer:**
-
-   - Visit the [Python Downloads for macOS](https://www.python.org/downloads/macos/) page.
-   - Download the latest Python 3.11.x installer (e.g., `python-3.11.9-macosx10.9.pkg`).
-
-2. **Run the Installer:**
-
-   - Locate the downloaded `.pkg` file and double-click to run it.
-   - Follow the installation prompts, agreeing to the license and selecting the installation location.
-
-3. **Verify the Installation:**
-
-   - Open Terminal (`Command + Space`, type `Terminal`, and press `Enter`).
-   - Run:
-     ```bash
-     python3 --version
-     ```
-     You should see:
-     ```
-     Python 3.11.9
-     ```
-
----
-
-### Step 2: Clone the Repository
-
-Clone the **RL Bootcamp Tutorial** repository to your local machine using Git.
-
-1. **Open Terminal or Command Prompt.**
-
-2. **Run the Clone Command:**
-
-   ```bash
-   git clone https://github.com/SARL-PLUS/RL_bootcamp_tutorial.git
-   ```
-
-3. **Navigate to the Project Directory:**
-
-   ```bash
-   cd RL_bootcamp_tutorial
-   ```
-
----
-
-### Step 3: Create a Virtual Environment
-
-Creating a virtual environment isolates your project's dependencies from other Python projects on your system.
-
-1. **Run the Following Command:**
-
-   ```bash
-   python3 -m venv venv
-   ```
-
-   - **Explanation:**
-     - `python3`: Specifies the Python interpreter. Use `python` if `python3` is not recognized.
-     - `-m venv`: Uses the `venv` module to create a virtual environment.
-     - `venv`: The name of the virtual environment directory. You can name it differently if preferred.
-
----
-
-### Step 4: Activate the Virtual Environment
-
-Before installing dependencies, activate the virtual environment.
-
-#### On Windows
-
-1. **Run the Activation Script:**
-
-   ```bash
-   venv\Scripts\activate
-   ```
-
-2. **Confirmation:**
-
-   - Your command prompt should now be prefixed with `(venv)` indicating that the virtual environment is active.
-     ```
-     (venv) C:\Path\To\RL_bootcamp_tutorial>
-     ```
-
-#### On macOS/Linux
-
-1. **Run the Activation Script:**
-
-   ```bash
-   source venv/bin/activate
-   ```
-
-2. **Confirmation:**
-
-   - Your terminal prompt should now be prefixed with `(venv)` indicating that the virtual environment is active.
-     ```
-     (venv) your-mac:RL_bootcamp_tutorial user$
-     ```
-
----
-
-### Step 5: Install Dependencies
-
-With the virtual environment activated, install the required Python packages using the `requirements.txt` file.
-
-```bash
-pip install -r requirements.txt
-```
-
-- **Notes:**
-  - Ensure that the `requirements.txt` file is present in the project directory.
-  - This command installs all packages listed in `requirements.txt` into the virtual environment.
-
----
-
-### Step 6: Verify the Installation
-
-To confirm that all dependencies are installed correctly, list the installed packages.
-
-```bash
-pip list
-```
-
-**Expected Output:**
-
-A list of installed packages along with their versions, matching those specified in `requirements.txt`.
-
-```
-Package         Version
---------------- -------
-numpy           1.23.1
-pandas          1.4.2
-...
-```
-
----
-
-### Troubleshooting
-
-- **`pip` Not Found:**
-
-  - Ensure that the virtual environment is activated.
-  - Verify that Python and `pip` are correctly installed and added to your system's PATH.
-
-- **Permission Issues:**
-
-  - Avoid using `sudo` with `pip`. Instead, use a virtual environment.
-  - If necessary, add the `--user` flag:
-    ```bash
-    pip install --user -r requirements.txt
-    ```
-
-- **Virtual Environment Activation Issues:**
-
-  - **macOS/Linux:**
-    - Ensure that the activation script has execute permissions.
-    - If you encounter a "permission denied" error, run:
-      ```bash
-      chmod +x venv/bin/activate
-      ```
-  
-  - **Windows:**
-    - If you receive an execution policy error, open PowerShell as an administrator and run:
-      ```powershell
-      Set-ExecutionPolicy RemoteSigned
-      ```
-    - Then, try activating the virtual environment again.
-
-- **Incompatible Python Version:**
-
-  - Ensure that the active Python interpreter is **3.11.9** or higher.
-  - You can specify the Python version when creating the virtual environment:
-    ```bash
-    python3.11 -m venv venv
-    ```
-    *Replace `python3.11` with the path to the desired Python executable if necessary.*
-
-- **Missing `requirements.txt`:**
-
-  - Ensure that you are in the correct project directory.
-  - If `requirements.txt` is missing, you may need to generate it or obtain it from the repository.
-
----
-
-### Further Assistance
-
-- **Official Python Documentation:** [https://docs.python.org/3/](https://docs.python.org/3/)
-- **Git Documentation:** [https://git-scm.com/doc](https://git-scm.com/doc)
-- **Virtual Environments (`venv`):** [https://docs.python.org/3/library/venv.html](https://docs.python.org/3/library/venv.html)
-- **Pip Documentation:** [https://pip.pypa.io/en/stable/](https://pip.pypa.io/en/stable/)
-- **Community Support:**
-  - [Stack Overflow](https://stackoverflow.com/)
-  - [Python Discord](https://pythondiscord.com/)
-  - [GitHub Discussions](https://github.com/SARL-PLUS/RL_bootcamp_tutorial/discussions)
-
----
-
-
-
 # Description of the content
 ## `AwakeSteering` Gym Environment
 The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE
@@ -1593,6 +1276,333 @@ task_setting:
 5. **Validation and Benchmarking:**  
    Utilize the `validation-settings` to perform consistent and reproducible evaluations of your RL agent's performance across different configurations and seeds.
 
+---
+
+## Additional Resources
+
+- **Documentation:**
+  - [OpenAI Gymnasium Documentation](https://gymnasium.farama.org/)
+  - [Stable Baselines3 Documentation](https://stable-baselines3.readthedocs.io/)
+
+---
+
+[//]: # (## Contributing)
+
+[//]: # ()
+[//]: # (Contributions are welcome! If you encounter issues or have suggestions for improvements, please open an issue or submit a pull request. Ensure that your contributions adhere to the project's coding standards and include relevant documentation.)
+
+[//]: # ()
+[//]: # (---)
+
+[//]: # ()
+[//]: # (## License)
+
+[//]: # ()
+[//]: # (This project is licensed under the [MIT License]&#40;LICENSE&#41;.)
+
+[//]: # ()
+[//]: # (---)
+
+
+[//]: # ()
+[//]: # ()
+[//]: # (# Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24]&#40;https://sarl-plus.github.io/RL-Bootcamp/&#41;)
+
+[//]: # ()
+[//]: # (## Getting Closer to Real-World Reinforcement Learning Applications)
+
+[//]: # ()
+[//]: # ([Simon Hirlaender]&#40;https://mathphyssim.github.io&#41;, Olga Mironova, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu)
+
+[//]: # ()
+[//]: # (Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through implementing reinforcement learning &#40;RL&#41; techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness, and conduct a comprehensive noise study to evaluate performance under different conditions.)
+
+## Todo: 
+* Marius PPO Challenge - hyperparameter model and so on...
+* Simon and Catherine tomorrow
+* Simon Deep Dive
+* Final round weekend
+
+We will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it (there are two ingredients, making the control problem interesting).
+There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL
+Now I implement a noise study.
+
+   1. We have a look at the [configiguration file](config/environment_setting.yaml) for the [environment](environment/environment_awake_steering.py).
+   2. We start the script [MPC_approach.py](MPC_approach.py) to run the MPC on AWAKE. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
+   3. The script [Train_policy_gradients_off_the_shelf.py](RL_approach.py) contains the training 
+      procedures of two main stream algorithms: PPO and TRPO. The training is done with ten fixed validation episodes done at a 
+      defined numer of training steps. The plot shows the statistics of the validations during the training.
+   4. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
+
+### reward to penalty for specific boundary conditions
+Part II:
+   1. Elements of model-based RL
+   2. Elements of data-driven MPC design and optimization
+   3. Gaussian processes in a nut-shell
+   4. Running GP-MPC on the AWAKE environment
+   5. Alternative advanced ideas - non-stationary (shifts), masking, domain randomization, domain generalisation.
+
+
+## RL Bootcamp Tutorial Installation Guide
+
+Welcome to the **RL Bootcamp Tutorial**! This guide will help you set up a Python environment using `requirements.txt` to ensure you have all the necessary dependencies to run the tutorials smoothly. Follow the steps below to get started.
+
+### Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Step 1: Install Python 3.11.9 or Higher](#step-1-install-python-3119-or-higher)
+  - [On Windows](#on-windows)
+  - [On macOS](#on-macos)
+- [Step 2: Clone the Repository](#step-2-clone-the-repository)
+- [Step 3: Create a Virtual Environment](#step-3-create-a-virtual-environment)
+- [Step 4: Activate the Virtual Environment](#step-4-activate-the-virtual-environment)
+  - [On Windows](#on-windows-1)
+  - [On macOS/Linux](#on-macoslinux)
+- [Step 5: Install Dependencies](#step-5-install-dependencies)
+- [Step 6: Verify the Installation](#step-6-verify-the-installation)
+- [Step 7: Deactivate the Virtual Environment](#step-7-deactivate-the-virtual-environment)
+- [Additional Tips](#additional-tips)
+- [Troubleshooting](#troubleshooting)
+- [Further Assistance](#further-assistance)
+
+---
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- **Git**: [Install Git](https://git-scm.com/downloads)
+- **Python 3.11.9 or higher**: [Download Python](https://www.python.org/downloads/)
+- **pip**: Comes bundled with Python. Verify installation with `pip --version`
+
+---
+
+### Step 1: Install Python 3.11.9 or Higher
+
+#### On Windows
+
+1. **Download the Python Installer:**
+
+   - Visit the [Python Downloads for Windows](https://www.python.org/downloads/windows/) page.
+   - Download the latest Python 3.11.x installer (e.g., `python-3.11.9-amd64.exe`).
+
+2. **Run the Installer:**
+
+   - Locate the downloaded `.exe` file and double-click to run it.
+   - **Important:** Check the box that says `Add Python 3.11 to PATH`.
+   - Click on `Install Now`.
+   - Follow the on-screen instructions to complete the installation.
+
+3. **Verify the Installation:**
+
+   - Open Command Prompt (`Win + R`, type `cmd`, and press `Enter`).
+   - Run:
+     ```bash
+     python --version
+     ```
+     You should see:
+     ```
+     Python 3.11.9
+     ```
+
+#### On macOS
+
+1. **Download the Python Installer:**
+
+   - Visit the [Python Downloads for macOS](https://www.python.org/downloads/macos/) page.
+   - Download the latest Python 3.11.x installer (e.g., `python-3.11.9-macosx10.9.pkg`).
+
+2. **Run the Installer:**
+
+   - Locate the downloaded `.pkg` file and double-click to run it.
+   - Follow the installation prompts, agreeing to the license and selecting the installation location.
+
+3. **Verify the Installation:**
+
+   - Open Terminal (`Command + Space`, type `Terminal`, and press `Enter`).
+   - Run:
+     ```bash
+     python3 --version
+     ```
+     You should see:
+     ```
+     Python 3.11.9
+     ```
+
+---
+
+### Step 2: Clone the Repository
+
+Clone the **RL Bootcamp Tutorial** repository to your local machine using Git.
+
+1. **Open Terminal or Command Prompt.**
+
+2. **Run the Clone Command:**
+
+   ```bash
+   git clone https://github.com/SARL-PLUS/RL_bootcamp_tutorial.git
+   ```
+
+3. **Navigate to the Project Directory:**
+
+   ```bash
+   cd RL_bootcamp_tutorial
+   ```
+
+---
+
+### Step 3: Create a Virtual Environment
+
+Creating a virtual environment isolates your project's dependencies from other Python projects on your system.
+
+1. **Run the Following Command:**
+
+   ```bash
+   python3 -m venv venv
+   ```
+
+   - **Explanation:**
+     - `python3`: Specifies the Python interpreter. Use `python` if `python3` is not recognized.
+     - `-m venv`: Uses the `venv` module to create a virtual environment.
+     - `venv`: The name of the virtual environment directory. You can name it differently if preferred.
+
+---
+
+### Step 4: Activate the Virtual Environment
+
+Before installing dependencies, activate the virtual environment.
+
+#### On Windows
+
+1. **Run the Activation Script:**
+
+   ```bash
+   venv\Scripts\activate
+   ```
+
+2. **Confirmation:**
+
+   - Your command prompt should now be prefixed with `(venv)` indicating that the virtual environment is active.
+     ```
+     (venv) C:\Path\To\RL_bootcamp_tutorial>
+     ```
+
+#### On macOS/Linux
+
+1. **Run the Activation Script:**
+
+   ```bash
+   source venv/bin/activate
+   ```
+
+2. **Confirmation:**
+
+   - Your terminal prompt should now be prefixed with `(venv)` indicating that the virtual environment is active.
+     ```
+     (venv) your-mac:RL_bootcamp_tutorial user$
+     ```
+
+---
+
+### Step 5: Install Dependencies
+
+With the virtual environment activated, install the required Python packages using the `requirements.txt` file.
+
+```bash
+pip install -r requirements.txt
+```
+
+- **Notes:**
+  - Ensure that the `requirements.txt` file is present in the project directory.
+  - This command installs all packages listed in `requirements.txt` into the virtual environment.
+
+---
+
+### Step 6: Verify the Installation
+
+To confirm that all dependencies are installed correctly, list the installed packages.
+
+```bash
+pip list
+```
+
+**Expected Output:**
+
+A list of installed packages along with their versions, matching those specified in `requirements.txt`.
+
+```
+Package         Version
+--------------- -------
+numpy           1.23.1
+pandas          1.4.2
+...
+```
+
+---
+
+### Troubleshooting
+
+- **`pip` Not Found:**
+
+  - Ensure that the virtual environment is activated.
+  - Verify that Python and `pip` are correctly installed and added to your system's PATH.
+
+- **Permission Issues:**
+
+  - Avoid using `sudo` with `pip`. Instead, use a virtual environment.
+  - If necessary, add the `--user` flag:
+    ```bash
+    pip install --user -r requirements.txt
+    ```
+
+- **Virtual Environment Activation Issues:**
+
+  - **macOS/Linux:**
+    - Ensure that the activation script has execute permissions.
+    - If you encounter a "permission denied" error, run:
+      ```bash
+      chmod +x venv/bin/activate
+      ```
+  
+  - **Windows:**
+    - If you receive an execution policy error, open PowerShell as an administrator and run:
+      ```powershell
+      Set-ExecutionPolicy RemoteSigned
+      ```
+    - Then, try activating the virtual environment again.
+
+- **Incompatible Python Version:**
+
+  - Ensure that the active Python interpreter is **3.11.9** or higher.
+  - You can specify the Python version when creating the virtual environment:
+    ```bash
+    python3.11 -m venv venv
+    ```
+    *Replace `python3.11` with the path to the desired Python executable if necessary.*
+
+- **Missing `requirements.txt`:**
+
+  - Ensure that you are in the correct project directory.
+  - If `requirements.txt` is missing, you may need to generate it or obtain it from the repository.
+
+---
+
+### Further Assistance
+
+- **Official Python Documentation:** [https://docs.python.org/3/](https://docs.python.org/3/)
+- **Git Documentation:** [https://git-scm.com/doc](https://git-scm.com/doc)
+- **Virtual Environments (`venv`):** [https://docs.python.org/3/library/venv.html](https://docs.python.org/3/library/venv.html)
+- **Pip Documentation:** [https://pip.pypa.io/en/stable/](https://pip.pypa.io/en/stable/)
+- **Community Support:**
+  - [Stack Overflow](https://stackoverflow.com/)
+  - [Python Discord](https://pythondiscord.com/)
+  - [GitHub Discussions](https://github.com/SARL-PLUS/RL_bootcamp_tutorial/discussions)
+
+---
+
+
+
+
 [//]: # (### Example Usage)
 
 [//]: # ()
@@ -1602,7 +1612,7 @@ task_setting:
 [//]: # (```bash)
 
 [//]: # (python train_agent.py --config config.yaml)
-```
+
 
 Ensure that the `train_agent.py` script is designed to parse and apply the settings from `config.yaml`. Adjust the command as necessary based on the repository's structure and available scripts.
 
@@ -1610,7 +1620,7 @@ Ensure that the `train_agent.py` script is designed to parse and apply the setti
 
 By meticulously configuring these parameters, you can tailor the RL environment to match your experimental requirements, facilitating effective learning and benchmarking of reinforcement learning agents in beam steering tasks.
 
-```
+
 We will provide a mathematical definition of our environment, it's properties (in a control theoretical sense) and why I have chosen it (there are two ingredients, making the control problem interesting).
 There are several possibilities to attack the problem, and we can highlight some of the drawbacks and advantages of RL
 Now I implement a noise study.
@@ -1624,7 +1634,8 @@ as the original environment.
    3. To visualize the progress helper functions are defined in [Visualize_policy_validation.py](helper_scripts/Visualize_policy_validation.py).
    4. To get the near optimal solution we use a control based approach, namely model predictive control (MPC). For this we need a model of the dynamics and the reward and use a sequential least squares quadratic programming (SLSQP), which is a constrained optimization. In order to get robust against errors we only use the first action from the planned action sequence. The optimization is in [MPC.py](helper_scripts/MPC.py) and the validation on the validation episodes is in [MPC_approach.py](MPC_approach.py)
    5. Finally, we can compare our training results with MPC and teh response matrix approach: [Compare_different_approaches.py](Compare_different_approaches.py).
-# reward to penalty for specific boundary conditions
+
+6. reward to penalty for specific boundary conditions
 Part II:
    1. Elements of model-based RL
    2. Elements of data-driven MPC design and optimization
