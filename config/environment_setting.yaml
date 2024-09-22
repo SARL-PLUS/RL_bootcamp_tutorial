@@ -28,45 +28,41 @@ mpc-settings:
 # RL (Reinforcement Learning) Settings: Parameters for the RL algorithm.
 rl-settings:
   algorithm: 'PPO' # Change this to 'TRPO' to use TRPO from stable-baselines
-  # RL algorithm to use. Examples: 'PPO', 'TRPO' from Stable Baselines.
-  # Total number of training steps for the RL agent.
-  total_steps: 150000
-
-  # Number of steps between each evaluation of the RL agent.
-  evaluation_steps: 20
+  total_steps: 150000 # Total number of training steps for the RL agent
+  evaluation_steps: 20 # Number of steps between each evaluation of the RL agent
 
   # PPO specific hyperparameters
   ppo:
-    learning_rate: 3.0e-4
-    n_steps: 2048
-    batch_size: 64
-    n_epochs: 10
-    gamma: 0.99
-    gae_lambda: 0.95
-    clip_range: 0.2
-    ent_coef: 0.0
-    vf_coef: 0.5
-    max_grad_norm: 0.5
-    use_sde: False
-    sde_sample_freq: -1
+    learning_rate: 3.0e-4 # Controls the step size of policy and value function updates
+    n_steps: 2048 # Determines the amount of experience collected before each update
+    batch_size: 64 # Affects the stability and speed of training
+    n_epochs: 10 # Controls how many times the collected data is reused for updates
+    gamma: 0.99 # Determines the importance of future rewards in decision-making
+    gae_lambda: 0.95 # Trades off bias vs. variance in advantage estimation
+    clip_range: 0.2 # Limits the size of policy updates to improve stability
+    ent_coef: 0.0 # Encourages exploration by adding an entropy bonus to the objective
+    vf_coef: 0.5 # Balances the importance of value function learning vs. policy learning
+    max_grad_norm: 0.5 # Prevents excessively large gradient updates to improve stability
+    use_sde: False # Whether to use generalized State Dependent Exploration
+    sde_sample_freq: -1 # The frequency of sampling a new noise matrix
 
   # TRPO specific hyperparameters
   trpo:
-    learning_rate: 1.0e-3
-    n_steps: 2048
-    batch_size: 128
-    gamma: 0.99
-    cg_max_steps: 15
-    cg_damping: 0.1
-    line_search_shrinking_factor: 0.8
-    line_search_max_iter: 10
-    n_critic_updates: 10
-    gae_lambda: 0.95
-    use_sde: False
-    sde_sample_freq: -1
-    normalize_advantage: True
-    target_kl: 0.01
-    sub_sampling_factor: 1
+    learning_rate: 1.0e-3 # Influences how quickly the value function is updated
+    n_steps: 2048 # Determines the amount of experience collected before each update
+    batch_size: 128 # Affects the stability and speed of value function training
+    gamma: 0.99 # Controls the importance of future rewards in decision-making
+    cg_max_steps: 15 # Impacts the precision of the natural gradient computation
+    cg_damping: 0.1 # Helps stabilize the natural gradient computation
+    line_search_shrinking_factor: 0.8 # Affects how conservatively the policy is updated
+    line_search_max_iter: 10 # Limits the computational cost of finding an acceptable policy update
+    n_critic_updates: 10 # Balances the learning between policy and value function
+    gae_lambda: 0.95 # Trades off bias vs. variance in advantage estimation
+    use_sde: False # Whether to use generalized State Dependent Exploration
+    sde_sample_freq: -1 # The frequency of sampling a new noise matrix
+    normalize_advantage: True # Can improve training stability across different scales of rewards
+    target_kl: 0.01 # Controls how conservative the policy updates are
+    sub_sampling_factor: 1 # Can reduce computation time at the cost of using less data
 
 # Advanced Settings
 # Note: Modify these settings only if necessary.
