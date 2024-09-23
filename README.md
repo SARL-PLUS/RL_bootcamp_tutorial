@@ -36,7 +36,7 @@ Before we start, these are the **learning goals**:
 
 # Open questions for the programme? - these are the notes I took during our discussions:
 
-Part II:
+Advanced part:
    1. Elements of model-based RL
    2. Elements of data-driven MPC design and optimization
    3. Gaussian processes in a nut-shell
@@ -88,7 +88,7 @@ Part II:
 - RL is used when there is a clear objective but the path to achieve it is not predefined.
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
-- 
+
 # Table of Contents
 
 - [Introduction](#introduction)
@@ -266,7 +266,7 @@ $$
 
 and any state or action constraints.
 
-![img.png](img.png)
+![img.png](miscellaneous/MPC_main_idea.png)
 
 #### Comparison with Other Methods:
 - **Versus Reinforcement Learning (RL):**
