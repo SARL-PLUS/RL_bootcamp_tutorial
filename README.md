@@ -132,8 +132,8 @@ The electron line in the AWAKE experiment at CERN is a crucial component designe
 
 #### Configuration and Function
 
-The electron line consists of several key elements, including electron sources, focusing magnets, diagnostics, and beamline elements that precisely align and focus the electron beam into the plasma cell. The configuration is carefully designed to synchronize the electron beam injection with the proton beam-induced plasma wakefields.
-
+The electron line consists of several key elements, including electron sources, focusing magnets, diagnostics, and beamline elements that precisely align and focus the electron beam into the plasma cell. The configuration is carefully designed to synchronize the electron beam injection with the proton beam-induced plasma wakefields. 
+Here we see the first five elements of the electron line.
 <img src="miscellaneous/AWAKE_image.png" width="800">
 
 #### Electron Beam Preparation
