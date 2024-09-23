@@ -190,11 +190,7 @@ def update_target_network(self):
 ## Results
 If your agents manage to solve the LunarLanderV2 environment, where we consider an environment to be solved if the average return of the last 100 episodes is at least 200, the agent should perform similarly to the one below.  
 
-<video width="640" height="480" controls>
-  <source src="./LunarLander-v2.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
+![Demo](./LunarLander-v2.gif)
 You can run our own inference by modifiying the `run` path in `inference.ipynb`.
 
 
