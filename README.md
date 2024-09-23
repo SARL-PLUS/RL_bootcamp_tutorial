@@ -133,7 +133,7 @@ The electron line in the AWAKE experiment at CERN is a crucial component designe
 #### Configuration and Function
 
 The electron line consists of several key elements, including electron sources, focusing magnets, diagnostics, and beamline elements that precisely align and focus the electron beam into the plasma cell. The configuration is carefully designed to synchronize the electron beam injection with the proton beam-induced plasma wakefields. 
-Here we see the first five elements of the electron line.
+
 <img src="miscellaneous/AWAKE_image.png" width="800">
 
 #### Electron Beam Preparation
@@ -153,10 +153,10 @@ Just before entering the plasma cell, the electron beam undergoes final adjustme
 This precise insertion into the wakefield allows the electrons to be rapidly accelerated over a short distance, gaining significant energy from the wakefields created by the proton beam in the plasma. The effectiveness of this entire process hinges on the precise control and optimization of the electron line, showcasing its importance in the AWAKE experiment.
 
 We focus on the part, right before entering the plasma cell. The steering problem, we want to solve in our tutorial is shown in the following image:
-
+Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. Here the state at time $t$ is $\mathbf s_t:=\text{target_trajectory}-\text{current_trajectory} = (s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t})$ and an action is $\mathbf a_t = (a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t})$. 
 <img src="miscellaneous/AWAKE_steering_image.png" width="600">
 
-The states are denoted by $\mathbf s$ and the actions by $\mathbf a$. We want to bring the current trajectory (blue) to a target trajectory (red) as fast as possible by modifying the magnets (violet).
+We want to bring the current trajectory (blue) to a target trajectory (red) as fast as possible (then $\mathbf s_t = \mathbf 0$) by modifying the magnets (violet).
 ### Environment Properties and Markov Decision Process (MDP) Definition
 
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
@@ -177,7 +177,7 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
   $$
 
 - **Dynamics:**
-  The system dynamics are characterized by:
+  The system dynamics (linear time invariant) are characterized by:
   $$
   \mathbf{s}_{t+1} = \mathbf{B} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t
   $$
@@ -186,10 +186,10 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
 [A good resource for linear dynamics and control](#a-good-resource-for-linear-dynamics-and-control)
 
 - **Initial Criteria:**
-  States are initialized based on an initial distribution, typically a Gaussian distribution centered around the desired beam position with a specified variance.
+  States are initialized based on an initial distribution ($\mathbf s_0\sim \rho$), typically a uniform distribution centered around the desired beam position within ($\mathcal S$).
 
 - **Training Paradigm:**
-  The environment operates in an episodic manner, where each episode consists of a sequence of interactions until termination criteria are met.
+  The environment operates in an episodic manner, where each episode consists of a sequence of interactions (changes of $\mathbf a$) until termination criteria are met.
 
 - **Termination Criteria:**
   An episode can terminate under the following conditions:
@@ -203,8 +203,9 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
      If any state component exceeds the beam pipe boundaries, leading to an unsafe or failed steering attempt.
 
 - **Discount Factor ($\gamma$):**
-  The discount factor is set to $ \gamma = 1 $, indicating that future rewards are valued equally to immediate rewards.
+  The discount factor is set to $ \gamma = 1 $, indicating that future rewards are valued equally to immediate rewards, which can allways be done in episodic scenarios (reducing the hyperparameters by one ;).
 
+<span style="color:pink">Why is the reward negative?</span>
 
 ### Why This Environment?
 
