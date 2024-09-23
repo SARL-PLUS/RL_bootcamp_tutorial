@@ -27,45 +27,71 @@ mpc-settings:
 
 # RL (Reinforcement Learning) Settings: Parameters for the RL algorithm.
 rl-settings:
-  algorithm: 'PPO' # Change this to 'TRPO' to use TRPO from stable-baselines
   # RL algorithm to use. Examples: 'PPO', 'TRPO' from Stable Baselines.
+  algorithm: 'PPO'
   # Total number of training steps for the RL agent.
   total_steps: 150000
-
   # Number of steps between each evaluation of the RL agent.
   evaluation_steps: 20
 
   # PPO specific hyperparameters
   ppo:
+    # Learning rate for the optimizer. Controls the step size of policy and value function updates.
     learning_rate: 3.0e-4
+    # Number of steps to run for each environment per update. Determines the amount of experience collected before each update.
     n_steps: 2048
+    # Minibatch size for gradient updates. Affects the stability and speed of training.
     batch_size: 64
+    # Number of epochs when optimizing the surrogate loss. Controls how many times the collected data is reused for updates.
     n_epochs: 10
+    # Discount factor. Determines the importance of future rewards in decision-making.
     gamma: 0.99
+    # Factor for trade-off of bias vs variance for Generalized Advantage Estimator. Trades off bias vs. variance in advantage estimation.
     gae_lambda: 0.95
+    # Clipping parameter for the policy loss. Limits the size of policy updates to improve stability.
     clip_range: 0.2
+    # Entropy coefficient for the loss calculation. Encourages exploration by adding an entropy bonus to the objective.
     ent_coef: 0.0
+    # Value function coefficient for the loss calculation. Balances the importance of value function learning vs. policy learning.
     vf_coef: 0.5
+    # The maximum value for the gradient clipping. Prevents excessively large gradient updates to improve stability.
     max_grad_norm: 0.5
+    # Whether to use generalized State Dependent Exploration.
     use_sde: False
+    # The frequency of sampling a new noise matrix when using gSDE.
     sde_sample_freq: -1
 
   # TRPO specific hyperparameters
   trpo:
+    # Learning rate for the value function optimizer. Influences how quickly the value function is updated.
     learning_rate: 1.0e-3
+    # Number of steps to run for each environment per update. Determines the amount of experience collected before each update.
     n_steps: 2048
+    # Minibatch size for the value function updates. Affects the stability and speed of value function training.
     batch_size: 128
+    # Discount factor. Controls the importance of future rewards in decision-making.
     gamma: 0.99
+    # Maximum number of steps in the Conjugate Gradient algorithm. Impacts the precision of the natural gradient computation.
     cg_max_steps: 15
+    # Damping factor in the Hessian vector product computation. Helps stabilize the natural gradient computation.
     cg_damping: 0.1
+    # Step-size reduction factor for the line search. Affects how conservatively the policy is updated.
     line_search_shrinking_factor: 0.8
+    # Maximum number of iterations for the backtracking line search. Limits the computational cost of finding an acceptable policy update.
     line_search_max_iter: 10
+    # Number of critic (value function) updates per policy update. Balances the learning between policy and value function.
     n_critic_updates: 10
+    # Factor for trade-off of bias vs variance for Generalized Advantage Estimator. Trades off bias vs. variance in advantage estimation.
     gae_lambda: 0.95
+    # Whether to use generalized State Dependent Exploration.
     use_sde: False
+    # The frequency of sampling a new noise matrix when using gSDE.
     sde_sample_freq: -1
+    # Whether to normalize the advantage. Can improve training stability across different scales of rewards.
     normalize_advantage: True
+    # Target Kullback-Leibler divergence between updates. Controls how conservative the policy updates are.
     target_kl: 0.01
+    # Factor for sub-sampling the batch to reduce computation time. Can reduce computation time at the cost of using less data.
     sub_sampling_factor: 1
 
 # Advanced Settings

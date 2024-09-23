@@ -4,7 +4,7 @@
 
 [Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova (, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu)
 
-**Contact:** [simon.hirlaender@plus.ac.at](mailto:simon.hirlaender@plus.ac.at) or [sarl.ida.plus@gmail.com](mailto:sarl.ida.plus@gmail.com) 
+**Contact:** [simon.hirlaender@plus.ac.at](mailto:simon.hirlaender@plus.ac.at) or [sarl.ida.plus@gmail.com](mailto:sarl.ida.plus@gmail.com)
 
 Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through implementing reinforcement learning (RL) techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness, and conduct a comprehensive noise study to evaluate performance under different conditions.
 
@@ -25,7 +25,7 @@ Before we start, these are the **learning goals**:
 - Incorporate hyperparameters of RL Agents
 - Help and contribute section
 - TOC has to be correct
-- credits for GP-MPC and reference 
+- credits for GP-MPC and reference
 - credits AWAKE
 - credits on papers
 ## How we do the tutorial
@@ -89,6 +89,7 @@ Advanced part:
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
 
+-
 # Table of Contents
 
 - [Introduction](#introduction)
@@ -160,22 +161,22 @@ The states are denoted by $\mathbf s$ and the actions by $\mathbf a$. We want to
 
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
 
-- **State Space ($\mathcal{S}$):**  
+- **State Space ($\mathcal{S}$):**
   A $N$-dimensional (10 in the real scenario) continuous space representing the current beam positions and related parameters. Each state $ \mathbf{s}_t \in \mathcal{S} $ is a vector of real numbers capturing the system's state at time step $ t $.
 
-- **Action Space ($\mathcal{A}$):**  
+- **Action Space ($\mathcal{A}$):**
   A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $ \mathbf{a}_t \in \mathcal{A} $ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
 
-- **Observation:**  
+- **Observation:**
   The observation provided to the agent is identical to the state $ \mathbf{s}_t $.
 
-- **Reward Function ($R$):**  
+- **Reward Function ($R$):**
   The reward is defined as the negative Root Mean Square (RMS) of the state vector:
   $$
   R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}
   $$
 
-- **Dynamics:**  
+- **Dynamics:**
   The system dynamics are characterized by:
   $$
   \mathbf{s}_{t+1} = \mathbf{B} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t
@@ -184,24 +185,24 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
 
 [A good resource for linear dynamics and control](#a-good-resource-for-linear-dynamics-and-control)
 
-- **Initial Criteria:**  
+- **Initial Criteria:**
   States are initialized based on an initial distribution, typically a Gaussian distribution centered around the desired beam position with a specified variance.
 
-- **Training Paradigm:**  
+- **Training Paradigm:**
   The environment operates in an episodic manner, where each episode consists of a sequence of interactions until termination criteria are met.
 
-- **Termination Criteria:**  
+- **Termination Criteria:**
   An episode can terminate under the following conditions:
-  1. **Maximum Number of Interactions (Truncation):**  
+  1. **Maximum Number of Interactions (Truncation):**
      The episode ends if the number of time steps exceeds a predefined maximum limit (e.g., 1000 steps).
-  
-  2. **Successful Termination:**  
+
+  2. **Successful Termination:**
      If the RMS of the state vector falls below the measurement uncertainty threshold, indicating successful beam steering.
-  
-  3. **Unsuccessful Termination:**  
+
+  3. **Unsuccessful Termination:**
      If any state component exceeds the beam pipe boundaries, leading to an unsafe or failed steering attempt.
 
-- **Discount Factor ($\gamma$):**  
+- **Discount Factor ($\gamma$):**
   The discount factor is set to $ \gamma = 1 $, indicating that future rewards are valued equally to immediate rewards.
 
 
@@ -344,7 +345,7 @@ where:
    - Compute the pseudo-inverse of the response matrix $\mathbf{B}$ to ensure numerical stability.
    - ```python
      import numpy as np
-     
+
      self.rmatrix_inverse = np.linalg.pinv(self.rmatrix)
      ```
 
@@ -586,7 +587,7 @@ You should see something like (here for five DoF):
 
 Sometimes this is the only option you have, if you know nothing about the environment. Does this make sense? How can you probe your system?
 
-## 2. Running Model Predictive Control
+## 3. Running Model Predictive Control
 
 Execute the script [`MPC_approach.py`](MPC_approach.py) to run the **Model Predictive Control (MPC)** approach on the **AWAKE** environment. MPC serves as a near-optimal control strategy based on a model of the environment's dynamics.
 
@@ -601,7 +602,7 @@ Execute the script [`MPC_approach.py`](MPC_approach.py) to run the **Model Predi
    - **Objective:** Achieve near-optimal solutions using a control-based approach.
    - **Methodology:** Utilizes **Sequential Least Squares Quadratic Programming (SLSQP)** for constrained optimization.
    - **Robustness:** Enhances stability by applying only the first action from the planned action sequence.
-   
+
 3. **Implementation Details:**
    - **Optimization:** Handled in [`helper_scripts/MPC.py`](helper_scripts/MPC.py).
    - **Validation:** Conducted within [`MPC_approach.py`](MPC_approach.py) across validation episodes to ensure performance consistency.
@@ -609,7 +610,9 @@ You should see something like (here for five DoF):
 <div align="center">
   <img src="miscellaneous/MPC.png" width="500">
 </div>
-## 3. Training RL Agents
+
+
+## 4. Training RL Agents
 
 Train reinforcement learning agents using the script [`Train_policy_gradients_off_the_shelf.py`](RL_approach.py). This script implements training procedures for two mainstream RL algorithms: **Proximal Policy Optimization (PPO)** and **Trust Region Policy Optimization (TRPO)**.
 
@@ -626,8 +629,9 @@ Train reinforcement learning agents using the script [`Train_policy_gradients_of
    - **Training Process:** Conducts training over `10,000` steps with `50` evaluation steps per validation episode.
    - **Evaluation:** Performs `ten` fixed validation episodes at defined training intervals to monitor agent performance.
    - **Visualization:** Generates plots showcasing validation statistics throughout the training process, enabling performance tracking and comparison.
+
 You see alternating figures showing the test of the policy and the training progress:
-   - <table>
+   <table>
   <tr>
     <td align="center">
       <img src="miscellaneous/PPO_learning.png" alt="Figure 1" width="500">
@@ -642,7 +646,62 @@ You see alternating figures showing the test of the policy and the training prog
   </tr>
 </table>
 
-## 4. Comparing Approaches
+
+The following hyperparameters can be adjusted in the configuration file or directly in the training script to optimize the performance of the RL agents. We add brief explanations to provide insights into how each parameter influences the learning process, helping users make informed decisions when tuning the algorithms. The configuration file is located at [`config/environment_setting.yaml`](config/environment_setting.yaml) and explained in the upcoming sections in more detail.
+
+TRPO (Trust Region Policy Optimization) uses the following key hyperparameters:
+
+- `learning_rate`: Learning rate for the value function optimizer. Default: 1e-3
+  - *Influences how quickly the value function is updated.*
+- `n_steps`: Number of steps per environment update. Default: 2048
+  - *Determines the amount of experience collected before each update.*
+- `batch_size`: Minibatch size for value function updates. Default: 128
+  - *Affects the stability and speed of value function training.*
+- `gamma`: Discount factor. Default: 0.99
+  - *Controls the importance of future rewards in decision-making.*
+- `cg_max_steps`: Maximum steps in Conjugate Gradient algorithm. Default: 15
+  - *Impacts the precision of the natural gradient computation.*
+- `cg_damping`: Damping factor for Hessian vector product. Default: 0.1
+  - *Helps stabilize the natural gradient computation.*
+- `line_search_shrinking_factor`: Step-size reduction factor for line search. Default: 0.8
+  - *Affects how conservatively the policy is updated.*
+- `line_search_max_iter`: Maximum iterations for backtracking line search. Default: 10
+  - *Limits the computational cost of finding an acceptable policy update.*
+- `n_critic_updates`: Number of critic updates per policy update. Default: 10
+  - *Balances the learning between policy and value function.*
+- `gae_lambda`: Factor for Generalized Advantage Estimator. Default: 0.95
+  - *Trades off bias vs. variance in advantage estimation.*
+- `normalize_advantage`: Whether to normalize the advantage. Default: True
+  - *Can improve training stability across different scales of rewards.*
+- `target_kl`: Target KL divergence between updates. Default: 0.01
+  - *Controls how conservative the policy updates are.*
+- `sub_sampling_factor`: Factor for batch sub-sampling. Default: 1
+  - *Can reduce computation time at the cost of using less data.*
+
+PPO (Proximal Policy Optimization) uses the following key hyperparameters:
+
+- `learning_rate`: Learning rate for the optimizer. Default: 3e-4
+  - *Controls the step size of policy and value function updates.*
+- `n_steps`: Number of steps per environment update. Default: 2048
+  - *Determines the amount of experience collected before each update.*
+- `batch_size`: Minibatch size for gradient updates. Default: 64
+  - *Affects the stability and speed of training.*
+- `n_epochs`: Number of optimization epochs. Default: 10
+  - *Controls how many times the collected data is reused for updates.*
+- `gamma`: Discount factor. Default: 0.99
+  - *Determines the importance of future rewards in decision-making.*
+- `gae_lambda`: Factor for Generalized Advantage Estimator. Default: 0.95
+  - *Trades off bias vs. variance in advantage estimation.*
+- `clip_range`: Clipping parameter for policy loss. Default: 0.2
+  - *Limits the size of policy updates to improve stability.*
+- `ent_coef`: Entropy coefficient for loss calculation. Default: 0.0
+  - *Encourages exploration by adding an entropy bonus to the objective.*
+- `vf_coef`: Value function coefficient for loss calculation. Default: 0.5
+  - *Balances the importance of value function learning vs. policy learning.*
+- `max_grad_norm`: Maximum value for gradient clipping. Default: 0.5
+  - *Prevents excessively large gradient updates to improve stability.*
+
+## 5. Comparing Approaches
 
 After training, compare the performance of RL agents with the MPC and response matrix approaches using the script [`Compare_different_approaches.py`](Compare_different_approaches.py).
 
@@ -676,7 +735,7 @@ You see two figures:
 </table>
 
 
-## 5. Running the GP-MPC Controller
+## 6. Running the GP-MPC Controller
 
 Utilize the Gaussian Process-based Model Predictive Control (GP-MPC) framework to manage and optimize the Beam Steering Environment. This script integrates GP regression with MPC to handle uncertainties and complex dynamics effectively.
 
@@ -812,13 +871,13 @@ done = False
 while not done:
     # Sample a random action
     action = env.action_space.sample()
-    
+
     # Take a step in the environment
     observation, reward, done, truncated, info = env.step(action)
-    
+
     # Render or process the observation as needed
     env.render()
-    
+
     if done:
         break
 
@@ -984,10 +1043,10 @@ degrees-of-freedom: 10
 terminal-conditions:
   # Maximum number of steps allowed per episode.
   MAX-TIME: 1000
-  
+
   # Whether to enforce boundary conditions on beam positions.
   boundary-conditions: true
-  
+
   # Scaling factor applied to penalties when boundary conditions are violated.
   penalty-scaling: 10.0
 
@@ -995,10 +1054,10 @@ terminal-conditions:
 mpc-settings:
   # Length of the prediction horizon for MPC.
   horizon-length: 8
-  
+
   # Tolerance for convergence in the MPC solver.
   tol: 1.0e-8
-  
+
   # Whether to display solver output during optimization.
   disp: False
 
@@ -1006,12 +1065,22 @@ mpc-settings:
 rl-settings:
   # RL algorithm to use. Examples: 'PPO', 'TRPO' from Stable Baselines.
   algorithm: 'PPO' # 'TRPO' ... from stable baselines
-  
+
   # Total number of training steps for the RL agent.
   total_steps: 10000
-  
+
   # Number of steps between each evaluation of the RL agent.
   evaluation_steps: 50
+
+  # PPO specific hyperparameters
+  ppo:
+    learning_rate: 3.0e-4
+    ...
+
+  # TRPO specific hyperparameters
+  trpo:
+    learning_rate: 1.0e-3
+    ...
 
 # Advanced Settings
 # Note: Modify these settings only if necessary.
@@ -1034,87 +1103,87 @@ validation-settings:
 task_setting:
   # Path to the file containing predefined tasks for verification.
   task_location: 'environment/tasks/verification_tasks.pkl'
-  
+
   # Task number to load from the task file.
   task_nr: 0
 ```
 
 ### Description of Configuration Parameters
 
-- **degrees-of-freedom:**  
+- **degrees-of-freedom:**
   Determines the number of control inputs and observed states the RL agent will interact with. Setting this value adjusts the complexity and dimensionality of the environment.
 
-- **terminal-conditions:**  
-  - **MAX-TIME:**  
+- **terminal-conditions:**
+  - **MAX-TIME:**
     The maximum number of steps an episode can run before it is forcibly terminated. Useful for preventing excessively long episodes.
-    
-  - **boundary-conditions:**  
+
+  - **boundary-conditions:**
     When set to `true`, the environment enforces boundary conditions on beam positions, ensuring they remain within safe operational limits.
-    
-  - **penalty-scaling:**  
+
+  - **penalty-scaling:**
     A multiplier applied to penalties incurred when boundary conditions are violated. Higher values increase the severity of penalties, encouraging the agent to avoid such violations.
 
-- **mpc-settings:**  
+- **mpc-settings:**
   Parameters governing the Model Predictive Control (MPC) algorithm used within the environment.
-  - **horizon-length:**  
+  - **horizon-length:**
     The number of future steps the MPC considers when optimizing actions.
-    
-  - **tol:**  
+
+  - **tol:**
     The numerical tolerance for convergence in the MPC solver. Smaller values require more precise solutions.
-    
-  - **disp:**  
+
+  - **disp:**
     Enables (`True`) or disables (`False`) the display of solver output during optimization.
 
-- **rl-settings:**  
+- **rl-settings:**
   Configuration for the Reinforcement Learning (RL) algorithm employed.
-  - **algorithm:**  
+  - **algorithm:**
     Specifies the RL algorithm to use, such as Proximal Policy Optimization (`'PPO'`) or Trust Region Policy Optimization (`'TRPO'`), typically sourced from libraries like Stable Baselines.
-    
-  - **total_steps:**  
+
+  - **total_steps:**
     The total number of training steps the RL agent will undergo.
-    
-  - **evaluation_steps:**  
+
+  - **evaluation_steps:**
     The frequency (in steps) at which the agent's performance is evaluated during training.
 
-- **noise_setting:**  
-  - **std_noise:**  
+- **noise_setting:**
+  - **std_noise:**
     Defines the standard deviation of noise added to observations. Setting this to `'none'` disables noise, allowing for deterministic observations.
 
-- **init_scaling:**  
+- **init_scaling:**
   A scaling factor applied to initial observations to normalize state values, aiding in stabilizing the learning process.
 
-- **action_scale:**  
+- **action_scale:**
   Scales the magnitude of actions taken by the RL agent, allowing for control over the aggressiveness of actions.
 
-- **validation-settings:**  
+- **validation-settings:**
   Parameters related to the validation phase of the RL agent.
-  - **validation-seeds:**  
+  - **validation-seeds:**
     A list of seeds ensuring reproducible validation runs, allowing consistent evaluation across different runs.
 
-- **task_setting:**  
-  - **task_location:**  
+- **task_setting:**
+  - **task_location:**
     The file path to the pickle file containing predefined tasks used for environment verification and benchmarking.
-    
-  - **task_nr:**  
+
+  - **task_nr:**
     The specific task number to load from the `verification_tasks.pkl` file, enabling targeted testing of the environment.
 
 ### How to Use This Configuration
 
-1. **Locate the Configuration File:**  
+1. **Locate the Configuration File:**
    Ensure that the configuration file (e.g., `config.yaml`) is placed in the appropriate directory within the repository, typically at the root or within a `config/` folder.
 
-2. **Modify Parameters as Needed:**  
+2. **Modify Parameters as Needed:**
    Adjust the parameters to suit your specific experimentation needs. For instance:
    - Change `degrees-of-freedom` to increase or decrease the complexity of the environment.
    - Modify `rl-settings` to switch between different RL algorithms or adjust training durations.
 
-3. **Advanced Settings:**  
+3. **Advanced Settings:**
    Only alter the advanced settings if you have a clear understanding of their impact. These settings control finer aspects of the environment and agent behavior.
 
-4. **Running the Tutorial:**  
+4. **Running the Tutorial:**
    When executing the tutorial scripts, ensure they reference the correct configuration file. This allows the environment and RL agent to initialize with your specified settings.
 
-5. **Validation and Benchmarking:**  
+5. **Validation and Benchmarking:**
    Utilize the `validation-settings` to perform consistent and reproducible evaluations of your RL agent's performance across different configurations and seeds.
 
 ---
@@ -1378,7 +1447,7 @@ pandas          1.4.2
       ```bash
       chmod +x venv/bin/activate
       ```
-  
+
   - **Windows:**
     - If you receive an execution policy error, open PowerShell as an administrator and run:
       ```powershell
