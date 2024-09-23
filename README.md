@@ -456,7 +456,7 @@ Model-Based Reinforcement Learning offers promising advantages by leveraging lea
 
 ---
 
-### 4. More advanded part: Gaussian Process-based MPC (GP-MPC)
+### 4. More advanded part model-based RL: Gaussian Process-based MPC (GP-MPC)
 
 **Gaussian Process-based Model Predictive Control (GP-MPC)** integrates Gaussian Process (GP) regression with traditional MPC to enhance the controller's ability to handle model uncertainties and non-linear dynamics. This hybrid approach leverages the strengths of both MPC and GP to provide a more robust and adaptive control strategy.
 
