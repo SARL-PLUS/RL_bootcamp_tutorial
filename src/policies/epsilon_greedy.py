@@ -106,13 +106,12 @@ class EpsilonGreedy(GreedyPolicy):
         if obs.shape == self.observation_space.shape:
             obs = np.expand_dims(obs, axis=0)
 
-        actions = super().__call__(obs)
+        # TODO: sample greedy actions
+        actions = ...
 
-        if not greedy:
-            random_actions = RandomPolicy.__call__(self, obs)
-            rnd = np.random.rand(obs.shape[0])
-            actions[rnd < self.epsilon] = random_actions[rnd < self.epsilon]
+        # TODO: sample random actions
+        random_actions = ...
 
+        # TODO: pick random action over greedy action with probability self.epsilon
         return actions
-
 
