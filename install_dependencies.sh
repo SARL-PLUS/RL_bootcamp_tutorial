@@ -23,6 +23,9 @@ install_dependencies() {
         fi
     fi
 
+    echo "Install swig"
+    pip install swig
+
     echo "Installing gymnasium..."
     pip install gymnasium
     pip install gymnasium[box2d]
