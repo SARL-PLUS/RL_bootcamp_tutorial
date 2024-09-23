@@ -123,18 +123,16 @@ class DeepQAgent():
 
         # let's start to update our networks
         if len(self.buffer) >= self.burn_in: 
-            
             self.t_step += 1
     
             if (self.t_step % self.update_every) == 0:
-                 
                 for _ in range(self.num_updates):
                     self.update()
 
                 self.t_step = 0
 
             # slowly mix local network parameter weights into target network
-            self.soft_update()
+            self.update_target_network()
                 
 
     def compute_targets(
@@ -190,8 +188,7 @@ class DeepQAgent():
 
 
 
-
-    def soft_update(self):
+    def update_target_network(self):
         """Soft update model parameters.
         θ_target = τ*θ_local + (1 - τ)*θ_target
         """

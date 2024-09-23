@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from gymnasium.spaces import Space, Discrete
-from torch.distributions import Normal
+
 
 
 
@@ -37,19 +37,3 @@ class QNet(nn.Sequential):
 
 
 
-class NoisyQNet(QNet):
-    def __init__(self, log_std_init: float = 0, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        num_outputs = self[-1].out_features
-        self.log_std = nn.Parameter(
-            data=log_std_init*torch.ones(num_outputs),
-            requires_grad=True,
-        )
-
-    def forward(self, x):
-        x = super().forward(x)
-        epsilon = torch.randn_like(x)
-        return x + epsilon*self.log_std.exp().unsqueeze(dim=0)
-
-     

@@ -33,7 +33,8 @@ def main(cfg: DictConfig) -> int:
     agent = hydra.utils.instantiate(
         cfg.agent,
         qnet_local=policy.Qnet,
-    ).to(cfg.device)
+    )
+    agent.to(cfg.device)
 
   
     logger =  hydra.utils.instantiate(cfg.logger) if "logger" in cfg else None
