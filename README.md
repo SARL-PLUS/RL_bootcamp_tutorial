@@ -125,7 +125,7 @@ The reward is composition of
   
   
 ## Tasks
-In order to make to code work you need to complete the code for two classes.
+In order to make the code work you need to complete the code for two classes.
 
 First you need to complete the code for the `EpsilonGreedy` policy in `src.policies.epsilon_greedy.py`.
 ```
