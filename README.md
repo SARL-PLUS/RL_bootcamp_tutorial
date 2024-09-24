@@ -11,7 +11,7 @@ We provide a requirements.txt file for pip install, but as it is really challeng
 ```
 (your_env_id)$ bash install_dependencies.sh cpu|cu118|cu121
 ```
-where the user needs to specify either `cpu` for cpu only installation or cu118 or cu121 for cuda tookkit 11.8 or 12.1 respectively.
+where the user needs to specify either `cpu` for cpu only installation or cu118 or cu121 for cuda toolkit 11.8 or 12.1 respectively.
 
 ## Goal
 The goal is to get a basic understanding of how the algorithm works. As Deep Q-Learning is one of the easier algorithms to implement, we have a fair chance of getting it done within the short timeframe of the tutorial. Therefore, the goal is to write your own implementation without relying on third-party deep reinforcement learning libraries. 
