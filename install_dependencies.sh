@@ -34,6 +34,7 @@ install_dependencies() {
     pip install hydra-core --upgrade
     pip install hydra_colorlog --upgrade
     pip install hydra-optuna-sweeper --upgrade
+    pip install hydra-ray-launcher --upgrade
 
     echo "Installing tensorboard..."
     pip install tensorboard 
