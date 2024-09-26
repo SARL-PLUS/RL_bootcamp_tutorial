@@ -75,7 +75,7 @@ policy_benchmark = policy_response_matrix
 verify_external_policy_on_specific_env_regret(env, [policy_rl_agent, policy_response_matrix],
                                               policy_benchmark=policy_response_matrix,
                                               tasks=verification_task, episodes=nr_validation_episodes,
-                                              title=f'Regret to {'policy_response_matrix'} of {algorithm}',
+                                              title=f'Regret to {"policy_response_matrix"} of {algorithm}',
                                               save_folder=save_folder+'_Response_matrix',
                                               policy_labels=[algorithm, 'policy_response_matrix'],
                                               DoF=DoF, read_results=save_folder_name_results)
