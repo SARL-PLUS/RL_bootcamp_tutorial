@@ -2,7 +2,7 @@
 
 ## Getting Closer to Real-World Reinforcement Learning Applications - the AWAKE RL Playground
 
-[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova (, Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu)
+[Simon Hirlaender](https://mathphyssim.github.io), Olga Mironova , Catherine Laflamme, Thomas Gallien, Marius-Constantin Dinu
 
 **Contact:** [simon.hirlaender@plus.ac.at](mailto:simon.hirlaender@plus.ac.at) or [sarl.ida.plus@gmail.com](mailto:sarl.ida.plus@gmail.com)
 
@@ -22,36 +22,54 @@ Before we start, these are the **learning goals**:
 ## Specific situations - todos:
 - Rewards shaping by modifiyng the penalty
 - Increasing the complexity of the problem
-- Incorporate hyperparameters of RL Agents
+- Try hyperparameters of the algorithms RL Agents
 - Help and contribute section
-- TOC has to be correct
-- credits for GP-MPC and reference
-- credits AWAKE
-- credits on papers
+
+[//]: # (- TOC has to be correct)
+
+[//]: # (- credits for GP-MPC and reference)
+
+[//]: # (- credits AWAKE)
+
+[//]: # (- credits on papers)
 ## How we do the tutorial
 - We will make subgroups with at least one expert in each group
 - **Group discussions:**
    - Please discuss questions.
    - Facilitate sessions where learners and experts debate and reach consensus on RL concepts and implementation strategies.
 
-# Open questions for the programme? - these are the notes I took during our discussions:
+[//]: # (# Open questions for the programme? - these are the notes I took during our discussions:)
 
-Advanced part:
-   1. Elements of model-based RL
-   2. Elements of data-driven MPC design and optimization
-   3. Gaussian processes in a nut-shell
-   4. Running GP-MPC on the AWAKE environment
-   5. Alternative advanced ideas - non-stationary (shifts), masking, domain randomization, domain generalisation.
+[//]: # ()
+[//]: # (Advanced part:)
 
-1. MDP shaping as a part of the tutorial also as a contest?
+[//]: # (   1. Elements of model-based RL)
 
-2. One of the main goals is to understand every aspect of the (an) MDP:
-   * We discuss the dynamics of the system, actions and states
-   * We discuss the initial distribution of the states and it's role
-   * We discuss the reward function and its equivalence classes
-   * The episodic formulation within the MDP world - modification of termination/truncation criteria
-   * Beyond MDP - POMDPs  by modifying the dynamics (non-stationary)
-3. Difference between noise and partially observability - where to draw the line?
+[//]: # (   2. Elements of data-driven MPC design and optimization)
+
+[//]: # (   3. Gaussian processes in a nut-shell)
+
+[//]: # (   4. Running GP-MPC on the AWAKE environment)
+
+[//]: # (   5. Alternative advanced ideas - non-stationary &#40;shifts&#41;, masking, domain randomization, domain generalisation.)
+
+[//]: # ()
+[//]: # (1. MDP shaping as a part of the tutorial also as a contest?)
+
+[//]: # ()
+[//]: # (2. One of the main goals is to understand every aspect of the &#40;an&#41; MDP:)
+
+[//]: # (   * We discuss the dynamics of the system, actions and states)
+
+[//]: # (   * We discuss the initial distribution of the states and it's role)
+
+[//]: # (   * We discuss the reward function and its equivalence classes)
+
+[//]: # (   * The episodic formulation within the MDP world - modification of termination/truncation criteria)
+
+[//]: # (   * Beyond MDP - POMDPs  by modifying the dynamics &#40;non-stationary&#41;)
+
+[//]: # (3. Difference between noise and partially observability - where to draw the line?)
 
 ## Achievements:
 ### What should people learn?
@@ -460,7 +478,7 @@ Model-Based Reinforcement Learning offers promising advantages by leveraging lea
 ### 4. More advanded part model-based RL: Gaussian Process-based MPC (GP-MPC)
 
 **Gaussian Process-based Model Predictive Control (GP-MPC)** integrates Gaussian Process (GP) regression with traditional MPC to enhance the controller's ability to handle model uncertainties and non-linear dynamics. This hybrid approach leverages the strengths of both MPC and GP to provide a more robust and adaptive control strategy.
-
+[GP-MPC reference](#reference-gp-mpc-approach)
 #### Advantages:
 - **Uncertainty Quantification:** GP provides probabilistic predictions, allowing MPC to account for model uncertainties effectively.
 - **Adaptability:** Capable of adapting to non-linear dynamics by learning from data, improving performance in complex environments.
@@ -782,7 +800,7 @@ Two interactive figures open and show the live progress of the training:
 - **Adaptability Demonstration:** Showcases the GP-MPC controller's ability to adapt to dynamic changes and uncertainties within the Beam Steering Environment.
 
 This script serves as a critical component in demonstrating the advantages of integrating Gaussian Processes with Model Predictive Control, highlighting its potential in managing complex and uncertain control scenarios effectively.
-
+[GP-MP code source](#gp-mpc-approach-)
 ---
 
 # Environment Components
@@ -1609,3 +1627,7 @@ Gaussian Processes (GP) are powerful tools in statistics and machine learning fo
      - Extensive coverage of GP-based algorithms and methodologies.
      - Applications of GP in various domains.
    - **Link:** [Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/drupal/)
+
+#### Reference GP-MPC approach: 
+1. S. Kamthe and M. Deisenroth, “Data-Efficient Reinforcement Learning with Probabilistic Model Predictive Control,” in Proceedings of the Twenty-First International Conference on Artificial Intelligence and Statistics, A. Storkey and F. Perez-Cruz, Eds., in Proceedings of Machine Learning Research, vol. 84. PMLR, 2018, pp. 1701–1710. [Online]. Available: https://proceedings.mlr.press/v84/kamthe18a.html
+2. https://github.com/SimonRennotte/Data-Efficient-Reinforcement-Learning-with-Probabilistic-Model-Predictive-Control

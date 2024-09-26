@@ -1,7 +1,7 @@
 
 # Configuration File for RL Bootcamp Tutorial
 # Degrees of Freedom: Specifies the number of control inputs and observed states in the environment.
-degrees-of-freedom: 5
+degrees-of-freedom: 1
 
 # Terminal Conditions: Defines conditions under which an episode ends.
 terminal-conditions:
@@ -12,7 +12,7 @@ terminal-conditions:
   boundary-conditions: true
 
   # Scaling factor applied to penalties when boundary conditions are violated.
-  penalty-scaling: 100.0
+  penalty-scaling: 1.0
 
 # MPC (Model Predictive Control) Settings: Parameters for the MPC algorithm.
 mpc-settings:
