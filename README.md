@@ -106,8 +106,6 @@ Before we start, these are the **learning goals**:
 - RL is used when there is a clear objective but the path to achieve it is not predefined.
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
-
--
 # Table of Contents
 
 - [Introduction](#introduction)
