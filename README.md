@@ -188,9 +188,9 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
 
 - **Reward Function ($R$):**
   The reward is defined as the negative Root Mean Square (RMS) of the state vector:
-  $$
+ \(
   R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}
-  $$
+  \)
 
 - **Dynamics:**
   The system dynamics (linear time invariant) are characterized by:
