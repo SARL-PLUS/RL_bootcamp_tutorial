@@ -797,8 +797,11 @@ Two interactive figures open and show the live progress of the training:
 - **Data Persistence:** Stores detailed results in organized folders for subsequent evaluation and comparison with other control approaches.
 - **Adaptability Demonstration:** Showcases the GP-MPC controller's ability to adapt to dynamic changes and uncertainties within the Beam Steering Environment.
 
+
 This script serves as a critical component in demonstrating the advantages of integrating Gaussian Processes with Model Predictive Control, highlighting its potential in managing complex and uncertain control scenarios effectively.
 [GP-MP code source](#gp-mpc-approach-)
+
+
 ---
 
 # Environment Components
