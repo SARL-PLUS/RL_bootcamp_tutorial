@@ -169,7 +169,7 @@ Just before entering the plasma cell, the electron beam undergoes final adjustme
 This precise insertion into the wakefield allows the electrons to be rapidly accelerated over a short distance, gaining significant energy from the wakefields created by the proton beam in the plasma. The effectiveness of this entire process hinges on the precise control and optimization of the electron line, showcasing its importance in the AWAKE experiment.
 
 We focus on the part, right before entering the plasma cell. The steering problem, we want to solve in our tutorial is shown in the following image:
-Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. Here the state at time $t$ is \(\mathbf s_t:=\text{target_trajectory}-\text{current_trajectory} = (s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t})$ and an action is $\mathbf a_t = (a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t})\). 
+Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. Here the state at time $t$ is $\mathbf s_t:=\text{target_trajectory}-\text{current_trajectory} = (s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t})$ and an action is $\mathbf a_t = (a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t})\). 
 <img src="miscellaneous/AWAKE_steering_image.png" width="600">
 
 We want to bring the current trajectory (blue) to a target trajectory (red) as fast as possible (then $\mathbf s_t = \mathbf 0$) by modifying the magnets (violet).
@@ -194,9 +194,9 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
 
 - **Dynamics:**
   The system dynamics (linear time invariant) are characterized by:
-  $$
+  $
   \mathbf{s}_{t+1} = \mathbf{B} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t
-  $$
+  $
   where $ \mathbf{B} $ is the response matrix and $ \mathbf{I} $ is the identity matrix.
 
 [A good resource for linear dynamics and control](#a-good-resource-for-linear-dynamics-and-control)
