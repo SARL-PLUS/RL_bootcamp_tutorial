@@ -23,7 +23,7 @@ Before we start, these are the **learning goals**:
 - Rewards shaping by modifiyng the penalty
 - Increasing the complexity of the problem
 - Try hyperparameters of the algorithms RL Agents
-- Help and contribute section
+- Help and contribute section please contact us
 
 [//]: # (- TOC has to be correct)
 
