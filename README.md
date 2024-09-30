@@ -172,7 +172,7 @@ We focus on the part, right before entering the plasma cell. The steering proble
 Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. 
 Here the state at time $t$ is 
 
-($\mathbf s_t:=\text{target_trajectory}-\text{current_trajectory} = (s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t});$ and an action is $\mathbf a_t = &#40;a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t}&#41;$. )
+$\mathbf s_t:=\text{target_trajectory}-\text{current_trajectory} = (s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t});$ and an action is $\mathbf a_t = &#40;a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t}&#41;$.
 
 <img src="miscellaneous/AWAKE_steering_image.png" width="600">
 
