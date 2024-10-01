@@ -195,10 +195,16 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
   A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $\mathbf{a}_t \in \mathcal{A}$ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
 
 - **Observation:**
-  The observation provided to the agent is identical to the state $\mathbf{s}_t$.
+  The observation $\mathbf{o}_t$ provided to the agent is identical to the state $\mathbf{s}_t$.
 
 - **Reward Function ($R$):**
-  The reward is defined as the negative Root Mean Square (RMS) of the state vector: $R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}$
+  The reward is defined as the negative Root Mean Square (RMS) of the state vector: \[
+R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}
+\]
+
+Where:
+- \( \mathbf{s}_t \) represents the state vector at time \( t \)
+- \( N \) is the dregrees of freedom in the state vector.
 
 - **Dynamics:**
   The system dynamics (linear time invariant) are characterized by:
