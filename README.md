@@ -120,7 +120,6 @@ Contributions are welcome! If you encounter issues, have suggestions for improve
     - [Model Predictive Control (MPC)](#model-predictive-control-mpc)
     - [Reinforcement Learning (RL)](#reinforcement-learning-rl)
     - [Analytical approach](#analytical-approach)
-- [Noise Study](#noise-study)
 - [Getting Started](#getting-started)
   - [1. Configuration](#1-configuration)
   - [2. Running Model Predictive Control](#2-running-model-predictive-control)
