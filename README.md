@@ -176,9 +176,9 @@ This precise insertion into the wakefield allows the electrons to be rapidly acc
 
 We focus on the part, right before entering the plasma cell. The steering problem, we want to solve in our tutorial is shown in the following image:
 Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. 
-Here the state at time $t$ is 
+Here the state at time $t$is 
 
-$\mathbf s_t:=\text{current trajectory}-\text{target trajectory}  = &#40;s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t}&#41;$ 
+$\mathbf s_t:=\text{current trajectory}-\text{target trajectory}  = &#40;s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t}&#41;$
 and an action is $\mathbf a_t = &#40;a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t}&#41;$.
 
 <img src="miscellaneous/AWAKE_steering_image.png" width="600">
@@ -189,13 +189,13 @@ We want to bring the current trajectory (blue) to a target trajectory (red) as f
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
 
 - **State Space ($\mathcal{S}$):**
-  A $N$-dimensional (10 in the real scenario) continuous space representing the current beam positions and related parameters. Each state $ \mathbf{s}_t \in \mathcal{S} $ is a vector of real numbers capturing the system's state at time step $ t $.
+  A $N$-dimensional (10 in the real scenario) continuous space representing the current beam positions and related parameters. Each state $\mathbf{s}_t \in \mathcal{S}$is a vector of real numbers capturing the system's state at time step $t$.
 
 - **Action Space ($\mathcal{A}$):**
-  A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $ \mathbf{a}_t \in \mathcal{A} $ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
+  A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $\mathbf{a}_t \in \mathcal{A} $are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
 
 - **Observation:**
-  The observation provided to the agent is identical to the state $ \mathbf{s}_t $.
+  The observation provided to the agent is identical to the state $\mathbf{s}_t $.
 
 - **Reward Function ($R$):**
   The reward is defined as the negative Root Mean Square (RMS) of the state vector:
@@ -208,7 +208,7 @@ $
   $
   \mathbf{s}_{t+1} = \mathbf{B} \mathbf{a}_t + \mathbf{I} \mathbf{s}_t
   $
-  where $ \mathbf{B} $ is the response matrix and $ \mathbf{I} $ is the identity matrix.
+  where $\mathbf{B} $is the response matrix and $\mathbf{I} $is the identity matrix.
 
 [A good resource for linear dynamics and control](#a-good-resource-for-linear-dynamics-and-control)
 
@@ -230,7 +230,7 @@ $
      If any state component exceeds the beam pipe boundaries, leading to an unsafe or failed steering attempt.
 
 - **Discount Factor ($\gamma$):**
-  The discount factor is set to $ \gamma = 1 $, indicating that future rewards are valued equally to immediate rewards, which can allways be done in episodic scenarios (reducing the hyperparameters by one ;).
+  The discount factor is set to $\gamma = 1 $, indicating that future rewards are valued equally to immediate rewards, which can allways be done in episodic scenarios (reducing the hyperparameters by one ;).
 
 <span style="color:pink">Why is the reward negative?</span>
 
@@ -280,7 +280,7 @@ and:
 $$
 \mathbf{s}_{0} = S_0 \qquad (given)
 $$
-MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $ N $:
+MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $N $:
 $$
 \text{maximise}_{\{a_t\}} \mathbb E_{W_t}[ \sum_{t=0}^{H-1} R_t(S_t,A_t,W_t)+ V(S_H)]
 $$
@@ -325,7 +325,7 @@ Model Predictive Control (MPC), also known as Receding Horizon Control or Moving
 - **Stability:** Training can be unstable and sensitive to hyperparameters, making the tuning process challenging.
 - **Guarantees:** Only in specific Markov Decision Processes (MDPs) and with certain algorithms can performance guarantees be provided. Generally, these guarantees break down when using function approximators like neural networks.
 #### Mathematical Foundation:
-RL frameworks are typically defined by the MDP components: state space $ \mathcal{S} $, action space $ \mathcal{A} $, reward function $ R $, transition dynamics $ P $, and discount factor $ \gamma $. The goal is to find a policy $ \pi: \mathcal{S} \rightarrow \mathcal{A} $ that maximizes the expected cumulative reward:
+RL frameworks are typically defined by the MDP components: state space $\mathcal{S} $, action space $\mathcal{A} $, reward function $R $, transition dynamics $P $, and discount factor $\gamma $. The goal is to find a policy $\pi: \mathcal{S} \rightarrow \mathcal{A} $that maximizes the expected cumulative reward:
 $$
 \pi^* = \arg\max_{\pi} \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(\mathbf{s}_t, \mathbf{a}_t) \right]
 $$
@@ -364,13 +364,13 @@ $$
 \mathbf{a}_t = \mathbf {B}^{-1} \mathbf{s}_t
 $$
 where:
-- $ \mathbf{s}_t $ is the state vector at time $ t $.
-- $ \mathbf{a}_t $ is the action vector at time $ t $.
-- $ \mathbb{B} $ is the response matrix.
+- $\mathbf{s}_t $is the state vector at time $t $.
+- $\mathbf{a}_t $is the action vector at time $t $.
+- $\mathbb{B} $is the response matrix.
 
 #### Implementation in the Tutorial:
 1. **Inverse Matrix Calculation:**
-   - Compute the pseudo-inverse of the response matrix $\mathbf{B}$ to ensure numerical stability.
+   - Compute the pseudo-inverse of the response matrix $\mathbf{B}$to ensure numerical stability.
    - ```python
      import numpy as np
 
@@ -379,7 +379,7 @@ where:
 
 2. **Control Action Computation:**
    - Calculate the control action by multiplying the inverse matrix with the current state.
-   - $$ \mathbf{a}_t = \mathbf{B}^{-1} \mathbf{s}_t $$
+   - $$\mathbf{a}_t = \mathbf{B}^{-1} \mathbf{s}_t $$
    - ```python
      action = -self.rmatrix_inverse.dot(state * self.state_scale)
      ```
@@ -506,7 +506,7 @@ The GP-MPC approach augments the traditional MPC framework by incorporating a GP
    - $$
      \mathbf{s}_{t+1} = f(\mathbf{a}_t, \mathbf{s}_t) + \epsilon
      $$
-     where $ \epsilon $ represents the uncertainty modeled by the GP.
+     where $\epsilon $represents the uncertainty modeled by the GP.
 
 [Standard text books on GPs](#standard-text-books-on-gps)
 
