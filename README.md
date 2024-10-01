@@ -176,7 +176,7 @@ This precise insertion into the wakefield allows the electrons to be rapidly acc
 
 We focus on the part, right before entering the plasma cell. The steering problem, we want to solve in our tutorial is shown in the following image:
 Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. 
-Here the state at time $t$is 
+Here the state at time $t$ is 
 
 $\mathbf s_t:=\text{current trajectory}-\text{target trajectory}  = &#40;s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t}&#41;$
 and an action is $\mathbf a_t = &#40;a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t}&#41;$.
@@ -198,10 +198,7 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
   The observation $\mathbf{o}_t$ provided to the agent is identical to the state $\mathbf{s}_t$.
 
 - **Reward Function ($R$):**
-  The reward is defined as the negative Root Mean Square (RMS) of the state vector: $R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}$
-
-Where:
--$N$ is the dregrees of freedom in the state vector.
+  The reward is defined as the negative Root Mean Square (RMS) of the state vector: $R(\mathbf{s}_t) = -\sqrt{\frac{1}{N} \sum_{i=1}^{N} s_{t,i}^2}$, where $N$ is the degrees of freedom in the state vector.
 
 - **Dynamics:**
   The system dynamics (linear time invariant) are characterized by:
