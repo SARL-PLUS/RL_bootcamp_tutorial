@@ -6,7 +6,7 @@
 
 **Contact:** [simon.hirlaender@plus.ac.at](mailto:simon.hirlaender@plus.ac.at) or [sarl.ida.plus@gmail.com](mailto:sarl.ida.plus@gmail.com)
 
-Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through implementing reinforcement learning (RL) techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness, and conduct a comprehensive noise study to evaluate performance under different conditions.
+Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through learning reinforcement learning (RL) techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness (, and conduct a comprehensive noise study) to evaluate performance under different conditions.
 
 Before we start, these are the **learning goals**:
 ## Learning goals:
@@ -19,11 +19,14 @@ Before we start, these are the **learning goals**:
 - Learn how to control an accelerator at CERN
 - Learn how to train an RL agent out of the box - if you are advanced be creative!
 
-## Specific situations - todos:
+## Specific todos:
 - Rewards shaping by modifiyng the penalty
-- Increasing the complexity of the problem
+- Increasing the complexity of the problem by increasing the number of degrees of freedom
 - Try hyperparameters of the algorithms RL Agents
-- Help and contribute section please contact us
+
+## Contributing
+
+Contributions are welcome! If you encounter issues, have suggestions for improvements, or would like to add new features to this tutorial, please feel free to open an issue or submit a pull request on our GitHub repository or contact us direclty. Ensure that your contributions adhere to the project's coding standards and include relevant documentation to facilitate smooth integration.
 
 [//]: # (- TOC has to be correct)
 
@@ -72,7 +75,7 @@ Before we start, these are the **learning goals**:
 [//]: # (3. Difference between noise and partially observability - where to draw the line?)
 
 ## Achievements:
-### What should people learn?
+### What should you learn?
 - Understanding the basics of Reinforcement Learning (RL).
 - Key components: agents, environments, states, actions, rewards, and policies.
 - Differences between RL and other machine learning paradigms and classical optimization.
