@@ -24,10 +24,6 @@ Before we start, these are the **learning goals**:
 - Increasing the complexity of the problem by increasing the number of degrees of freedom
 - Try hyperparameters of the algorithms RL Agents
 
-## Contributing
-
-Contributions are welcome! If you encounter issues, have suggestions for improvements, or would like to add new features to this tutorial, please feel free to open an issue or submit a pull request on our GitHub repository or contact us direclty. Ensure that your contributions adhere to the project's coding standards and include relevant documentation to facilitate smooth integration.
-
 [//]: # (- TOC has to be correct)
 
 [//]: # (- credits for GP-MPC and reference)
@@ -109,6 +105,11 @@ Contributions are welcome! If you encounter issues, have suggestions for improve
 - RL is used when there is a clear objective but the path to achieve it is not predefined.
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
+- 
+## Contributing
+
+Contributions are welcome! If you encounter issues, have suggestions for improvements, or would like to add new features to this tutorial, please feel free to open an issue or submit a pull request on our GitHub repository or contact us direclty. Ensure that your contributions adhere to the project's coding standards and include relevant documentation to facilitate smooth integration.
+
 # Table of Contents
 
 - [Introduction](#introduction)
