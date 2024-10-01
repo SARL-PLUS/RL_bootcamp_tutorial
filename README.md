@@ -189,13 +189,13 @@ We want to bring the current trajectory (blue) to a target trajectory (red) as f
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
 
 - **State Space ($\mathcal{S}$):**
-  A $N$-dimensional (10 in the real scenario) continuous space representing the current beam positions and related parameters. Each state $\mathbf{s}_t \in \mathcal{S}$is a vector of real numbers capturing the system's state at time step $t$.
+  A $N$-dimensional (10 in the real scenario) continuous space representing the current beam positions and related parameters. Each state $\mathbf{s}_t \in \mathcal{S}$ is a vector of real numbers capturing the system's state at time step $t$.
 
 - **Action Space ($\mathcal{A}$):**
-  A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $\mathbf{a}_t \in \mathcal{A} $are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
+  A $N$-dimensional (10 in the real scenario) continuous space corresponding to control inputs, such as corrector magnets. Actions $\mathbf{a}_t \in \mathcal{A}$ are bounded to satisfy physical constraints, ensuring safe and feasible control actions.
 
 - **Observation:**
-  The observation provided to the agent is identical to the state $\mathbf{s}_t $.
+  The observation provided to the agent is identical to the state $\mathbf{s}_t$.
 
 - **Reward Function ($R$):**
   The reward is defined as the negative Root Mean Square (RMS) of the state vector:
