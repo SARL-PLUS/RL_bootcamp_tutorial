@@ -176,10 +176,6 @@ def plot_regrets(ax, ax_twin, rewards_per_task,  rewards_per_task_benchmark, suc
 
 def test_policy(env, policy=None, episodes=50, seed_set=None):
     rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = [], [], [], []
-
-    if policy is None:
-        policy = lambda x: env.action_space.sample()
-
     trajectories = \
         create_trajectories(env, policy, episodes, seed_set=seed_set)
 
@@ -203,11 +199,16 @@ def create_trajectories(env, policy, episodes, seed_set=None):
     for seed in tqdm(seed_set, total=episodes):
         trajectory = {'observations': [], 'actions': [], 'rewards': [], 'length': 0}
         observation, info = env.reset(seed=seed)
+        np.random.seed(seed)
         trajectory['observations'].append(observation.copy())
+        if policy is None:
+            policy = lambda x: np.random.uniform(low=env.action_space.low, high=env.action_space.high)
+            # policy = lambda x: env.action_space.sample()
 
         done = False
         while not done:
             action = policy(observation)
+            print('action', action)
             observation, reward, terminated, truncated, infos = env.step(action)
             trajectory['observations'].append(observation.copy())
             trajectory['actions'].append(action.copy())

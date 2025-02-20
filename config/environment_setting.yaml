@@ -12,7 +12,7 @@ terminal-conditions:
   boundary-conditions: true
 
   # Scaling factor applied to penalties when boundary conditions are violated.
-  penalty-scaling: 100.0
+  penalty-scaling: 1.0
 
 # MPC (Model Predictive Control) Settings: Parameters for the MPC algorithm.
 mpc-settings:

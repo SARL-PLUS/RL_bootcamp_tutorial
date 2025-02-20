@@ -77,7 +77,8 @@ class DoFWrapper(gym.Wrapper):
         observation, info = self.env.reset(seed=seed, options=options)
         observation = observation[: self.DoF]
         return observation, info
-
+    def seed(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None) -> None:
+        self.env.seed(seed=seed, options=options)
     def step(self, action: np.ndarray):
         """
         Step the environment with the given action, limited to the specified DoF.

@@ -126,6 +126,7 @@ class AwakeSteering(gym.Env):
             **kwargs: Additional keyword arguments.
         """
         super().__init__()
+        self.init_scaling = 1.0
         self.__version__ = "1.0"
         self.MAX_TIME = kwargs.get("MAX_TIME", 100)
         self.boundary_conditions = kwargs.get("boundary_conditions", False)
@@ -137,7 +138,7 @@ class AwakeSteering(gym.Env):
         self.current_steps = 0
 
         seed = kwargs.get('seed', None)
-        self.seed(seed)
+
         self.maml_helper = DynamicsHelper()
         self.plane = kwargs.get("plane", Plane.horizontal)
 
@@ -148,6 +149,7 @@ class AwakeSteering(gym.Env):
         self.setup_dimensions()
 
         self.verification_tasks_loc = kwargs.get("verification_tasks_loc", None)
+        self.seed(seed)
 
     def setup_dimensions(self):
         """
@@ -193,6 +195,7 @@ class AwakeSteering(gym.Env):
             truncated: Whether the episode was truncated.
             info: Additional information about the environment.
         """
+        print('step')
         delta_kicks = np.clip(action, self.low_action, self.high_action)
         self.state += self.rmatrix.dot(delta_kicks)
         self.state = np.clip(self.state, self.low_observation, self.high_observation)
@@ -249,8 +252,9 @@ class AwakeSteering(gym.Env):
         """
         super().reset(seed=seed)
         if seed is not None:
+            print('Seed env reset:', seed)
             self.seed(seed)
-            self.observation_space.seed(seed)
+
         self.is_finalized = False
         self.current_steps = 0
         self.current_episode += 1
@@ -258,18 +262,29 @@ class AwakeSteering(gym.Env):
         return_state = self.state.copy()
         return return_state, {}
 
+    # def seed(self, seed: Optional[int] = None):
+    #     """
+    #     Set the seed for the environment's random number generator(s).
+    #
+    #     Args:
+    #         seed: The seed value.
+    #
+    #     Returns:
+    #         A list containing the seed.
+    #     """
+    #     random.seed(seed)
+    #     np.random.seed(seed)
+    #     self.observation_space.seed(seed)
+    #     self.action_space.seed(seed)
+    #     print('Seed env:', seed)
+    #     return [seed]
+
     def seed(self, seed: Optional[int] = None):
-        """
-        Set the seed for the environment's random number generator(s).
-
-        Args:
-            seed: The seed value.
-
-        Returns:
-            A list containing the seed.
-        """
+        self.np_random, seed = gym.utils.seeding.np_random(seed)
         random.seed(seed)
-        np.random.seed(seed)
+        self.observation_space.seed(seed)
+        self.action_space.seed(seed)
+        print('Seed env:', seed)
         return [seed]
 
     def sample_tasks(self, num_tasks: int):
@@ -325,8 +340,8 @@ if __name__ == "__main__":
     # Create an instance of the environment
     env = AwakeSteering()
 
-    num_episodes = 5        # Number of episodes to run
-    max_steps_per_episode = env.MAX_TIME  # Maximum steps per episode
+    num_episodes = 3        # Number of episodes to run
+    max_steps_per_episode = 5  # Maximum steps per episode
 
     all_states = []
     all_actions = []
@@ -336,7 +351,7 @@ if __name__ == "__main__":
     total_steps = 0
 
     for episode in range(num_episodes):
-        state, info = env.reset()
+        state, info = env.reset(seed=1)
         episode_states = []
         episode_actions = []
         episode_rewards = []
