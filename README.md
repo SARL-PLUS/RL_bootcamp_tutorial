@@ -9,7 +9,9 @@
 Welcome to the **RL Bootcamp Tutorial**! This tutorial guides you through learning reinforcement learning (RL) techniques for beam steering in a control-theoretical framework. We'll explore various approaches, compare their effectiveness (, and conduct a comprehensive noise study) to evaluate performance under different conditions.
 
 Before we start, these are the **learning goals**:
-## Learning goals:
+
+## Learning goals
+
 - Learn the basics of episodic control problems in a didactic and visual way
 - Learn basics to find a good policy in a linear continuous MDP
 - Learn the complexity in applying different approaches and gradually increase the complexity of a problem
@@ -19,7 +21,8 @@ Before we start, these are the **learning goals**:
 - Learn how to control an accelerator at CERN
 - Learn how to train an RL agent out of the box - if you are advanced be creative!
 
-## Specific todos:
+## Specific todos
+
 - Rewards shaping by modifiyng the penalty
 - Increasing the complexity of the problem by increasing the number of degrees of freedom
 - Try hyperparameters of the algorithms RL Agents
@@ -31,11 +34,13 @@ Before we start, these are the **learning goals**:
 [//]: # (- credits AWAKE)
 
 [//]: # (- credits on papers)
+
 ## How we do the tutorial
+
 - We will make subgroups with at least one expert in each group
 - **Group discussions:**
-   - Please discuss questions.
-   - Facilitate sessions where learners and experts debate and reach consensus on RL concepts and implementation strategies.
+  - Please discuss questions.
+  - Facilitate sessions where learners and experts debate and reach consensus on RL concepts and implementation strategies.
 
 [//]: # (# Open questions for the programme? - these are the notes I took during our discussions:)
 
@@ -70,8 +75,10 @@ Before we start, these are the **learning goals**:
 
 [//]: # (3. Difference between noise and partially observability - where to draw the line?)
 
-## Achievements:
+## Achievements
+
 ### What should you learn?
+
 - Understanding the basics of Reinforcement Learning (RL).
 - Key components: agents, environments, states, actions, rewards, and policies.
 - Differences between RL and other machine learning paradigms and classical optimization.
@@ -80,6 +87,7 @@ Before we start, these are the **learning goals**:
 - Working with gymnasium and wrappers
 
 ### What are common pitfalls in the beginning?
+
 - Underestimating the complexity of tuning hyperparameters.
 - Overfitting to a specific environment or task.
 - Misinterpreting results due to stochastic nature of RL.
@@ -87,6 +95,7 @@ Before we start, these are the **learning goals**:
 - Insufficient computational resources for training complex models.
 
 ### What are the most important concepts?
+
 - **Agent:** The learner or decision maker.
 - **Environment and MDPs:** The external system with which the agent interacts.
 - **State:** A representation of the current situation of the agent.
@@ -97,15 +106,18 @@ Before we start, these are the **learning goals**:
 - **Exploration vs. Exploitation:** Balancing the act of trying new actions vs. sticking to known rewarding actions.
 
 ### What can RL do for you?
+
 - Solve complex decision-making problems.
 - Optimize strategies in various fields like finance, robotics, gaming, and healthcare.
 - Improve efficiency in dynamic systems by learning optimal policies.
 
 ### Why use RL? Is it the last hope?
+
 - RL is used when there is a clear objective but the path to achieve it is not predefined.
 - It's powerful for problems where the environment is dynamic and the agent needs to adapt and learn from interactions.
 - While not the "last hope," RL provides a robust approach to problems where traditional methods fall short.
-- 
+-
+
 ## Contributing
 
 Contributions are welcome! If you encounter issues, have suggestions for improvements, or would like to add new features to this tutorial, please feel free to open an issue or submit a pull request on our GitHub repository or contact us direclty. Ensure that your contributions adhere to the project's coding standards and include relevant documentation to facilitate smooth integration.
@@ -125,11 +137,11 @@ Contributions are welcome! If you encounter issues, have suggestions for improve
     - [Preliminary conclusion RL with guarantees - a dream?](#preliminary-conclusion-rl-with-guarantees---a-dream)
     - [4. More advanded part model-based RL: Gaussian Process-based MPC (GP-MPC)](#4-more-advanded-part-model-based-rl-gaussian-process-based-mpc-gp-mpc)
 - [Getting Started](#getting-started)
-    - [1. Configuration](#1-configuration)
-    - [2. Running a random walk](#2-running-a-random-walk)
-    - [3. Running Model Predictive Control](#3-running-model-predictive-control)
-    - [4. Training RL Agents](#4-training-rl-agents)
-    - [5. Comparing Approaches](#5-comparing-approaches)
+  - [1. Configuration](#1-configuration)
+  - [2. Running a random walk](#2-running-a-random-walk)
+  - [3. Running Model Predictive Control](#3-running-model-predictive-control)
+  - [4. Training RL Agents](#4-training-rl-agents)
+  - [5. Comparing Approaches](#5-comparing-approaches)
 - [Environment Components](#environment-components)
 - [Additional Resources](#additional-resources)
 - [Contributing](#contributing)
@@ -140,6 +152,7 @@ Contributions are welcome! If you encounter issues, have suggestions for improve
 # Introduction
 
 ## Problem Definition
+
 ### CERN Advanced WAKe (AWAKE) field Experiment
 
 In this tutorial, we define a **Beam Steering Environment** where the goal is to control beam parameters to achieve desired states. The environment is modeled using control theory principles, incorporating dynamic response matrices and state-space representations. The reinforcement learning agent interacts with this environment by selecting actions that influence the beam's state, aiming to minimize deviations from target parameters.
@@ -150,12 +163,11 @@ In the AWAKE experiment, a high-energy proton beam from CERN's SPS (Super Proton
 
 The primary goals of the AWAKE experiment include validating the concept of proton-driven plasma wakefield acceleration, understanding the dynamics of the process, and exploring its potential applications in future particle accelerators. This experiment not only aims to advance our understanding of plasma physics but also seeks to develop more compact and cost-effective particle accelerators.
 
-
 The electron line in the AWAKE experiment at CERN is a crucial component designed to inject a beam of electrons into the plasma cell where wakefield acceleration occurs. This part of the setup is strategically positioned just before the plasma cell and plays a pivotal role in the overall acceleration process. Here's a detailed description of the electron line right before the plasma cell:
 
 #### Configuration and Function
 
-The electron line consists of several key elements, including electron sources, focusing magnets, diagnostics, and beamline elements that precisely align and focus the electron beam into the plasma cell. The configuration is carefully designed to synchronize the electron beam injection with the proton beam-induced plasma wakefields. 
+The electron line consists of several key elements, including electron sources, focusing magnets, diagnostics, and beamline elements that precisely align and focus the electron beam into the plasma cell. The configuration is carefully designed to synchronize the electron beam injection with the proton beam-induced plasma wakefields.
 
 <img src="miscellaneous/AWAKE_image.png" width="800">
 
@@ -176,15 +188,16 @@ Just before entering the plasma cell, the electron beam undergoes final adjustme
 This precise insertion into the wakefield allows the electrons to be rapidly accelerated over a short distance, gaining significant energy from the wakefields created by the proton beam in the plasma. The effectiveness of this entire process hinges on the precise control and optimization of the electron line, showcasing its importance in the AWAKE experiment.
 
 We focus on the part, right before entering the plasma cell. The steering problem, we want to solve in our tutorial is shown in the following image:
-Here we see the first five elements (dregrees of freedom: $N=5$) of the electron line. 
-Here the state at time $t$ is 
+Here we see the first five elements (degrees of freedom: $N=5$) of the electron line.
+Here the state at time $t$ is
 
-$\mathbf s_t:=\text{current trajectory}-\text{target trajectory}  = &#40;s_{1,t},s_{2,t}s_{3,t}s_{4,t}s_{5,t}&#41;$
-and an action is $\mathbf a_t = &#40;a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t}&#41;$.
+$\mathbf{s}_t := \text{current trajectory} - \text{target trajectory} = (s_{1,t}, s_{2,t}, s_{3,t}, s_{4,t}, s_{5,t})$
+and an action is $\mathbf a_t = (a_{1,t}, a_{2,t}, a_{3,t}, a_{4,t}, a_{5,t})$.
 
 <img src="miscellaneous/AWAKE_steering_image.png" width="600">
 
 We want to bring the current trajectory (blue) to a target trajectory (red) as fast as possible (then $\mathbf s_t = \mathbf 0$) by modifying the magnets (violet).
+
 ### Environment Properties and Markov Decision Process (MDP) Definition
 
 The **Beam Steering Environment** is formally defined as a Markov Decision Process (MDP) with the following components:
@@ -226,7 +239,7 @@ The **Beam Steering Environment** is formally defined as a Markov Decision Proce
      If any state component exceeds the beam pipe boundaries, leading to an unsafe or failed steering attempt.
 
 - **Discount Factor ($\gamma$):**
-  The discount factor is set to $\gamma = 1 $, indicating that future rewards are valued equally to immediate rewards, which can allways be done in episodic scenarios (reducing the hyperparameters by one ;).
+  The discount factor is set to $\gamma = 1$, indicating that future rewards are valued equally to immediate rewards, which can allways be done in episodic scenarios (reducing the hyperparameters by one ;)).
 
 <span style="color:pink">Why is the reward negative?</span>
 
@@ -245,21 +258,25 @@ These characteristics render the beam steering problem both intriguing and signi
 ---
 
 ## Approaches to solve the control problem
+
 ### 1. Model Predictive Control (MPC)
 
 **Model Predictive Control (MPC)** is a traditional control strategy that optimizes a sequence of actions over a finite horizon to achieve desired outcomes. MPC utilizes an internal model of the system to predict future states and determine the optimal control actions accordingly.
 
-#### Advantages:
+#### Advantages
+
 - **Optimality:** MPC provides near-optimal solutions based on the system model, ensuring efficient control actions.
 - **Constraint Handling:** Effectively manages constraints on states and actions, making it suitable for systems with physical or safety limitations.
 - **Flexibility:** Can accommodate multi-variable control problems and handle various types of constraints seamlessly.
 
-#### Drawbacks:
+#### Drawbacks
+
 - **Model Dependence:** Requires an accurate model of the environment dynamics. Model inaccuracies can degrade performance.
 - **Computational Complexity:** Can be computationally intensive, especially for large-scale or highly dynamic systems, potentially limiting real-time applicability.
 - **Implementation Complexity:** Designing and tuning MPC controllers can be complex, requiring expertise in both control theory and optimization.
 
-#### Mathematical Foundation:
+#### Mathematical Foundation
+
 Want to solve:
 $$
 \text{maximise}_{\pi_t} \lim_{T\to\infty}\mathbb E_{W_t}[\frac 1 T \sum_{t=0}^T R_t(S_t,A_t,W_t)]
@@ -282,7 +299,7 @@ $$
 $$
 subject to:
 $$
-\text{subject to: } S_{t+1}=f_t(S_t,A_t,W_t)
+S_{t+1}=f_t(S_t,A_t,W_t)
 $$
 and
 $$
@@ -293,7 +310,8 @@ and any state or action constraints.
 
 ![img.png](miscellaneous/MPC_main_idea.png)
 
-#### Comparison with Other Methods:
+#### Comparison with Other Methods
+
 - **Versus Reinforcement Learning (RL):**
   - **Optimality vs. Adaptability:** While MPC seeks optimal control actions based on a predefined model, RL learns policies through interactions, offering greater adaptability to unforeseen dynamics.
   - **Model Requirement:** MPC requires an accurate system model, whereas RL can operate in a model-free manner, reducing dependence on precise modeling.
@@ -303,7 +321,6 @@ and any state or action constraints.
   - **Flexibility:** MPC can handle a wider range of constraints and multi-variable systems compared to the Analytical Approach, which is typically limited to linear and simpler systems.
   - **Optimality:** MPC provides a more systematic way to achieve near-optimal solutions through optimization, whereas the Analytical Approach relies on direct computation which may not always yield optimal results under constraints.
 
-
 Model Predictive Control (MPC), also known as Receding Horizon Control or Moving Horizon Control, is a type of control algorithm that uses an optimization approach to predict and control the future behavior of a system. Here are some classical and foundational references on MPC that provide a deep understanding of its concepts, methods, and applications:
 [References on Model Predictive Control (MPC)](#references-on-model-predictive-control-mpc) and [References on optimisation](#references-on-optimisation).
 
@@ -311,21 +328,27 @@ Model Predictive Control (MPC), also known as Receding Horizon Control or Moving
 
 **Reinforcement Learning (RL)** offers a data-driven approach to control without explicit reliance on environment models. RL algorithms learn optimal policies through interactions with the environment, aiming to maximize cumulative rewards over time.
 
-#### Advantages:
+#### Advantages
+
 - **Model-Free:** Learns optimal policies directly from interactions, eliminating the need for precise models.
 - **Flexibility:** Capable of handling complex, high-dimensional, and non-linear environments.
 - **Adaptability:** Can continuously adapt to changing environments and dynamics through ongoing learning.
 
-#### Drawbacks:
+#### Drawbacks
+
 - **Sample Efficiency:** Often requires a large number of interactions to learn effectively, which can be time-consuming and resource-intensive.
 - **Stability:** Training can be unstable and sensitive to hyperparameters, making the tuning process challenging.
 - **Guarantees:** Only in specific Markov Decision Processes (MDPs) and with certain algorithms can performance guarantees be provided. Generally, these guarantees break down when using function approximators like neural networks.
-#### Mathematical Foundation:
-RL frameworks are typically defined by the MDP components: state space $\mathcal{S} $, action space $\mathcal{A} $, reward function $R $, transition dynamics $P $, and discount factor $\gamma $. The goal is to find a policy $\pi: \mathcal{S} \rightarrow \mathcal{A} $that maximizes the expected cumulative reward:
+
+#### Mathematical Foundation
+
+RL frameworks are typically defined by the MDP components: state space $\mathcal{S}$, action space $\mathcal{A}$, reward function $R$, transition dynamics $P$, and discount factor $\gamma$. The goal is to find a policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$ that maximizes the expected cumulative reward:
 $$
 \pi^* = \arg\max_{\pi} \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(\mathbf{s}_t, \mathbf{a}_t) \right]
 $$
-#### Comparison with Other Methods:
+
+#### Comparison with Other Methods
+
 - **Versus Model Predictive Control (MPC):**
   - **Adaptability vs. Optimality:** RL offers greater adaptability to dynamic and uncertain environments, whereas MPC provides near-optimal control based on a predefined model.
   - **Learning Requirement:** RL requires extensive training and interaction data, while MPC relies on a known system model, reducing the need for learning from scratch.
@@ -335,38 +358,44 @@ $$
   - **Flexibility and Learning:** RL can handle more complex and non-linear dynamics by learning from data, whereas the Analytical Approach is limited to linear and simpler systems without learning capabilities.
   - **Optimality and Constraints:** The Analytical Approach provides deterministic control actions based on mathematical relationships, while RL seeks to maximize rewards, which may not always align with strict constraint handling unless explicitly incorporated.
 
-
 By comparing MPC and RL, we aim to highlight the strengths and limitations of each approach in the context of beam steering.
 
 [References on Reinforcement Learning](#references-on-reinforcement-learning)
+
 ### 3. Analytical Approach
 
 The **Analytical Approach** leverages the inverse of the linear dynamics matrices to compute control actions directly. This method is grounded in classical control theory and offers a straightforward mechanism for beam steering without the iterative optimization processes inherent in MPC or the extensive training required in RL.
 
-#### Advantages:
+#### Advantages
+
 - **Simplicity:** Provides a direct computation of control actions using predefined mathematical relationships, simplifying the control strategy.
 - **Computational Efficiency:** Typically faster than MPC and does not require iterative optimization, making it suitable for real-time applications with limited computational resources.
 - **Deterministic Outcomes:** Produces consistent results given the same initial conditions and inputs, ensuring predictable control behavior.
 
-#### Drawbacks:
+#### Drawbacks
+
 - **Limited Adaptability:** Relies on the accuracy of the linear model; performance may degrade in highly non-linear or dynamic environments.
 - **No Learning Capability:** Does not adapt or improve based on environmental interactions or feedback, limiting its effectiveness in changing conditions.
 - **Sensitivity to Model Accuracy:** Errors in the inverse matrix or model parameters can lead to suboptimal or unstable control actions.
 - **Does Not Account for Non-Linearities:** Struggles to handle non-linear dynamics, making it less effective in scenarios where such complexities are present.
 
-#### Mathematical Foundation:
+#### Mathematical Foundation
+
 The Analytical Approach uses the inverse of the response matrix ($\mathbf{B}$) derived from the linear dynamics of the beam steering system. By applying this inverse matrix to the current state, the method calculates the precise control actions required to correct deviations from the desired beam position:
 $$
 \mathbf{a}_t = \mathbf {B}^{-1} \mathbf{s}_t
 $$
 where:
-- $\mathbf{s}_t $is the state vector at time $t $.
-- $\mathbf{a}_t $is the action vector at time $t $.
-- $\mathbb{B} $is the response matrix.
 
-#### Implementation in the Tutorial:
+- $\mathbf{s}_t$ is the state vector at time $t$.
+- $\mathbf{a}_t$ is the action vector at time $t$.
+- $\mathbb{B}$ is the response matrix.
+
+#### Implementation in the Tutorial
+
 1. **Inverse Matrix Calculation:**
    - Compute the pseudo-inverse of the response matrix $\mathbf{B}$to ensure numerical stability.
+
    - ```python
      import numpy as np
 
@@ -376,17 +405,20 @@ where:
 2. **Control Action Computation:**
    - Calculate the control action by multiplying the inverse matrix with the current state.
    - $$\mathbf{a}_t = \mathbf{B}^{-1} \mathbf{s}_t $$
+
    - ```python
      action = -self.rmatrix_inverse.dot(state * self.state_scale)
      ```
 
 3. **Action Scaling and Clipping:**
    - Scale the computed action and ensure it remains within predefined bounds. This scaling, combined with threshold termination criteria, makes the control problem non-trivial. Only in specific cases is the solution optimal.
+
    - ```python
      action = np.clip(action, -1, 1)
      ```
 
-#### Comparison with Other Methods:
+#### Comparison with Other Methods
+
 - **Versus Model Predictive Control (MPC):**
   - **Computational Efficiency vs. Optimality:** The Analytical Approach is less computationally intensive since it avoids the optimization process over a prediction horizon, offering faster control actions. However, MPC can handle constraints more effectively, providing near-optimal solutions that the Analytical Approach may not always achieve under constraints.
   - **Flexibility:** MPC offers greater flexibility in managing multi-variable and constrained systems compared to the Analytical Approach, which is typically limited to linear and simpler scenarios.
@@ -399,18 +431,18 @@ The Analytical Approach serves as a foundational control method that can be effe
 
 [References on the analytical approach](#references-on-the-analytical-approach)
 
-### Comparison with MPC and RL:
+### Comparison with MPC and RL
 
-* Versus MPC:
+- Versus MPC:
 The Analytical Approach is less computationally intensive since it avoids the optimization process over a prediction horizon.
 MPC can handle constraints more effectively, whereas the Analytical Approach relies on the inherent properties of the inverse matrix and action clipping.
-* Versus RL:
+- Versus RL:
 The Analytical Approach does not require training and provides immediate control actions, whereas RL methods require extensive training to learn effective policies.
 RL offers adaptability and can handle more complex, non-linear dynamics, which the Analytical Approach may struggle with.
 
 The Analytical Approach serves as a foundational control method that can be effective in environments with well-defined linear dynamics and minimal uncertainties. While it lacks the adaptability and learning capabilities of RL, it offers simplicity and computational efficiency, making it a valuable tool for benchmarking and comparison against more advanced control strategies like MPC and RL.
 
-## Preliminary conclusion RL with guarantees - a dream?:
+## Preliminary conclusion RL with guarantees - a dream?
 
 Can we somehow get the advantages of having a model and purly learning from data?
 
@@ -428,54 +460,67 @@ Model-Based Reinforcement Learning (MBRL) combines the strengths of model-based 
 To give us an idea about the complexity of the method, let us look at the main challenges:
 
 #### 1. **Model Accuracy**
-   - **Description:** Learning an accurate model of the environment's dynamics is fundamental to MBRL. However, in complex or high-dimensional systems, capturing the true dynamics accurately can be exceedingly difficult.
-   - **Impact:** Inaccurate models can lead to suboptimal or even detrimental control actions, as the agent relies on flawed predictions to make decisions.
+
+- **Description:** Learning an accurate model of the environment's dynamics is fundamental to MBRL. However, in complex or high-dimensional systems, capturing the true dynamics accurately can be exceedingly difficult.
+- **Impact:** Inaccurate models can lead to suboptimal or even detrimental control actions, as the agent relies on flawed predictions to make decisions.
 
 #### 2. **Computational Complexity**
-   - **Description:** MBRL involves both learning the environment model and planning based on that model. This dual requirement increases the computational burden compared to model-free approaches.
-   - **Impact:** High computational demands can limit the applicability of MBRL in real-time or resource-constrained environments, where rapid decision-making is essential.
+
+- **Description:** MBRL involves both learning the environment model and planning based on that model. This dual requirement increases the computational burden compared to model-free approaches.
+- **Impact:** High computational demands can limit the applicability of MBRL in real-time or resource-constrained environments, where rapid decision-making is essential.
 
 #### 3. **Error Propagation**
-   - **Description:** Errors in the learned model can propagate through the planning and decision-making processes, exacerbating inaccuracies over time.
-   - **Impact:** Compounded errors can degrade the performance of the RL agent, leading to unstable or inefficient control policies.
+
+- **Description:** Errors in the learned model can propagate through the planning and decision-making processes, exacerbating inaccuracies over time.
+- **Impact:** Compounded errors can degrade the performance of the RL agent, leading to unstable or inefficient control policies.
 
 #### 4. **Balancing Exploration and Exploitation**
-   - **Description:** MBRL agents often rely heavily on their models to make decisions, which can bias them towards exploiting known information and limit exploration of the state-action space.
-   - **Impact:** Reduced exploration can hinder the discovery of optimal policies, especially in environments with sparse or deceptive reward signals.
+
+- **Description:** MBRL agents often rely heavily on their models to make decisions, which can bias them towards exploiting known information and limit exploration of the state-action space.
+- **Impact:** Reduced exploration can hinder the discovery of optimal policies, especially in environments with sparse or deceptive reward signals.
 
 #### 5. **Data Efficiency vs. Model Complexity**
-   - **Description:** While MBRL is generally more data-efficient than model-free RL, achieving high model accuracy may require large and diverse datasets, especially for complex environments.
-   - **Impact:** Gathering sufficient data to train accurate models can be time-consuming and resource-intensive, potentially negating some of the sample efficiency benefits.
+
+- **Description:** While MBRL is generally more data-efficient than model-free RL, achieving high model accuracy may require large and diverse datasets, especially for complex environments.
+- **Impact:** Gathering sufficient data to train accurate models can be time-consuming and resource-intensive, potentially negating some of the sample efficiency benefits.
 
 #### 6. **Generalization and Transferability**
-   - **Description:** Models trained in specific environments may struggle to generalize to new or slightly altered scenarios. Ensuring that the learned model remains effective across varying conditions is a significant challenge.
-   - **Impact:** Poor generalization can limit the applicability of MBRL agents to dynamic or evolving environments, reducing their robustness and versatility.
+
+- **Description:** Models trained in specific environments may struggle to generalize to new or slightly altered scenarios. Ensuring that the learned model remains effective across varying conditions is a significant challenge.
+- **Impact:** Poor generalization can limit the applicability of MBRL agents to dynamic or evolving environments, reducing their robustness and versatility.
 
 #### 7. **Integration of Learning and Planning**
-   - **Description:** Seamlessly integrating the processes of model learning and planning is non-trivial. Coordinating these components to work harmoniously without introducing instability is a complex task.
-   - **Impact:** Inefficient integration can lead to delays in decision-making, increased computational overhead, and potential conflicts between the learning and planning modules.
+
+- **Description:** Seamlessly integrating the processes of model learning and planning is non-trivial. Coordinating these components to work harmoniously without introducing instability is a complex task.
+- **Impact:** Inefficient integration can lead to delays in decision-making, increased computational overhead, and potential conflicts between the learning and planning modules.
 
 #### 8. **Handling Uncertainty**
-   - **Description:** Accurately quantifying and managing uncertainty in model predictions is crucial for reliable decision-making in MBRL. This includes both epistemic uncertainty (model uncertainty) and aleatoric uncertainty (inherent randomness).
-   - **Impact:** Inadequate handling of uncertainty can result in overconfident predictions, leading to risky or unsafe control actions, especially in critical applications.
+
+- **Description:** Accurately quantifying and managing uncertainty in model predictions is crucial for reliable decision-making in MBRL. This includes both epistemic uncertainty (model uncertainty) and aleatoric uncertainty (inherent randomness).
+- **Impact:** Inadequate handling of uncertainty can result in overconfident predictions, leading to risky or unsafe control actions, especially in critical applications.
 
 #### 9. **Scalability**
-   - **Description:** Scaling MBRL methods to environments with large or continuous state and action spaces poses significant challenges. Ensuring that the model remains tractable and the planning process remains efficient is essential.
-   - **Impact:** Limited scalability can restrict the use of MBRL to smaller or simpler systems, reducing its applicability to real-world, complex control problems.
+
+- **Description:** Scaling MBRL methods to environments with large or continuous state and action spaces poses significant challenges. Ensuring that the model remains tractable and the planning process remains efficient is essential.
+- **Impact:** Limited scalability can restrict the use of MBRL to smaller or simpler systems, reducing its applicability to real-world, complex control problems.
 
 #### 10. **Hyperparameter Tuning**
+
 - **Description:** MBRL frameworks often involve numerous hyperparameters related to model architecture, learning rates, planning horizons, and more. Effectively tuning these hyperparameters is critical for optimal performance.
 - **Impact:** Extensive hyperparameter tuning can be time-consuming and may require expert knowledge, making the development process more resource-intensive and less accessible to practitioners.
 
 #### 11. **Robustness to Model Mis-specification**
+
 - **Description:** MBRL assumes that the learned model sufficiently captures the true environment dynamics. However, model mis-specification can occur due to incorrect assumptions or limitations in the modeling approach.
 - **Impact:** Robustness to such mis-specifications is essential to maintain reliable control performance, especially in environments where accurate modeling is challenging.
 
 #### 12. **Exploration in Model Space**
+
 - **Description:** Efficiently exploring the space of possible models to discover accurate representations of the environment is a complex aspect of MBRL. This involves balancing the exploration of different model hypotheses with the exploitation of known good models.
 - **Impact:** Ineffective exploration can lead to premature convergence to suboptimal models, limiting the agent's ability to improve its understanding and control of the environment.
 
 #### **Conclusion**
+
 Model-Based Reinforcement Learning offers promising advantages by leveraging learned models to enhance control and decision-making. However, the inherent challenges—ranging from model accuracy and computational complexity to robustness and scalability—necessitate careful consideration and innovative solutions. Addressing these challenges is key to unlocking the full potential of MBRL in complex, real-world control applications.
 
 ---
@@ -484,16 +529,21 @@ Model-Based Reinforcement Learning offers promising advantages by leveraging lea
 
 **Gaussian Process-based Model Predictive Control (GP-MPC)** integrates Gaussian Process (GP) regression with traditional MPC to enhance the controller's ability to handle model uncertainties and non-linear dynamics. This hybrid approach leverages the strengths of both MPC and GP to provide a more robust and adaptive control strategy.
 [GP-MPC reference](#reference-gp-mpc-approach)
-#### Advantages:
+
+#### Advantages
+
 - **Uncertainty Quantification:** GP provides probabilistic predictions, allowing MPC to account for model uncertainties effectively.
 - **Adaptability:** Capable of adapting to non-linear dynamics by learning from data, improving performance in complex environments.
 - **Data Efficiency:** GP models can achieve high accuracy with relatively small datasets, making them suitable for scenarios with limited data.
-#### Drawbacks:
+
+#### Drawbacks
+
 - **Scalability:** GP regression can become computationally expensive as the size of the dataset increases, limiting its applicability to very large-scale systems.
 - **Implementation Complexity:** Integrating GP with MPC requires careful tuning of hyperparameters and may involve more intricate implementation compared to standard MPC.
 - **Real-Time Constraints:** The additional computational overhead of GP may pose challenges for real-time control applications where rapid decision-making is essential.
 
-#### Mathematical Foundation:
+#### Mathematical Foundation
+
 The GP-MPC approach augments the traditional MPC framework by incorporating a GP model to predict system dynamics. This combination allows the controller to adaptively update its predictions based on observed data, enhancing its ability to manage uncertainties and non-linearities.
 
 1. **Gaussian Process Regression:**
@@ -502,33 +552,32 @@ The GP-MPC approach augments the traditional MPC framework by incorporating a GP
    - $$
      \mathbf{s}_{t+1} = f(\mathbf{a}_t, \mathbf{s}_t) + \epsilon
      $$
-     where $\epsilon $represents the uncertainty modeled by the GP.
+     where $\epsilon$ represents the uncertainty modeled by the GP.
 
 [Standard text books on GPs](#standard-text-books-on-gps)
 
+#### Comparison with Other Methods
 
-
-#### Comparison with Other Methods:
 - **Versus Model Predictive Control (MPC):**
-  - **Enhanced Robustness:** -MPC accounts for model uncertainties and non-linearities, providing more reliable performance in uncertain environments compared to standard MPC, which relies on a fixed model.
-  - **Adaptive Learning:** While standard MPC uses a predefined model, -MPC can adapt its predictions based on new data through GP learning, improving over time as more data becomes available.
+  - **Enhanced Robustness:** GP-MPC accounts for model uncertainties and non-linearities, providing more reliable performance in uncertain environments compared to standard MPC, which relies on a fixed model.
+  - **Adaptive Learning:** While standard MPC uses a predefined model, GP-MPC can adapt its predictions based on new data through GP learning, improving over time as more data becomes available.
 
 - **Versus Reinforcement Learning (RL):**
-  - **Model-Based Efficiency:** -MPC leverages model-based predictions, offering greater sample efficiency compared to model-free RL approaches that require extensive interactions to learn effective policies.
-  - **Controlled Adaptability:** While RL learns policies through extensive interactions and can handle highly non-linear dynamics, -MPC maintains a structured optimization framework enhanced by GP learning, providing a balance between model-based control and data-driven adaptability.
+  - **Model-Based Efficiency:** GP-MPC leverages model-based predictions, offering greater sample efficiency compared to model-free RL approaches that require extensive interactions to learn effective policies.
+  - **Controlled Adaptability:** While RL learns policies through extensive interactions and can handle highly non-linear dynamics, GP-MPC maintains a structured optimization framework enhanced by GP learning, providing a balance between model-based control and data-driven adaptability.
 
-#### Challenges with Hyperparameters in Model-Based RL:
-One of the most significant challenges in deploying -MPC is the tuning of hyperparameters. The -MPC framework contains a larger number of hyperparameters compared to other control strategies, primarily due to the dual nature of learning and optimization. Hyperparameters affect both the GP model (learning the dynamics) and the MPC (optimizing the control), creating a complex interaction that requires careful adjustment:
+#### Challenges with Hyperparameters in Model-Based RL
+
+One of the most significant challenges in deploying GP-MPC is the tuning of hyperparameters. The GP-MPC framework contains a larger number of hyperparameters compared to other control strategies, primarily due to the dual nature of learning and optimization. Hyperparameters affect both the GP model (learning the dynamics) and the MPC (optimizing the control), creating a complex interaction that requires careful adjustment:
 
 - **Model Complexity:** The GP model must balance complexity and computational efficiency, necessitating hyperparameters that govern the kernel functions, noise levels, and regularization parameters.
 - **Optimization Horizon:** The MPC's prediction horizon and constraints also serve as hyperparameters that need to be synchronized with the learning model to ensure optimal performance.
 
-Successfully managing these hyperparameters is crucial, as improper settings can lead to suboptimal control actions, increased computational load, and slower response times. Consequently, tuning these parameters becomes a critical task that can significantly impact the effectiveness and efficiency of the -MPC approach.
+Successfully managing these hyperparameters is crucial, as improper settings can lead to suboptimal control actions, increased computational load, and slower response times. Consequently, tuning these parameters becomes a critical task that can significantly impact the effectiveness and efficiency of the GP-MPC approach.
 
-#### Conclusion:
-Gaussian Process-based MPC bridges the gap between traditional model-based control and data-driven learning approaches. By integrating GP regression with MPC, -MPC offers a more adaptable and robust control strategy capable of handling uncertainties and complex dynamics. This makes it a compelling alternative to both standard MPC and Reinforcement Learning (RL), particularly in environments where model accuracy is challenging to maintain and adaptability is crucial. However, the increased complexity in hyperparameter tuning presents a significant challenge, necessitating careful calibration to harness the full potential of -MPC.
+#### Conclusion
 
-Successfully managing these hyperparameters is crucial, as improper settings can lead to suboptimal control actions, increased computational load, and slower response times. Consequently, tuning these parameters becomes a critical task that can significantly impact the effectiveness and efficiency of the gp-MPC approach.
+Gaussian Process-based MPC bridges the gap between traditional model-based control and data-driven learning approaches. By integrating GP regression with MPC, GP-MPC offers a more adaptable and robust control strategy capable of handling uncertainties and complex dynamics. This makes it a compelling alternative to both standard MPC and Reinforcement Learning (RL), particularly in environments where model accuracy is challenging to maintain and adaptability is crucial. However, the increased complexity in hyperparameter tuning presents a significant challenge, necessitating careful calibration to harness the full potential of GP-MPC.
 
 # Getting Started
 
@@ -594,7 +643,9 @@ task_setting:
 - **task_setting:** Location and identifier for predefined tasks used in environment verification.
 
 Remark: All the following scripts have to be run when configuration was changed.
+
 ## 2. Running a random walk
+
 Execute the script [`Random_walk.py`](Random_walk.py) to run a **Random walk** approach on the **AWAKE** environment. Here in each step the action is sampled uniformly from the action space.
 
 **Steps:**
@@ -604,6 +655,7 @@ Execute the script [`Random_walk.py`](Random_walk.py) to run a **Random walk** a
    ```bash
    python Random_walk.py
    ```
+
 You should see something like (here for five DoF):
 <div align="center">
   <img src="miscellaneous/Random_walk.png" width="500">
@@ -622,6 +674,7 @@ Execute the script [`MPC_approach.py`](MPC_approach.py) to run the **Model Predi
    ```bash
    python MPC_approach.py
    ```
+
 2. **Overview:**
    - **Objective:** Achieve near-optimal solutions using a control-based approach.
    - **Methodology:** Utilizes **Sequential Least Squares Quadratic Programming (SLSQP)** for constrained optimization.
@@ -631,10 +684,10 @@ Execute the script [`MPC_approach.py`](MPC_approach.py) to run the **Model Predi
    - **Optimization:** Handled in [`helper_scripts/MPC.py`](helper_scripts/MPC.py).
    - **Validation:** Conducted within [`MPC_approach.py`](MPC_approach.py) across validation episodes to ensure performance consistency.
 You should see something like (here for five DoF):
+
 <div align="center">
   <img src="miscellaneous/MPC.png" width="500">
 </div>
-
 
 ## 4. Training RL Agents
 
@@ -669,7 +722,6 @@ You see alternating figures showing the test of the policy and the training prog
     </td>
   </tr>
 </table>
-
 
 The following hyperparameters can be adjusted in the configuration file or directly in the training script to optimize the performance of the RL agents. We add brief explanations to provide insights into how each parameter influences the learning process, helping users make informed decisions when tuning the algorithms. The configuration file is located at [`config/environment_setting.yaml`](config/environment_setting.yaml) and explained in the upcoming sections in more detail.
 
@@ -758,7 +810,6 @@ You see two figures:
   </tr>
 </table>
 
-
 ## 6. Running the GP-MPC Controller
 
 Utilize the Gaussian Process-based Model Predictive Control (GP-MPC) framework to manage and optimize the Beam Steering Environment. This script integrates GP regression with MPC to handle uncertainties and complex dynamics effectively.
@@ -779,7 +830,6 @@ Utilize the Gaussian Process-based Model Predictive Control (GP-MPC) framework t
    - **Visualization:** Initializes live plotting tools to monitor real-time performance, including state trajectories, actions, and cost metrics.
    - **Control Loop:** Executes the control loop where the GP-MPC controller computes optimal actions based on current observations, interacts with the environment, and updates the model with new data.
    - **Outcome Logging:** Saves comprehensive results, including rewards, episode lengths, actions, and states, facilitating further analysis and benchmarking.
-
 
 Two interactive figures open and show the live progress of the training:
 <table>
@@ -804,17 +854,19 @@ Two interactive figures open and show the live progress of the training:
 - **Data Persistence:** Stores detailed results in organized folders for subsequent evaluation and comparison with other control approaches.
 - **Adaptability Demonstration:** Showcases the GP-MPC controller's ability to adapt to dynamic changes and uncertainties within the Beam Steering Environment.
 
-
 This script serves as a critical component in demonstrating the advantages of integrating Gaussian Processes with Model Predictive Control, highlighting its potential in managing complex and uncertain control scenarios effectively.
 [GP-MP code source](#gp-mpc-approach-)
-
 
 ---
 
 # Environment Components
+
 The **RL Bootcamp Tutorial** leverages a custom Gym environment, `AwakeSteering`, tailored for beam steering tasks using reinforcement learning (RL). The environment is enhanced with several wrappers and helper functions to provide flexibility, scalability, and robust functionality.
+
 ## `AwakeSteering` Gym Environment
+
 The script [environment_awake_steering.py](environment/environment_awake_steering.py) contains the original AWAKE
+
 ### Overview
 
 `AwakeSteering` is a custom [OpenAI Gym](https://gym.openai.com/) environment designed for **beam steering** using **reinforcement learning** (RL). This environment simulates the control of beam parameters, allowing agents to learn optimal steering strategies to achieve desired beam states under various conditions.
@@ -874,6 +926,7 @@ The script [environment_awake_steering.py](environment/environment_awake_steerin
     - `seed`: Seed value.
   - **Returns:**
     - List containing the seed.
+
 ### Usage Example
 
 ```python
@@ -1060,6 +1113,7 @@ benchmark_env.close()
 ```
 
 By utilizing the `AwakeSteering` environment, you can develop and train reinforcement learning agents to perform beam steering tasks effectively. Whether you're conducting research or developing practical applications, this environment provides a robust foundation for your RL experiments.
+
 ```yaml
 # Configuration File for RL Bootcamp Tutorial
 
@@ -1240,7 +1294,6 @@ task_setting:
 [//]: # ()
 [//]: # (---)
 
-
 [//]: # ()
 [//]: # ()
 [//]: # (# Tutorial in Reinforcement Learning of the [RL-Bootcamp Salzburg 24]&#40;https://sarl-plus.github.io/RL-Bootcamp/&#41;)
@@ -1308,10 +1361,13 @@ Before you begin, ensure you have the following installed on your system:
 
    - Open Command Prompt (`Win + R`, type `cmd`, and press `Enter`).
    - Run:
+
      ```bash
      python --version
      ```
+
      You should see:
+
      ```
      Python 3.11.9
      ```
@@ -1332,10 +1388,13 @@ Before you begin, ensure you have the following installed on your system:
 
    - Open Terminal (`Command + Space`, type `Terminal`, and press `Enter`).
    - Run:
+
      ```bash
      python3 --version
      ```
+
      You should see:
+
      ```
      Python 3.11.9
      ```
@@ -1394,6 +1453,7 @@ Before installing dependencies, activate the virtual environment.
 2. **Confirmation:**
 
    - Your command prompt should now be prefixed with `(venv)` indicating that the virtual environment is active.
+
      ```
      (venv) C:\Path\To\RL_bootcamp_tutorial>
      ```
@@ -1409,6 +1469,7 @@ Before installing dependencies, activate the virtual environment.
 2. **Confirmation:**
 
    - Your terminal prompt should now be prefixed with `(venv)` indicating that the virtual environment is active.
+
      ```
      (venv) your-mac:RL_bootcamp_tutorial user$
      ```
@@ -1462,6 +1523,7 @@ pandas          1.4.2
 
   - Avoid using `sudo` with `pip`. Instead, use a virtual environment.
   - If necessary, add the `--user` flag:
+
     ```bash
     pip install --user -r requirements.txt
     ```
@@ -1471,24 +1533,29 @@ pandas          1.4.2
   - **macOS/Linux:**
     - Ensure that the activation script has execute permissions.
     - If you encounter a "permission denied" error, run:
+
       ```bash
       chmod +x venv/bin/activate
       ```
 
   - **Windows:**
     - If you receive an execution policy error, open PowerShell as an administrator and run:
+
       ```powershell
       Set-ExecutionPolicy RemoteSigned
       ```
+
     - Then, try activating the virtual environment again.
 
 - **Incompatible Python Version:**
 
   - Ensure that the active Python interpreter is **3.11.9** or higher.
   - You can specify the Python version when creating the virtual environment:
+
     ```bash
     python3.11 -m venv venv
     ```
+
     *Replace `python3.11` with the path to the desired Python executable if necessary.*
 
 - **Missing `requirements.txt`:**
@@ -1512,98 +1579,104 @@ pandas          1.4.2
 ---
 
 # References
+
 #### A good resource for linear dynamics and control
+
 A good resource for linear dynamics is: Margellos, K. (2023). *B15 Linear Dynamic Systems and Optimal Control*. Michaelmas Term, University of Oxford. Email: [kostas.margellos@eng.ox.ac.uk](mailto:kostas.margellos@eng.ox.ac.uk)
 
 #### References on Model Predictive Control (MPC)
 
-1. **Maciejowski, J. M. (2002).** _Predictive Control: with Constraints_. Prentice Hall.
+1. **Maciejowski, J. M. (2002).** *Predictive Control: with Constraints*. Prentice Hall.
    - This book provides an in-depth look at predictive control, focusing on practical applications and incorporating constraints into control strategies.
 
-2. **Camacho, E. F., & Bordons, C. (2004).** _Model Predictive Control_. Springer.
+2. **Camacho, E. F., & Bordons, C. (2004).** *Model Predictive Control*. Springer.
    - A foundational text that covers the basics of MPC, detailing the principles and practical implementations of the control strategy.
 
-3. **Rawlings, J. B., & Mayne, D. Q. (2009).** _Model Predictive Control: Theory and Design_. Nob Hill Publishing.
+3. **Rawlings, J. B., & Mayne, D. Q. (2009).** *Model Predictive Control: Theory and Design*. Nob Hill Publishing.
    - Offers rigorous discussion on the theoretical aspects of MPC, with a strong emphasis on the design and stability of control systems.
 
-4. **Qin, S. J., & Badgwell, T. A. (2003).** "A survey of industrial model predictive control technology." _Control Engineering Practice_, 11(7), 733-764.
+4. **Qin, S. J., & Badgwell, T. A. (2003).** "A survey of industrial model predictive control technology." *Control Engineering Practice*, 11(7), 733-764.
    - This survey paper explores the application of MPC in industrial settings, discussing advancements, challenges, and practical insights.
 
-5. **Mayne, D. Q., Rawlings, J. B., Rao, C. V., & Scokaert, P. O. M. (2000).** "Constrained model predictive control: Stability and optimality." _Automatica_, 36(6), 789-814.
+5. **Mayne, D. Q., Rawlings, J. B., Rao, C. V., & Scokaert, P. O. M. (2000).** "Constrained model predictive control: Stability and optimality." *Automatica*, 36(6), 789-814.
    - A critical paper that discusses the stability and optimality of MPC, particularly when constraints are applied to the control process.
 
-6. **Rossiter, J. A. (2003).** _Model-Based Predictive Control: A Practical Approach_. CRC Press.
+6. **Rossiter, J. A. (2003).** *Model-Based Predictive Control: A Practical Approach*. CRC Press.
    - Designed for both practitioners and researchers, this book navigates through the practical aspects of predictive control with real-world case studies.
 
-#### References on optimisation:
-1. **Nocedal, J., & Wright, S. J. (2006).** _Numerical Optimization_. Springer.
+#### References on optimisation
+
+1. **Nocedal, J., & Wright, S. J. (2006).** *Numerical Optimization*. Springer.
    - This comprehensive text provides an in-depth exploration of numerical methods for optimization, making it essential for understanding the computational techniques used in various optimization problems.
 
-2. **Boyd, S., & Vandenberghe, L. (2004).** _Convex Optimization_. Cambridge University Press.
+2. **Boyd, S., & Vandenberghe, L. (2004).** *Convex Optimization*. Cambridge University Press.
    - A seminal book that introduces the fundamentals of convex optimization and its applications in a clear and concise manner. It is particularly valuable for its theoretical insights and practical problem-solving strategies.
 
-3. **Bertsekas, D. P. (1999).** _Nonlinear Programming (2nd Edition)_. Athena Scientific.
+3. **Bertsekas, D. P. (1999).** *Nonlinear Programming (2nd Edition)*. Athena Scientific.
    - Focuses on the theory and methods for nonlinear optimization, providing rigorous coverage of algorithms and their convergence properties.
 
-4. **Chong, E. K. P., & Zak, S. H. (2013).** _An Introduction to Optimization (4th Edition)_. Wiley.
+4. **Chong, E. K. P., & Zak, S. H. (2013).** *An Introduction to Optimization (4th Edition)*. Wiley.
    - This textbook offers a broad introduction to optimization with applications across engineering, science, and economics. It covers both theoretical aspects and practical algorithms.
 
-5. **Fletcher, R. (1987).** _Practical Methods of Optimization (2nd Edition)_. Wiley.
+5. **Fletcher, R. (1987).** *Practical Methods of Optimization (2nd Edition)*. Wiley.
    - Explains practical techniques and methods used in optimization, suitable for those who need to solve real-world problems. This book emphasizes practical algorithms over theoretical analysis.
 
-6. **Bazaraa, M. S., Sherali, H. D., & Shetty, C. M. (2006).** _Nonlinear Programming: Theory and Algorithms (3rd Edition)_. Wiley-Interscience.
+6. **Bazaraa, M. S., Sherali, H. D., & Shetty, C. M. (2006).** *Nonlinear Programming: Theory and Algorithms (3rd Edition)*. Wiley-Interscience.
    - Offers a comprehensive treatment of the theory of nonlinear programming, detailed explanations of algorithmic methods, and an extensive set of application examples.
 
-7. **Luenberger, D. G., & Ye, Y. (2008).** _Linear and Nonlinear Programming (3rd Edition)_. Springer.
+7. **Luenberger, D. G., & Ye, Y. (2008).** *Linear and Nonlinear Programming (3rd Edition)*. Springer.
    - Provides an in-depth look at both linear and nonlinear programming, with a strong emphasis on solution techniques and special algorithms.
 
-8. **Arrow, K. J., Hurwicz, L., & Uzawa, H. (1958).** _Studies in Linear and Non-Linear Programming_. Stanford University Press.
+8. **Arrow, K. J., Hurwicz, L., & Uzawa, H. (1958).** *Studies in Linear and Non-Linear Programming*. Stanford University Press.
    - This classic collection of papers by prominent economists introduces foundational concepts in linear and non-linear programming and their implications for economic theory.
 
-9. **Gill, P. E., Murray, W., & Wright, M. H. (1981).** _Practical Optimization_. Academic Press.
+9. **Gill, P. E., Murray, W., & Wright, M. H. (1981).** *Practical Optimization*. Academic Press.
    - This book is designed for practitioners who need to apply optimization methods in their work. It explains practical considerations in the implementation of optimization methods.
 
-10. **Polak, E. (1997).** _Optimization: Algorithms and Consistent Approximations_. Springer.
+10. **Polak, E. (1997).** *Optimization: Algorithms and Consistent Approximations*. Springer.
     - Focuses on optimization algorithms and the theory of consistent approximations, providing a solid foundation for understanding the convergence behavior of algorithms in optimization.
 
 #### References on Reinforcement Learning
 
-1. **Sutton, R. S., & Barto, A. G. (2018).** _Reinforcement Learning: An Introduction_. MIT Press.
+1. **Sutton, R. S., & Barto, A. G. (2018).** *Reinforcement Learning: An Introduction*. MIT Press.
    - This seminal text provides a comprehensive introduction to the field of reinforcement learning, covering both the theoretical underpinnings and practical algorithms.
-2. **Szepesvári, C. (2010).** _Algorithms for Reinforcement Learning_. Morgan and Claypool Publishers.
+2. **Szepesvári, C. (2010).** *Algorithms for Reinforcement Learning*. Morgan and Claypool Publishers.
    - A concise overview of the core algorithms in reinforcement learning, geared towards students and researchers familiar with machine learning.
-3. **Bertsekas, D. P., & Tsitsiklis, J. N. (1996).** _Neuro-Dynamic Programming_. Athena Scientific.
+3. **Bertsekas, D. P., & Tsitsiklis, J. N. (1996).** *Neuro-Dynamic Programming*. Athena Scientific.
    - This book explores the intersection of dynamic programming and neural networks, offering insights into the development of efficient algorithms for RL.
-5. **Kaelbling, L. P., Littman, M. L., & Moore, A. W. (1996).** "Reinforcement learning: A survey." _Journal of Artificial Intelligence Research_, 4, 237-285.
+4. **Kaelbling, L. P., Littman, M. L., & Moore, A. W. (1996).** "Reinforcement learning: A survey." *Journal of Artificial Intelligence Research*, 4, 237-285.
    - This survey provides an extensive overview of the field, discussing the foundational theories, significant challenges, and major directions in RL research.
-6. **Arulkumaran, K., Deisenroth, M. P., Brundage, M., & Bharath, A. A. (2017).** "Deep reinforcement learning: A brief survey." _IEEE Signal Processing Magazine_, 34(6), 26-38.
+5. **Arulkumaran, K., Deisenroth, M. P., Brundage, M., & Bharath, A. A. (2017).** "Deep reinforcement learning: A brief survey." *IEEE Signal Processing Magazine*, 34(6), 26-38.
    - This survey reviews deep reinforcement learning, focusing on its success in various domains and discussing the integration of deep learning techniques with reinforcement learning frameworks.
 
 #### References on the analytical approach
-1. **Moore, B. (1981).** "Principal component analysis in linear systems: Controllability, observability, and model reduction." _IEEE Transactions on Automatic Control_, 26(1), 17-32.
+
+1. **Moore, B. (1981).** "Principal component analysis in linear systems: Controllability, observability, and model reduction." *IEEE Transactions on Automatic Control*, 26(1), 17-32.
    - This pioneering paper introduces the use of principal component analysis, which relies on SVD, for reducing the complexity of linear systems in control engineering, particularly focusing on controllability and observability.
 
-2. **Van Overschee, P., & De Moor, B. (1996).** _Subspace Identification for Linear Systems: Theory — Implementation — Applications_. Kluwer Academic Publishers.
+2. **Van Overschee, P., & De Moor, B. (1996).** *Subspace Identification for Linear Systems: Theory — Implementation — Applications*. Kluwer Academic Publishers.
    - This book details the subspace identification method, which uses SVD to identify state-space models from data, applicable in various control system applications.
 
-3. **Liu, Y., & Anderson, B. D. O. (1989).** "Singular value decomposition for controller reduction." _Automatica_, 25(4), 659-664.
+3. **Liu, Y., & Anderson, B. D. O. (1989).** "Singular value decomposition for controller reduction." *Automatica*, 25(4), 659-664.
    - Discusses how SVD can be utilized for controller reduction, improving the efficiency and performance of large-scale control systems by simplifying the controller design.
 
-4. **Golub, G. H., & Van Loan, C. F. (2013).** _Matrix Computations (4th Edition)_. Johns Hopkins University Press.
+4. **Golub, G. H., & Van Loan, C. F. (2013).** *Matrix Computations (4th Edition)*. Johns Hopkins University Press.
    - While not solely focused on control problems, this comprehensive text includes discussions on the application of SVD in various numerical methods and algorithms, which are fundamental in control engineering.
 
-5. **Zhou, K., & Doyle, J. C. (1998).** _Essentials of Robust Control_. Prentice Hall.
+5. **Zhou, K., & Doyle, J. C. (1998).** *Essentials of Robust Control*. Prentice Hall.
    - Provides a broader look at control techniques including those involving SVD, especially in the context of developing robust control systems that can handle uncertainty and model inaccuracies.
 
-6. **Tomizuka, M. (1987).** "Zero phase error tracking algorithm for digital control." _Journal of Dynamic Systems, Measurement, and Control_, 109(1), 65-68.
+6. **Tomizuka, M. (1987).** "Zero phase error tracking algorithm for digital control." *Journal of Dynamic Systems, Measurement, and Control*, 109(1), 65-68.
    - Discusses the use of SVD in optimizing control algorithms, specifically in achieving zero phase error in tracking applications.
 
-7. **Skelton, R. E., Iwasaki, T., & Grigoriadis, K. (1998).** _A Unified Algebraic Approach to Linear Control Design_. Taylor & Francis.
+7. **Skelton, R. E., Iwasaki, T., & Grigoriadis, K. (1998).** *A Unified Algebraic Approach to Linear Control Design*. Taylor & Francis.
    - This book offers an integrated approach to control design, with sections dedicated to using SVD for analyzing and designing control systems, emphasizing its value in ensuring system stability and performance.
+
 #### Standard text books on GPs
+
 Gaussian Processes (GP) are powerful tools in statistics and machine learning for modeling and inference in various applications. The following are some of the standard and highly recommended books that provide comprehensive coverage of Gaussian Processes, ranging from foundational theories to practical implementations:
 
-1. **Rasmussen, C. E., & Williams, C. K. I. (2006).** _Gaussian Processes for Machine Learning_. MIT Press.
+1. **Rasmussen, C. E., & Williams, C. K. I. (2006).** *Gaussian Processes for Machine Learning*. MIT Press.
    - **Overview:** This is the seminal text on Gaussian Processes, offering an in-depth exploration of their theoretical foundations and practical applications in machine learning. It covers topics such as regression, classification, and optimization using GP models.
    - **Key Features:**
      - Comprehensive introduction to GP theory.
@@ -1612,7 +1685,7 @@ Gaussian Processes (GP) are powerful tools in statistics and machine learning fo
      - Numerous examples and exercises to reinforce learning.
    - **Link:** [Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/)
 
-2. **Murphy, K. P. (2012).** _Machine Learning: A Probabilistic Perspective_. MIT Press.
+2. **Murphy, K. P. (2012).** *Machine Learning: A Probabilistic Perspective*. MIT Press.
    - **Overview:** While not exclusively focused on Gaussian Processes, this book includes extensive coverage of GP as part of its broader discussion on probabilistic models in machine learning.
    - **Key Features:**
      - Integrates GP within the context of Bayesian methods.
@@ -1620,7 +1693,7 @@ Gaussian Processes (GP) are powerful tools in statistics and machine learning fo
      - Provides practical algorithms and implementation details.
    - **Link:** [Machine Learning: A Probabilistic Perspective](https://probml.github.io/pml-book/book1.html)
 
-3. **Schölkopf, B., & Smola, A. J. (2002).** _Learning with Kernels: Support Vector Machines, Regularization, Optimization, and Beyond_. MIT Press.
+3. **Schölkopf, B., & Smola, A. J. (2002).** *Learning with Kernels: Support Vector Machines, Regularization, Optimization, and Beyond*. MIT Press.
    - **Overview:** This book delves into kernel methods, a fundamental component of Gaussian Processes. It provides a thorough understanding of the mathematical underpinnings and applications of kernel-based learning algorithms.
    - **Key Features:**
      - Detailed treatment of kernel functions and their properties.
@@ -1628,7 +1701,7 @@ Gaussian Processes (GP) are powerful tools in statistics and machine learning fo
      - Advanced topics in regularization and optimization.
    - **Link:** [Learning with Kernels](https://www.bkz.ch/shop/learning-with-kernels_258071)
 
-4. **Williams, C. K. I. (2006).** "Gaussian Processes for Machine Learning." _Ph.D. Dissertation_, University of Toronto.
+4. **Williams, C. K. I. (2006).** "Gaussian Processes for Machine Learning." *Ph.D. Dissertation*, University of Toronto.
    - **Overview:** This dissertation by Carl Edward Rasmussen, one of the leading experts in Gaussian Processes, provides a comprehensive treatment of GP theory and applications. It serves as a foundational resource for advanced studies in GP.
    - **Key Features:**
      - In-depth theoretical exposition of Gaussian Processes.
@@ -1636,6 +1709,7 @@ Gaussian Processes (GP) are powerful tools in statistics and machine learning fo
      - Applications of GP in various domains.
    - **Link:** [Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/drupal/)
 
-#### Reference GP-MPC approach: 
-1. S. Kamthe and M. Deisenroth, “Data-Efficient Reinforcement Learning with Probabilistic Model Predictive Control,” in Proceedings of the Twenty-First International Conference on Artificial Intelligence and Statistics, A. Storkey and F. Perez-Cruz, Eds., in Proceedings of Machine Learning Research, vol. 84. PMLR, 2018, pp. 1701–1710. [Online]. Available: https://proceedings.mlr.press/v84/kamthe18a.html
-2. https://github.com/SimonRennotte/Data-Efficient-Reinforcement-Learning-with-Probabilistic-Model-Predictive-Control
+#### Reference GP-MPC approach
+
+1. S. Kamthe and M. Deisenroth, “Data-Efficient Reinforcement Learning with Probabilistic Model Predictive Control,” in Proceedings of the Twenty-First International Conference on Artificial Intelligence and Statistics, A. Storkey and F. Perez-Cruz, Eds., in Proceedings of Machine Learning Research, vol. 84. PMLR, 2018, pp. 1701–1710. [Online]. Available: <https://proceedings.mlr.press/v84/kamthe18a.html>
+2. <https://github.com/SimonRennotte/Data-Efficient-Reinforcement-Learning-with-Probabilistic-Model-Predictive-Control>
