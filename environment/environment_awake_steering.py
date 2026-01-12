@@ -195,7 +195,7 @@ class AwakeSteering(gym.Env):
             truncated: Whether the episode was truncated.
             info: Additional information about the environment.
         """
-        print('step')
+        # print('step')
         delta_kicks = np.clip(action, self.low_action, self.high_action)
         self.state += self.rmatrix.dot(delta_kicks)
         self.state = np.clip(self.state, self.low_observation, self.high_observation)

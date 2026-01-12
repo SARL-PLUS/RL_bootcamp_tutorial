@@ -176,6 +176,7 @@ def plot_regrets(ax, ax_twin, rewards_per_task,  rewards_per_task_benchmark, suc
 
 def test_policy(env, policy=None, episodes=50, seed_set=None):
     rewards_per_task, ep_len_per_task, actions_per_task, states_per_task = [], [], [], []
+    print(f'test_policy: seed_set {seed_set}')
     trajectories = \
         create_trajectories(env, policy, episodes, seed_set=seed_set)
 
@@ -225,6 +226,7 @@ def create_trajectories(env, policy, episodes, seed_set=None):
 def verify_external_policy_on_specific_env(env, policies, episodes=50, **kwargs):
     labels = kwargs['policy_labels']
     seed_set = kwargs['seed_set'] if 'seed_set' in kwargs else None
+    print(f'seed_set {seed_set}')
 
     fig = plt.figure(figsize=(10, 10))
     ax = []
