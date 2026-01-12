@@ -278,30 +278,43 @@ These characteristics render the beam steering problem both intriguing and signi
 #### Mathematical Foundation
 
 Want to solve:
+
 $$
 \text{maximise}_{\pi_t} \lim_{T\to\infty}\mathbb E_{W_t}[\frac 1 T \sum_{t=0}^T R_t(S_t,A_t,W_t)]
 $$
+
 subject to the system dynamics:
+
 $$
 \mathbf{s}_{t+k+1} = \mathbf{A} \mathbf{s}_{t+k} + \mathbf{B} \mathbf{a}_{t+k}
 $$
+
 and:
+
 $$
 \mathbf{a}_{t} = \pi(s_t)
 $$
+
 and:
+
 $$
 \mathbf{s}_{0} = S_0 \qquad (given)
 $$
-MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $N $:
+
+MPC solves an optimization problem at each control step, minimizing a cost function over a prediction horizon $N$:
+
 $$
 \text{maximise}_{\{a_t\}} \mathbb E_{W_t}[ \sum_{t=0}^{H-1} R_t(S_t,A_t,W_t)+ V(S_H)]
 $$
+
 subject to:
+
 $$
 S_{t+1}=f_t(S_t,A_t,W_t)
 $$
+
 and
+
 $$
 \mathbf{s}_{0} = S_0 \qquad (given)
 $$
@@ -343,6 +356,7 @@ Model Predictive Control (MPC), also known as Receding Horizon Control or Moving
 #### Mathematical Foundation
 
 RL frameworks are typically defined by the MDP components: state space $\mathcal{S}$, action space $\mathcal{A}$, reward function $R$, transition dynamics $P$, and discount factor $\gamma$. The goal is to find a policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$ that maximizes the expected cumulative reward:
+
 $$
 \pi^* = \arg\max_{\pi} \mathbb{E} \left[ \sum_{t=0}^{\infty} \gamma^t R(\mathbf{s}_t, \mathbf{a}_t) \right]
 $$
@@ -382,9 +396,11 @@ The **Analytical Approach** leverages the inverse of the linear dynamics matrice
 #### Mathematical Foundation
 
 The Analytical Approach uses the inverse of the response matrix ($\mathbf{B}$) derived from the linear dynamics of the beam steering system. By applying this inverse matrix to the current state, the method calculates the precise control actions required to correct deviations from the desired beam position:
+
 $$
 \mathbf{a}_t = \mathbf {B}^{-1} \mathbf{s}_t
 $$
+
 where:
 
 - $\mathbf{s}_t$ is the state vector at time $t$.
